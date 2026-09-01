@@ -1,7 +1,7 @@
 /** Jembatan tunggal React ↔ Phaser (Doc 09 §2): React mount/unmount game, tidak lebih. */
 import { useEffect, useRef } from "react";
 import Phaser from "phaser";
-import { PlaceholderScene } from "./placeholderScene";
+import { HomeScene } from "./HomeScene";
 
 export function PhaserHost() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -21,7 +21,7 @@ export function PhaserHost() {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
       },
-      scene: [PlaceholderScene],
+      scene: [HomeScene],
     });
 
     return () => {

@@ -52,15 +52,16 @@
 - [x] `SaveSystem`: skema v1 (Doc 09 §3), migrasi versi, tulis atomik, validasi load — Tgl: 02/09
 - [x] `PetStateMachine`: IDLE/EATING/BATHING/SLEEPING + aturan penolakan aksi (Doc 01 §5) — Tgl: 02/09
 
-### Fase C — Scene Home (UI pertama)
+### Fase C — Scene Home (UI pertama) ✅
 
-- [ ] Scene Home: bg placeholder (blok warna), area pet, HUD atas (H1–H5, Doc 12 §1.3) — Tgl: ____
-- [ ] Sprite kitsune placeholder (idle/walk/eat/sleep) — Tgl: ____
-- [ ] Action bar grid-6 (Doc 12 §3.2) + navigasi tombol (bekerja untuk scene kosong) — Tgl: ____
-- [ ] Interaksi belai & patok + balon bicara placeholder — Tgl: ____
-- [ ] Aksi makan (Dapur stub: 3 makanan hard-coded dari data) & animasi eat — Tgl: ____
-- [ ] Aksi mandi (Onsen stub: tombol → hygiene=100) & tidur (Futon stub + overlay redup) — Tgl: ____
-- [ ] EventBus + one-way data (UI → event → system → render, Doc 09 §2) — Tgl: ____
+- [x] Scene Home: bg placeholder (blok warna), area pet, HUD atas (H1–H5, Doc 12 §1.3) — Tgl: 02/09
+- [x] Sprite kitsune placeholder (idle/walk/eat/sleep) — Tgl: 02/09 *(emoji + tween; sprite final di M5)*
+- [x] Action bar grid-6 (Doc 12 §3.2) + navigasi pintu shōji stub — Tgl: 02/09
+- [x] Interaksi belai (usap ≥120px) & patok + balon bicara — Tgl: 02/09
+- [x] Aksi makan (Dapur stub: 3 makanan stub, tolak saat tidur/koin kurang) & animasi eat — Tgl: 02/09
+- [x] Aksi mandi (Onsen stub → hygiene=100 via PetStateMachine.bathe) & tidur (Futon + overlay) — Tgl: 02/09
+- [x] EventBus + one-way data (UI → event → system → render, Doc 09 §2) — Tgl: 02/09
+- [x] **Bonus:** system tersambung ke core asli — SaveSystem (localStorage + fallback Memory, starter kit saat kosong), PetStateMachine (semua aksi + penolakan), TimeSeasonBadge dari getDayPhase/getSeason — Tgl: 02/09
 
 ### Fase D — Persistensi & Siklus
 

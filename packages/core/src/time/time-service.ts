@@ -80,7 +80,7 @@ export function splitByDayPhase(fromMs: number, toMs: number): PhaseSegment[] {
 
     // Cari waktu transisi berikutnya
     const currentHour = startDate.getHours();
-    let nextTransitionHour = PHASE_TRANSITION_HOURS.find((h) => h > currentHour);
+    const nextTransitionHour = PHASE_TRANSITION_HOURS.find((h) => h > currentHour);
 
     const nextTransitionDate = new Date(startDate);
     if (nextTransitionHour !== undefined) {

@@ -12,6 +12,7 @@ export interface GameUiState {
   day: number;
   coins: number;
   health: number;
+  sleeping: boolean;
   stats: Record<StatKey, number>;
 }
 
@@ -20,11 +21,17 @@ const initialState: GameUiState = {
   day: 1,
   coins: 100,
   health: 90,
+  sleeping: false,
   stats: { hunger: 80, happiness: 80, energy: 80, hygiene: 80 },
 };
 
 let state: GameUiState = initialState;
 const listeners = new Set<() => void>();
+
+/** Akses state saat ini (dipakai system, bukan komponen React). */
+export function getGameState(): GameUiState {
+  return state;
+}
 
 export function setUiState(patch: Partial<GameUiState>): void {
   state = { ...state, ...patch };

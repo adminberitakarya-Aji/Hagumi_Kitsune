@@ -3,7 +3,7 @@
  * Mengatur transisi state pet dan validasi penolakan aksi.
  */
 
-import { clampStat, clampStats, isOverfed } from "./stats";
+import { clampStats, isOverfed } from "./stats";
 import type { ActionResult, PetData, PetStage, PetState } from "./types";
 
 export interface FeedPayload {

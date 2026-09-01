@@ -4,7 +4,7 @@
  */
 
 import type { IClock, ILogger, IStorage } from "../ports";
-import { CURRENT_SAVE_VERSION, SAVE_STORAGE_KEY, saveDataSchemaV1, type SaveData } from "./schema";
+import { SAVE_STORAGE_KEY, saveDataSchemaV1, type SaveData } from "./schema";
 
 export type LoadSaveResult =
   | { success: true; data: SaveData; migrated: boolean }

@@ -2,6 +2,10 @@
 
 > Sumber: GDD §8, Doc 02 (scene), Doc 10 (gaya visual). Dokumen ini = **kontrak layout** yang mengikat implementasi UI.
 > Semua ukuran dalam **px logis** (desain 360×640, dikalikan scale per device — lihat §1).
+>
+> **Catatan implementasi (v0.5):** semua wireframe di dokumen ini diimplementasikan sebagai
+> komponen **React + TSX** (`apps/web/src/components/` & `screens/` — lihat Doc 09 §2).
+> Spesifikasi visual, ukuran, dan perilaku di dokumen ini TIDAK berubah.
 
 ---
 

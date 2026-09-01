@@ -8,7 +8,7 @@
 |---|---|
 | **Genre** | Virtual Pet / Life Simulation |
 | **Platform** | Mobile-first: PWA (web) → APK/IPA via Capacitor |
-| **Stack** | TypeScript monorepo · Phaser 3 · Vite · Capacitor · Supabase |
+| **Stack** | TypeScript monorepo (core pure) · Phaser 3 (canvas) · **React + TSX (UI)** · Vite · Capacitor · Supabase |
 | **Status** | 📐 **Pra-produksi** — desain & dokumentasi selesai, pengembangan M1 belum dimulai |
 
 ---

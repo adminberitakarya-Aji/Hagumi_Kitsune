@@ -22,11 +22,16 @@ hagumi/
 │  │  └─ items.json · decay.json · evolution.json · seasons.json · dialog_*.json
 │  ├─ llm/                 # ADAPTER provider AI (Doc 11):
 │  │  └─ provider-openai.ts · provider-gemini.ts · provider-ollama.ts · provider-offline.ts
-│  ├─ ui/                  # komponen DOM shared: washi panel, hanko button, stat bar, modal
+│  ├─ ui/                  # (dipindah ke apps/web/src/components — React TSX, v0.5)
 │  └─ assets/              # sprites (pipeline recolor elemen) · audio
 ├─ apps/
-│  ├─ web/                 # Vite + Phaser 3 + PWA — host adapter & scene (Doc 02)
-│  │  └─ src/scenes/       # 12 scene Phaser (tipis: panggil core, render)
+│  ├─ web/                 # Vite + React(TSX) UI shell + Phaser canvas (Doc 02)
+│  │  └─ src/
+│  │     ├─ components/    # Hud, StatBar, ActionBar, HankoButton, WashiPanel (TSX)
+│  │     ├─ screens/       # 12 layar (Doc 02) sebagai .tsx
+│  │     ├─ game/          # PhaserHost: mount Phaser + jembatan ke React
+│  │     ├─ store/         # EventBus core → React state (useSyncExternalStore)
+│  │     └─ scenes/        # 12 scene Phaser (tipis: panggil core, render)
 │  └─ native/              # shell Capacitor (APK/IPA) — HANYA config, tanpa logika
 ├─ services/
 │  └─ supabase/            # backend tipis: edge function proxy LLM + (nanti) breeding online
@@ -43,8 +48,8 @@ hagumi/
 ## 2. Bahasa, Tooling & Aturan Arsitektur
 
 1. Bahasa: **TypeScript strict** — tangkap bug tipe sebelum mengorbankan save pemain.
-2. Rendering: **Phaser 3**; teks/menu = DOM overlay dari `packages/ui` (font pixel tetap tajam).
-3. **One-way data:** UI → `EventBus` → system (core) → state → render. UI tidak pernah mengubah stat langsung.
+2. **Rendering dua dunia (v0.5):** **Phaser 3** = canvas game (pet, scene, fx); **React + TSX** = semua UI overlay (HUD, menu, sheet, chat). Aturan jembatan: **React tidak pernah menyentuh objek Phaser** — React membaca state via store (subskripsi EventBus core) dan mengirim aksi; kanvas hanya menerima perintah. `packages/core` tetap TS murni **tanpa JSX**.
+3. **One-way data:** UI → `EventBus` → system (core) → state → store → React render. UI tidak pernah mengubah stat langsung.
 4. Semua angka balance dari `packages/data/*.json` (divalidasi skema saat load).
 5. `PetStats.applyDecay(hours, phase, sleeping)` = fungsi murni terhadap input waktu → headless-testable tanpa browser.
 6. Autosave pada: setiap aksi, setiap pindah scene, `visibilitychange`/`beforeunload` (implementasi `IStorage` di adapter — web: localStorage; native: SecureStorage/Preferences).

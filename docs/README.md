@@ -3,7 +3,7 @@
 > Referensi developer per komponen. GDD (`../GDD-Pet-Game.md`) berisi visi & desain;
 > dokumen di folder ini berisi **detail implementasi** yang mengikat.
 
-> **Stack terkunci (v0.4):** TypeScript monorepo (ports & adapters) · Phaser 3 · Vite/PWA · Capacitor (native) · Supabase (backend tipis). Lihat [09-architecture-save.md](09-architecture-save.md).
+> **Stack terkunci (v0.5):** TypeScript monorepo (ports & adapters) · Phaser 3 (canvas) · **React + TSX (UI overlay)** · Vite/PWA · Capacitor (native) · Supabase (backend tipis). Core tetap TS murni tanpa JSX. Lihat [09-architecture-save.md](09-architecture-save.md).
 
 ## 📚 Indeks Dokumen
 

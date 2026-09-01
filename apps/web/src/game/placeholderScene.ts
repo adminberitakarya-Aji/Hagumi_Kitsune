@@ -1,16 +1,8 @@
-/**
- * HAGUMI web — bootstrap (M1 Fase A, Tugas 4).
- * Scene placeholder: membuktikan pipeline Phaser + @hagumi/data + scaling 360x640.
- * Logika game TIDAK ada di sini (aturan perbatasan Doc 09 §1).
- */
+/** Scene placeholder Phaser (M1 Fase A) — diganti Scene Home asli di Fase C. */
 import Phaser from "phaser";
 import { decayConfig } from "@hagumi/data";
 
-const DESIGN_WIDTH = 360;
-const DESIGN_HEIGHT = 640;
-
-/** Scene placeholder — diganti Scene Home asli di M1 Fase C. */
-class PlaceholderScene extends Phaser.Scene {
+export class PlaceholderScene extends Phaser.Scene {
   private fox!: Phaser.GameObjects.Text;
   private dir = 1;
 
@@ -21,9 +13,7 @@ class PlaceholderScene extends Phaser.Scene {
   create(): void {
     // Latar tatami sederhana (placeholder — bg final di M5)
     this.add.rectangle(180, 340, 360, 496, 0xc9a87c);
-    this.add
-      .rectangle(180, 340, 344, 480, 0xb89a68)
-      .setStrokeStyle(2, 0x3d4a6b);
+    this.add.rectangle(180, 340, 344, 480, 0xb89a68).setStrokeStyle(2, 0x3d4a6b);
 
     // "Kitsune" placeholder — diganti sprite pixel-art (Doc 01 §6)
     this.fox = this.add
@@ -57,22 +47,8 @@ class PlaceholderScene extends Phaser.Scene {
     });
   }
 
-  override update(_time: number, delta: number): void {
-    // Jalan kaki ambient horizontal
-    this.fox.x += this.dir * (0.03 * delta);
+  override update(_time: number, _delta: number): void {
+    this.fox.x += this.dir * 0.03;
     if (this.fox.x > 280 || this.fox.x < 80) this.dir *= -1;
   }
 }
-
-new Phaser.Game({
-  type: Phaser.AUTO,
-  parent: "game-canvas",
-  width: DESIGN_WIDTH,
-  height: DESIGN_HEIGHT,
-  backgroundColor: "#F5EFE0",
-  scale: {
-    mode: Phaser.Scale.FIT, // skala bulat-fit ke device, letterbox via CSS (#stage)
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-  },
-  scene: [PlaceholderScene],
-});

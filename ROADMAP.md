@@ -311,4 +311,5 @@
 |---|---|---|
 | 01/09/2026 | Dibuat (M1–M9 + backlog) | Acuan pengerjaan dengan checklist |
 | 01/09/2026 | M1 Fase A selesai (5/5 tugas); M1 → 🔨 | Monorepo + core/data/web scaffold + 9 test lulus |
+| 01/09/2026 | **Keputusan arsitektur v0.5:** UI layer = React + TSX di atas Phaser (docs/09 & 12, GDD §11 direvisi); apps/web dimigrasi ke Vite+React, komponen TSX dibuat | UI state-driven butuh deklaratif; canvas+React shell = pola mapan; core tetap TS murni |
 

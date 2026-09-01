@@ -7,7 +7,7 @@
 | **Pet Utama** | Kitsune 🦊 (rubah putih folklore Jepang) |
 | **Target Platform** | **Mobile-first** (Web/PWA portrait → dibungkus Capacitor jadi APK/iOS) |
 | **Target Audience** | Semua umur (casual), penyayang hewan, nostalgia 90-an |
-| **Versi Dokumen** | v0.4 — Draft (revisi: stack TS monorepo + Phaser + Capacitor + Supabase, companion LLM 2 tingkat, monetisasi ditunda) |
+| **Versi Dokumen** | v0.5 — Draft (revisi: UI layer ganti ke React + TSX di atas Phaser; stack: TS monorepo + Phaser + React + Capacitor + Supabase) |
 | **Tanggal** | 2026-09-01 |
 
 ---
@@ -336,7 +336,7 @@ Game mengikuti **jam lokal pemain** sehingga dunia terasa hidup dan sinkron deng
 ## 11. Teknologi (TERKUNCI v0.4) — TS Monorepo + Phaser + Capacitor
 
 - ✅ **TypeScript monorepo (ports & adapters)** — logika game murni (`packages/core`) terpisah total dari platform; renderer/storage/LLM = adapter yang bisa ditukar. Detail: `docs/09`.
-- ✅ **Phaser 3 + Vite** untuk rendering & build; UI teks = DOM overlay (font pixel tajam).
+- ✅ **UI = React + TSX; Game = Phaser 3** (v0.5): Phaser menggambar canvas (pet/scene/fx); React menggambar semua UI overlay (HUD, menu, chat) di atasnya. Aturan: React tak pernah menyentuh objek Phaser; data mengalir core → store → React satu arah.
 - ✅ **Mobile-first:** orientasi **portrait 9:16**, UI di zona ibu jari (bawah), target sentuh ≥48px, gesture alami (usap = belai, sapu = mandi, ketuk = patok).
 - ✅ **Native:** shell **Capacitor** membungkus build web → APK/IPA; PWA tetap rilis pertama.
 - ✅ **Backend: Supabase** (MVP) — edge function proxy LLM (Doc 11), auth ringan, nanti breeding antar-pemain.

@@ -322,7 +322,97 @@ body {
   color: var(--indigo);
 }
 
-/* ===== Toast (Doc 12 §2.5 — top-center y=88) ===== */
+/* ===== Offline summary (Doc 12 §11.1) ===== */
+.offline-summary {
+  font-size: 13px;
+  color: var(--ink);
+  text-align: center;
+}
+.offline-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+.offline-list li {
+  font-size: 12px;
+  color: var(--indigo);
+  background: #fffdf6;
+  border: 1px solid rgba(61, 74, 107, 0.25);
+  border-radius: 6px;
+  padding: 5px 8px;
+  text-align: center;
+}
+
+/* ===== Settings / backup (Doc 09 §4) ===== */
+.backup-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.backup-title {
+  margin: 0;
+  font-size: 12px;
+  color: var(--indigo);
+}
+.backup-textarea {
+  width: 100%;
+  resize: none;
+  font-family: monospace;
+  font-size: 10px;
+  border: 2px solid var(--indigo);
+  border-radius: 8px;
+  padding: 6px;
+  background: #fffdf6;
+  color: var(--ink);
+}
+.backup-copy {
+  font-family: inherit;
+  font-size: 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--indigo);
+}
+
+/* ===== Panel debug time-lapse (Doc 03 §6 — dev saja) ===== */
+.debug-panel {
+  position: absolute;
+  top: 112px;
+  left: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 3;
+  opacity: 0.85;
+}
+.debug-row {
+  display: flex;
+  gap: 4px;
+}
+.debug-btn {
+  min-width: 34px;
+  height: 30px;
+  font-size: 11px;
+  font-family: inherit;
+  background: rgba(61, 74, 107, 0.85);
+  color: var(--washi);
+  border: 1px solid var(--indigo);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.debug-btn--wide {
+  min-width: 58px;
+}
+.debug-btn:active {
+  transform: scale(0.94);
+}
+
 .toasts {
   position: absolute;
   top: 88px;

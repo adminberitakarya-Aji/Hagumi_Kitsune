@@ -15,7 +15,7 @@
 
 | Milestone | Nama                                   | Status | Mulai | Selesai | Estimasi   |
 | --------- | -------------------------------------- | ------ | ----- | ------- | ---------- |
-| M1        | Playable Core                          | 🔨     | 01/09 | —       | 1–2 minggu |
+| M1        | Playable Core                          | ✅     | 01/09 | 02/09   | 2 hari     |
 | M1.5      | Onboarding (Telur & Nama)              | ⬜     | —     | —       | 3–4 hari   |
 | M2        | Loop Lengkap (Poop, Penyakit, Ekonomi) | ⬜     | —     | —       | 1 minggu   |
 | M3        | Evolusi Zenko/Yako                     | ⬜     | —     | —       | 1 minggu   |
@@ -63,12 +63,12 @@
 - [x] EventBus + one-way data (UI → event → system → render, Doc 09 §2) — Tgl: 02/09
 - [x] **Bonus:** system tersambung ke core asli — SaveSystem (localStorage + fallback Memory, starter kit saat kosong), PetStateMachine (semua aksi + penolakan), TimeSeasonBadge dari getDayPhase/getSeason — Tgl: 02/09
 
-### Fase D — Persistensi & Siklus
+### Fase D — Persistensi & Siklus ✅
 
-- [ ] Autosave (aksi, pindah scene, visibilitychange) — Tgl: ____
-- [ ] Offline catch-up saat buka game + layar ringkasan offline (Doc 12 §11.1) — Tgl: ____
-- [ ] Panel debug time-lapse ×10/×60/×3600 + set fase + skip hari (Doc 03 §6) — Tgl: ____
-- [ ] Backup ekspor/impor base64 (Doc 09 §4) — Tgl: ____
+- [x] Autosave (aksi, pindah scene, visibilitychange) — Tgl: 02/09
+- [x] Offline catch-up saat buka game + layar ringkasan offline (Doc 12 §11.1) — Tgl: 02/09
+- [x] Panel debug time-lapse ×10/×60/×3600 + set fase + skip hari (Doc 03 §6) — Tgl: 02/09
+- [x] Backup ekspor/impor base64 (Doc 09 §4) — Tgl: 02/09
 
 ### 🚧 Blokir & Catatan
 
@@ -79,7 +79,7 @@
 - [ ] Simulasi headless 90 hari (tools/simulate) menghasilkan angka decay sesuai Doc 01 tanpa NaN/clamp error
 - [ ] Tutup tab → buka lagi: stat konsisten, tidak ada state setengah jadi
 - [ ] Semua aksi makan/mandi/tidur menyelesaikan stat sesuai tabel (test otomatis + manual)
-- [ ] DoD M1 direview sebelum M1.5
+- [ ] DoD M1 direview sebelum M1.5 *(checklist DoD di bawah — review bersama sebelum mulai M1.5)*
 
 ---
 

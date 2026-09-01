@@ -9,17 +9,21 @@ import { WashiPanel } from "./components/WashiPanel";
 import { KitchenSheet } from "./components/KitchenSheet";
 import { OnsenSheet } from "./components/OnsenSheet";
 import { FutonSheet } from "./components/FutonSheet";
+import { SettingsSheet } from "./components/SettingsSheet";
+import { OfflineSummarySheet } from "./components/OfflineSummarySheet";
+import { DebugPanel } from "./components/DebugPanel";
 import { PhaserHost } from "./game/PhaserHost";
 import { eventBus } from "./lib/eventBus";
 import { initGameSystem } from "./system/gameSystem";
 import { useGameState } from "./store/gameState";
 
-type SheetId = "dapur" | "onsen" | "futon" | null;
+type SheetId = "dapur" | "onsen" | "futon" | "gear" | null;
 
-const SHEET_TITLES: Record<"dapur" | "onsen" | "futon", string> = {
+const SHEET_TITLES: Record<"dapur" | "onsen" | "futon" | "gear", string> = {
   dapur: "Dapur",
   onsen: "Onsen",
   futon: "Kamar Futon",
+  gear: "Pengaturan",
 };
 
 export default function App() {
@@ -29,7 +33,7 @@ export default function App() {
   useEffect(() => initGameSystem(), []);
   useEffect(() => {
     const off = eventBus.on("ui/action", ({ id }) => {
-      if (id === "dapur" || id === "onsen" || id === "futon") setSheet(id);
+      if (id === "dapur" || id === "onsen" || id === "futon" || id === "gear") setSheet(id);
     });
     return off;
   }, []);
@@ -42,11 +46,14 @@ export default function App() {
       <Hud />
       <ActionBar onAction={(id) => eventBus.emit("ui/action", { id })} />
       <Toast />
+      <DebugPanel />
+      <OfflineSummarySheet />
       {sheet && (
         <WashiPanel open title={SHEET_TITLES[sheet]} onClose={() => setSheet(null)}>
           {sheet === "dapur" && <KitchenSheet onFed={() => setSheet(null)} />}
           {sheet === "onsen" && <OnsenSheet onDone={() => setSheet(null)} />}
           {sheet === "futon" && <FutonSheet onDone={() => setSheet(null)} />}
+          {sheet === "gear" && <SettingsSheet />}
         </WashiPanel>
       )}
     </div>

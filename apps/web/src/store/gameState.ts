@@ -7,13 +7,27 @@ import { useSyncExternalStore } from "react";
 
 export type StatKey = "hunger" | "happiness" | "energy" | "hygiene";
 
+export interface OfflineSummaryUi {
+  summaryText: string;
+  elapsedHours: number;
+  poopsSpawned: number;
+  becameSick: boolean;
+  died: boolean;
+}
+
 export interface GameUiState {
   petName: string;
   day: number;
   coins: number;
   health: number;
   sleeping: boolean;
+  /** Jam simulasi saat ini (ms epoch) — mengikuti time-lapse debug. */
+  nowMs: number;
   stats: Record<StatKey, number>;
+  /** Hasil offline catch-up saat buka game (Doc 12 §11.1); null = tidak tampil. */
+  offline: OfflineSummaryUi | null;
+  /** Kode backup base64 hasil ekspor (Doc 09 §4). */
+  backupCode: string;
 }
 
 const initialState: GameUiState = {
@@ -22,7 +36,10 @@ const initialState: GameUiState = {
   coins: 100,
   health: 90,
   sleeping: false,
+  nowMs: Date.now(),
   stats: { hunger: 80, happiness: 80, energy: 80, hygiene: 80 },
+  offline: null,
+  backupCode: "",
 };
 
 let state: GameUiState = initialState;

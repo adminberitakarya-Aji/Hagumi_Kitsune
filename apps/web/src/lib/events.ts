@@ -14,4 +14,11 @@ export interface GameEventMap {
   "pet/say": { text: string };
   "pet/sleep": { on: boolean };
   "fx/hearts": undefined;
+  /* Backup (Doc 09 §4) — SettingsSheet → system */
+  "ui/backup-export": undefined;
+  "ui/backup-import": { code: string };
+  /* Debug panel dev-only (Doc 03 §6) */
+  "debug/speed": { multiplier: 1 | 10 | 60 | 3600 };
+  "debug/set-phase": { phase: "morning" | "day" | "evening" | "night" };
+  "debug/skip-day": undefined;
 }

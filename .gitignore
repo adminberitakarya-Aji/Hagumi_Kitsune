@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Native (Capacitor)
+apps/native/plugins/
+apps/native/ios/App/Pods/
+apps/native/android/.gradle/
+apps/native/android/app/build/
+apps/native/android/local.properties
+*.keystore
+*.jks
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+supabase/.temp/
+supabase/functions/**/.env*
+
+# OS & editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+
+# Logs & temp
+*.log
+npm-debug.log*
+pnpm-debug.log*
+.cache/
+coverage/
+
+# Game dev tools
+*.aseprite~*
+*~

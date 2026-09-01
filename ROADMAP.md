@@ -15,7 +15,7 @@
 
 | Milestone | Nama | Status | Mulai | Selesai | Estimasi |
 |---|---|---|---|---|---|
-| M1 | Playable Core | ⬜ | — | — | 1–2 minggu |
+| M1 | Playable Core | 🔨 | 01/09 | — | 1–2 minggu |
 | M1.5 | Onboarding (Telur & Nama) | ⬜ | — | — | 3–4 hari |
 | M2 | Loop Lengkap (Poop, Penyakit, Ekonomi) | ⬜ | — | — | 1 minggu |
 | M3 | Evolusi Zenko/Yako | ⬜ | — | — | 1 minggu |
@@ -35,12 +35,12 @@
 **Tujuan:** kitsune "hidup" di Rumah Tatami: stat turun realtime, bisa diberi makan/mandi/tidur, tersimpan & bertahan antar sesi.
 **Referensi:** Doc 01 (stat & state machine), Doc 03 §1–2 (time & offline), Doc 09 (monorepo & save), Doc 12 §1–3 (layout Home).
 
-### Fase A — Fondasi Monorepo
-- [ ] Init monorepo: `pnpm-workspace.yaml`, root `package.json`, ESLint + Prettier, `tsconfig` base (strict) — Tgl: ____
-- [ ] `packages/core` scaffold + `ports.ts` (IStorage, IClock, IRng, IAudio) — Tgl: ____
-- [ ] `packages/data` scaffold + loader Zod (`decay.json` v1) — Tgl: ____
-- [ ] `apps/web` scaffold: Vite + Phaser 3 + overlay DOM + kanvas 360×640 scaling — Tgl: ____
-- [ ] Vitest jalan di `packages/core` (1 test contoh CI-ready) — Tgl: ____
+### Fase A — Fondasi Monorepo ✅
+- [x] Init monorepo: `pnpm-workspace.yaml`, root `package.json`, ESLint + Prettier, `tsconfig` base (strict) — Tgl: 01/09
+- [x] `packages/core` scaffold + `ports.ts` (IStorage, IClock, IRng, IAudio) — Tgl: 01/09
+- [x] `packages/data` scaffold + loader Zod (`decay.json` v1) — Tgl: 01/09
+- [x] `apps/web` scaffold: Vite + Phaser 3 + overlay DOM + kanvas 360×640 scaling — Tgl: 01/09
+- [x] Vitest jalan di `packages/core` (1 test contoh CI-ready) — Tgl: 01/09
 
 ### Fase B — Core Logic (headless, tanpa UI)
 - [ ] `PetStats`: 6 stat, decay per fase (Doc 01 §2), clamp 0–100, fungsi murni — Tgl: ____
@@ -310,4 +310,5 @@
 | Tanggal | Perubahan | Alasan |
 |---|---|---|
 | 01/09/2026 | Dibuat (M1–M9 + backlog) | Acuan pengerjaan dengan checklist |
+| 01/09/2026 | M1 Fase A selesai (5/5 tugas); M1 → 🔨 | Monorepo + core/data/web scaffold + 9 test lulus |
 

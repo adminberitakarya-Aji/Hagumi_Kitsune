@@ -17,7 +17,7 @@
 
 ```
 PET/
-├─ GDD-Pet-Game.md      # Game Design Document (visi & desain besar) — v0.4
+├─ GDD-Pet-Game.md      # Game Design Document (visi & desain besar) — v0.5
 ├─ ROADMAP.md           # Checklist pengerjaan M1–M9 + Definition of Done
 ├─ docs/                # Dokumentasi teknis per komponen (01–12)
 │  ├─ README.md         #   ← indeks & aturan lintas komponen

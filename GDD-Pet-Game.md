@@ -333,7 +333,7 @@ Game mengikuti **jam lokal pemain** sehingga dunia terasa hidup dan sinkron deng
 
 ---
 
-## 11. Teknologi (TERKUNCI v0.4) — TS Monorepo + Phaser + Capacitor
+## 11. Teknologi (TERKUNCI v0.5) — TS Monorepo + React + Phaser + Capacitor
 
 - ✅ **TypeScript monorepo (ports & adapters)** — logika game murni (`packages/core`) terpisah total dari platform; renderer/storage/LLM = adapter yang bisa ditukar. Detail: `docs/09`.
 - ✅ **UI = React + TSX; Game = Phaser 3** (v0.5): Phaser menggambar canvas (pet/scene/fx); React menggambar semua UI overlay (HUD, menu, chat) di atasnya. Aturan: React tak pernah menyentuh objek Phaser; data mengalir core → store → React satu arah.
@@ -436,8 +436,8 @@ Agar pemain "benar-benar merasa memiliki", pet tidak pasif:
 
 ## 17. Langkah Selanjutnya
 
-1. ✅ GDD v0.4 — stack terkunci (TS monorepo + Phaser + Capacitor + Supabase), companion LLM 2 tingkat
-2. ⬜ Desain detail layout UI per scene (wireframe) — pembahasan berikutnya
+1. ✅ GDD v0.5 — stack terkunci (TS monorepo + React+TSX UI + Phaser + Capacitor + Supabase), companion LLM 2 tingkat
+2. ✅ Doc 12 — wireframe UI lengkap; implementasi = komponen React+TSX (`apps/web/src/components`, `screens`)
 3. ⬜ Buat **M1 Playable Core**: monorepo + `packages/core` (PetStats, TimeService, SaveSystem) + scene Rumah Tatami
 4. ⬜ Playtest internal, iterasi balance decay (kalibrasi siklus 90 hari)
 5. ⬜ Lanjut M2–M9 sesuai roadmap; monetisasi ditunda (Doc 11 §6)

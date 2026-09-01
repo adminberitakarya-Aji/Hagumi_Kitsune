@@ -39,7 +39,7 @@
 - [x] Init monorepo: `pnpm-workspace.yaml`, root `package.json`, ESLint + Prettier, `tsconfig` base (strict) — Tgl: 01/09
 - [x] `packages/core` scaffold + `ports.ts` (IStorage, IClock, IRng, IAudio) — Tgl: 01/09
 - [x] `packages/data` scaffold + loader Zod (`decay.json` v1) — Tgl: 01/09
-- [x] `apps/web` scaffold: Vite + Phaser 3 + overlay DOM + kanvas 360×640 scaling — Tgl: 01/09
+- [x] `apps/web` scaffold: Vite + Phaser 3 + overlay UI + kanvas 360×640 scaling — Tgl: 01/09 *(v0.5: overlay dimigrasikan ke React+TSX — lihat Log Revisi)*
 - [x] Vitest jalan di `packages/core` (1 test contoh CI-ready) — Tgl: 01/09
 
 ### Fase B — Core Logic (headless, tanpa UI)

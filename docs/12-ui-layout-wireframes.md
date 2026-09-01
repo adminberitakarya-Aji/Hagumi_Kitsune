@@ -39,7 +39,7 @@
 │ ░░ gesture bar ░░░░░░░░░░░░ │ 20
 └─────────────────────────────┘ 640
 ```
-- HUD atas & action bar = **DOM overlay** (`packages/ui`); area scene = Canvas Phaser.
+- HUD atas & action bar = **React overlay** (komponen TSX di `apps/web/src/components` — `Hud.tsx`, `ActionBar.tsx`, dst.); area scene = Canvas Phaser.
 - Layer z-index: canvas(0) → fx(1) → balon bicara(2) → HUD(3) → sheet/modal(4) → tutorial(5) → toast(6).
 
 ### 1.3 HUD Atas — spesifikasi per elemen (tinggi 48px)

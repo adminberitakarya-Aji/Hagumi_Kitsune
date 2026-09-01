@@ -2,14 +2,14 @@
 
 > Virtual pet game ala Tamagotchi dengan kitsune yang hidup 90 hari secara real-time.
 > Rawat ia dengan baik → menjadi **Zenko (善狐)**, rubah suci. Lalai → **Yako (野狐)**.
-> *Hagumi (育み) = "menumbuhkan dengan penuh perhatian" dalam bahasa Jepang.*
+> _Hagumi (育み) = "menumbuhkan dengan penuh perhatian" dalam bahasa Jepang._
 
-| | |
-|---|---|
-| **Genre** | Virtual Pet / Life Simulation |
-| **Platform** | Mobile-first: PWA (web) → APK/IPA via Capacitor |
-| **Stack** | TypeScript monorepo (core pure) · Phaser 3 (canvas) · **React + TSX (UI)** · Vite · Capacitor · Supabase |
-| **Status** | 📐 **Pra-produksi** — desain & dokumentasi selesai, pengembangan M1 belum dimulai |
+|              |                                                                                                          |
+| ------------ | -------------------------------------------------------------------------------------------------------- |
+| **Genre**    | Virtual Pet / Life Simulation                                                                            |
+| **Platform** | Mobile-first: PWA (web) → APK/IPA via Capacitor                                                          |
+| **Stack**    | TypeScript monorepo (core pure) · Phaser 3 (canvas) · **React + TSX (UI)** · Vite · Capacitor · Supabase |
+| **Status**   | 📐 **Pra-produksi** — desain & dokumentasi selesai, pengembangan M1 belum dimulai                        |
 
 ---
 
@@ -30,12 +30,12 @@ PET/
 
 ## 🚀 Mulai Dari Mana?
 
-| Jika kamu... | Baca ini |
-|---|---|
-| Baru bergabung / ingin paham game-nya | [`GDD-Pet-Game.md`](GDD-Pet-Game.md) (15 menit) |
-| Akan mengerjakan fitur tertentu | [`docs/README.md`](docs/README.md) → doc komponen terkait |
-| Ingin tahu progres / mengerjakan tugas | [`ROADMAP.md`](ROADMAP.md) |
-| Akan menyentuh UI | [`docs/12-ui-layout-wireframes.md`](docs/12-ui-layout-wireframes.md) |
+| Jika kamu...                           | Baca ini                                                             |
+| -------------------------------------- | -------------------------------------------------------------------- |
+| Baru bergabung / ingin paham game-nya  | [`GDD-Pet-Game.md`](GDD-Pet-Game.md) (15 menit)                      |
+| Akan mengerjakan fitur tertentu        | [`docs/README.md`](docs/README.md) → doc komponen terkait            |
+| Ingin tahu progres / mengerjakan tugas | [`ROADMAP.md`](ROADMAP.md)                                           |
+| Akan menyentuh UI                      | [`docs/12-ui-layout-wireframes.md`](docs/12-ui-layout-wireframes.md) |
 
 ## 🛠️ Menjalankan Proyek (setelah M1)
 
@@ -44,7 +44,8 @@ pnpm install
 pnpm dev        # apps/web (Vite dev server)
 pnpm test       # unit test packages/core
 ```
-*(Belum tersedia — tugas M1 Fase A di [ROADMAP.md](ROADMAP.md).)*
+
+_(Belum tersedia — tugas M1 Fase A di [ROADMAP.md](ROADMAP.md).)_
 
 ## 🧭 Aturan Emas Proyek
 
@@ -55,4 +56,4 @@ pnpm test       # unit test packages/core
 
 ---
 
-*Dokumen hidup — diperbarui seiring perkembangan proyek.*
+_Dokumen hidup — diperbarui seiring perkembangan proyek._

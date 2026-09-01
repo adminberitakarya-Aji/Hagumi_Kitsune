@@ -40,6 +40,7 @@ hagumi/
 ```
 
 **Aturan perbatasan (wajib):**
+
 - `packages/core` DILARANG import dari `apps/*`, `packages/llm`, DOM API, atau Phaser — hanya tahu kontrak di `ports.ts`.
 - `apps/web` = adapter tipis: parse input → panggil core → render. Tidak ada logika game di sini.
 - `apps/native` = shell Capacitor saja (config + plugin notifikasi/storage) — satu kode sumber untuk web & native.
@@ -63,13 +64,18 @@ hagumi/
   "lastTick": 1735700000000,
   "player": { "coins": 240, "loginStreak": { "count": 3, "lastDay": "2026-08-31" } },
   "pet": {
-    "name": "Kogitsune", "element": "fire",
+    "name": "Kogitsune",
+    "element": "fire",
     "birthAt": 1730000000000,
-    "stage": "adult", "state": "idle",
+    "stage": "adult",
+    "state": "idle",
     "stats": { "hunger": 72, "happiness": 88, "energy": 40, "hygiene": 65, "health": 90 },
-    "careScore": 78, "tails": 4, "path": "zenko",
-    "sickSince": null, "lastPoopAt": 1735698000000,
-    "memoryLog": [ { "t": 0, "key": "evolved", "detail": "..." } ]
+    "careScore": 78,
+    "tails": 4,
+    "path": "zenko",
+    "sickSince": null,
+    "lastPoopAt": 1735698000000,
+    "memoryLog": [{ "t": 0, "key": "evolved", "detail": "..." }]
   },
   "inventory": { "food": {}, "medicine": {}, "owned": [], "placedDecor": [] },
   "breeding": { "childrenCount": 1, "cooldownUntil": 0, "lineage": {} },
@@ -86,13 +92,13 @@ hagumi/
 
 ## 5. Data-Driven Config (wajib)
 
-| File | Isi |
-|---|---|
-| `decay.json` | decay/jam per stat per fase (Doc 01 §2) |
-| `items.json` | katalog Doc 06 |
+| File             | Isi                                          |
+| ---------------- | -------------------------------------------- |
+| `decay.json`     | decay/jam per stat per fase (Doc 01 §2)      |
+| `items.json`     | katalog Doc 06                               |
 | `evolution.json` | ambang Care Score, tahap, ekor (Doc 01 §3–4) |
-| `seasons.json` | tanggal, makanan, event (Doc 03 §4–5) |
-| `dialog_*.json` | baris dialog per elemen (Doc 08) |
+| `seasons.json`   | tanggal, makanan, event (Doc 03 §4–5)        |
+| `dialog_*.json`  | baris dialog per elemen (Doc 08)             |
 
 ## 6. Acceptance Criteria
 

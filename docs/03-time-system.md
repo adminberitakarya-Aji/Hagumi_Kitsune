@@ -41,12 +41,12 @@ onGameOpen():
 
 ## 3. Fase Pagi–Malam (jam lokal pemain)
 
-| Fase | Key | Jam | Efek Mekanik | Efek Visual (semua scene outdoor + jendela) |
-|---|---|---|---|---|
-| Pagi | `morning` | 05:00–10:00 | makan +5 Happiness ekstra | langit jingga, kabut tipis |
-| Siang | `day` | 10:00–15:00 | koin mini-game +10% | terang penuh |
-| Sore | `evening` | 15:00–19:00 | dialog nostalgia | hangat, bayangan panjang |
-| Malam | `night` | 19:00–05:00 | tidur pulih +50%; energy decay ×1.5 bila dipaksa bangun | gelap + lentera/andon menyala |
+| Fase  | Key       | Jam         | Efek Mekanik                                            | Efek Visual (semua scene outdoor + jendela) |
+| ----- | --------- | ----------- | ------------------------------------------------------- | ------------------------------------------- |
+| Pagi  | `morning` | 05:00–10:00 | makan +5 Happiness ekstra                               | langit jingga, kabut tipis                  |
+| Siang | `day`     | 10:00–15:00 | koin mini-game +10%                                     | terang penuh                                |
+| Sore  | `evening` | 15:00–19:00 | dialog nostalgia                                        | hangat, bayangan panjang                    |
+| Malam | `night`   | 19:00–05:00 | tidur pulih +50%; energy decay ×1.5 bila dipaksa bangun | gelap + lentera/andon menyala               |
 
 - Transisi fase = gradient langit berubah mulus selama 15 menit (interpolasi warna, bukan switch).
 - Util: `getDayPhase(date)` murni & mudah diuji (unit test wajib).
@@ -59,12 +59,12 @@ onGameOpen():
 
 ## 5. Event Musiman (trigger otomatis, layar pengumuman sederhana)
 
-| Musim | Event | Efek |
-|---|---|---|
-| Spring 🌸 | Hanami (hari ke-3 musim) | piknik di Taman: Happiness +20 sekali, foto tersimpan di Album |
-| Summer ☀️ | Matsuri | mini-game festival dibuka (sebenarnya selalu ada; versi musiman dapat koin ×1.5) |
-| Autumn 🍁 | Tsukimi | menonton bulan malam ini: item dekorasi "Dango" gratis |
-| Winter ❄️ | Tahun Baru | omikuji (ramalan harian acak: bonus stat/koin), kotatsu mode: happiness decay −20% |
+| Musim     | Event                    | Efek                                                                               |
+| --------- | ------------------------ | ---------------------------------------------------------------------------------- |
+| Spring 🌸 | Hanami (hari ke-3 musim) | piknik di Taman: Happiness +20 sekali, foto tersimpan di Album                     |
+| Summer ☀️ | Matsuri                  | mini-game festival dibuka (sebenarnya selalu ada; versi musiman dapat koin ×1.5)   |
+| Autumn 🍁 | Tsukimi                  | menonton bulan malam ini: item dekorasi "Dango" gratis                             |
+| Winter ❄️ | Tahun Baru               | omikuji (ramalan harian acak: bonus stat/koin), kotatsu mode: happiness decay −20% |
 
 ## 6. Mode Dev / Testing
 

@@ -16,9 +16,7 @@ export class PlaceholderScene extends Phaser.Scene {
     this.add.rectangle(180, 340, 344, 480, 0xb89a68).setStrokeStyle(2, 0x3d4a6b);
 
     // "Kitsune" placeholder — diganti sprite pixel-art (Doc 01 §6)
-    this.fox = this.add
-      .text(180, 340, "🦊", { fontSize: "48px" })
-      .setOrigin(0.5);
+    this.fox = this.add.text(180, 340, "🦊", { fontSize: "48px" }).setOrigin(0.5);
 
     // Buktikan pipeline @hagumi/data → render (angka dari decay.json, bukan hard-code)
     this.add

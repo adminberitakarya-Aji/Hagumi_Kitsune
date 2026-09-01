@@ -13,18 +13,18 @@
 
 ## 0. Ringkasan Status
 
-| Milestone | Nama | Status | Mulai | Selesai | Estimasi |
-|---|---|---|---|---|---|
-| M1 | Playable Core | 🔨 | 01/09 | — | 1–2 minggu |
-| M1.5 | Onboarding (Telur & Nama) | ⬜ | — | — | 3–4 hari |
-| M2 | Loop Lengkap (Poop, Penyakit, Ekonomi) | ⬜ | — | — | 1 minggu |
-| M3 | Evolusi Zenko/Yako | ⬜ | — | — | 1 minggu |
-| M4 | Retensi (Offline, Login, Mini-game) | ⬜ | — | — | 1 minggu |
-| M5 | Polish (Seni Final, Audio, Balance) | ⬜ | — | — | 1 minggu |
-| M6 | Companion & Siklus Hari | ⬜ | — | — | 1 minggu |
-| M7 | Breeding Offline | ⬜ | — | — | 1–2 minggu |
-| M8 | Breeding Online (Supabase) | ⬜ | — | — | 1–2 minggu |
-| M9 | Companion LLM | ⬜ | — | — | 1–2 minggu |
+| Milestone | Nama                                   | Status | Mulai | Selesai | Estimasi   |
+| --------- | -------------------------------------- | ------ | ----- | ------- | ---------- |
+| M1        | Playable Core                          | 🔨     | 01/09 | —       | 1–2 minggu |
+| M1.5      | Onboarding (Telur & Nama)              | ⬜     | —     | —       | 3–4 hari   |
+| M2        | Loop Lengkap (Poop, Penyakit, Ekonomi) | ⬜     | —     | —       | 1 minggu   |
+| M3        | Evolusi Zenko/Yako                     | ⬜     | —     | —       | 1 minggu   |
+| M4        | Retensi (Offline, Login, Mini-game)    | ⬜     | —     | —       | 1 minggu   |
+| M5        | Polish (Seni Final, Audio, Balance)    | ⬜     | —     | —       | 1 minggu   |
+| M6        | Companion & Siklus Hari                | ⬜     | —     | —       | 1 minggu   |
+| M7        | Breeding Offline                       | ⬜     | —     | —       | 1–2 minggu |
+| M8        | Breeding Online (Supabase)             | ⬜     | —     | —       | 1–2 minggu |
+| M9        | Companion LLM                          | ⬜     | —     | —       | 1–2 minggu |
 
 **Stack terkunci:** TS monorepo (ports & adapters) · Phaser 3 + Vite · Capacitor · Supabase — lihat `docs/09`.
 
@@ -36,21 +36,24 @@
 **Referensi:** Doc 01 (stat & state machine), Doc 03 §1–2 (time & offline), Doc 09 (monorepo & save), Doc 12 §1–3 (layout Home).
 
 ### Fase A — Fondasi Monorepo ✅
+
 - [x] Init monorepo: `pnpm-workspace.yaml`, root `package.json`, ESLint + Prettier, `tsconfig` base (strict) — Tgl: 01/09
 - [x] `packages/core` scaffold + `ports.ts` (IStorage, IClock, IRng, IAudio) — Tgl: 01/09
 - [x] `packages/data` scaffold + loader Zod (`decay.json` v1) — Tgl: 01/09
-- [x] `apps/web` scaffold: Vite + Phaser 3 + overlay UI + kanvas 360×640 scaling — Tgl: 01/09 *(v0.5: overlay dimigrasikan ke React+TSX — lihat Log Revisi)*
+- [x] `apps/web` scaffold: Vite + Phaser 3 + overlay UI + kanvas 360×640 scaling — Tgl: 01/09 _(v0.5: overlay dimigrasikan ke React+TSX — lihat Log Revisi)_
 - [x] Vitest jalan di `packages/core` (1 test contoh CI-ready) — Tgl: 01/09
 
-### Fase B — Core Logic (headless, tanpa UI)
-- [ ] `PetStats`: 6 stat, decay per fase (Doc 01 §2), clamp 0–100, fungsi murni — Tgl: ____
-- [ ] `PetStats`: aturan komposit health (2 stat <25, sakit, stat nol) — Tgl: ____
-- [ ] `TimeService`: `getDayPhase()` (murni, unit-test), `getSeason()` (Doc 03 §3–4) — Tgl: ____
-- [ ] `TimeService`: offline catch-up + clamp anti-frustrasi (Doc 03 §2) — Tgl: ____
-- [ ] `SaveSystem`: skema v1 (Doc 09 §3), migrasi versi, tulis atomik, validasi load — Tgl: ____
-- [ ] `PetStateMachine`: IDLE/EATING/BATHING/SLEEPING + aturan penolakan aksi (Doc 01 §5) — Tgl: ____
+### Fase B — Core Logic (headless, tanpa UI) ✅
+
+- [x] `PetStats`: 6 stat, decay per fase (Doc 01 §2), clamp 0–100, fungsi murni — Tgl: 02/09
+- [x] `PetStats`: aturan komposit health (2 stat <25, sakit, stat nol) — Tgl: 02/09
+- [x] `TimeService`: `getDayPhase()` (murni, unit-test), `getSeason()` (Doc 03 §3–4) — Tgl: 02/09
+- [x] `TimeService`: offline catch-up + clamp anti-frustrasi (Doc 03 §2) — Tgl: 02/09
+- [x] `SaveSystem`: skema v1 (Doc 09 §3), migrasi versi, tulis atomik, validasi load — Tgl: 02/09
+- [x] `PetStateMachine`: IDLE/EATING/BATHING/SLEEPING + aturan penolakan aksi (Doc 01 §5) — Tgl: 02/09
 
 ### Fase C — Scene Home (UI pertama)
+
 - [ ] Scene Home: bg placeholder (blok warna), area pet, HUD atas (H1–H5, Doc 12 §1.3) — Tgl: ____
 - [ ] Sprite kitsune placeholder (idle/walk/eat/sleep) — Tgl: ____
 - [ ] Action bar grid-6 (Doc 12 §3.2) + navigasi tombol (bekerja untuk scene kosong) — Tgl: ____
@@ -60,15 +63,18 @@
 - [ ] EventBus + one-way data (UI → event → system → render, Doc 09 §2) — Tgl: ____
 
 ### Fase D — Persistensi & Siklus
+
 - [ ] Autosave (aksi, pindah scene, visibilitychange) — Tgl: ____
 - [ ] Offline catch-up saat buka game + layar ringkasan offline (Doc 12 §11.1) — Tgl: ____
 - [ ] Panel debug time-lapse ×10/×60/×3600 + set fase + skip hari (Doc 03 §6) — Tgl: ____
 - [ ] Backup ekspor/impor base64 (Doc 09 §4) — Tgl: ____
 
 ### 🚧 Blokir & Catatan
+
 - (kosong)
 
 ### ✅ Definition of Done — M1
+
 - [ ] Simulasi headless 90 hari (tools/simulate) menghasilkan angka decay sesuai Doc 01 tanpa NaN/clamp error
 - [ ] Tutup tab → buka lagi: stat konsisten, tidak ada state setengah jadi
 - [ ] Semua aksi makan/mandi/tidur menyelesaikan stat sesuai tabel (test otomatis + manual)
@@ -90,9 +96,11 @@
 - [ ] Tutorial ringan Home: highlight Dapur → "Beri makan!" (sekali saja, simpan flag) — Tgl: ____
 
 ### 🚧 Blokir & Catatan
+
 - (kosong)
 
 ### ✅ Definition of Done — M1.5
+
 - [ ] Onboarding penuh ≤ 2 menit, tanpa tersesat, 60fps di mid-range
 - [ ] Refresh browser setelah menetas → tidak mengulang onboarding
 - [ ] Nama invalid → hanko terkunci + hint jelas
@@ -117,9 +125,11 @@
 - [ ] tools/simulate-90-days: laporan harian stat/koin (basis balance M3+) — Tgl: ____
 
 ### 🚧 Blokir & Catatan
+
 - (kosong)
 
 ### ✅ Definition of Done — M2
+
 - [ ] Siklus penuh 1 hari (time-lapse) tanpa jebakan: makan→poop→sapu→sakit→obat→sembuh
 - [ ] Kematian & memorial berfungsi; mulai baru tidak merusak data lama
 - [ ] Semua angka (harga/efek) dari `items.json` — tidak ada hard-code (audit)
@@ -141,9 +151,11 @@
 - [ ] Sprite recolor 5 elemen + varian jalur (pipeline palet swap) — Tgl: ____
 
 ### 🚧 Blokir & Catatan
+
 - (kosong)
 
 ### ✅ Definition of Done — M3
+
 - [ ] 1000 simulasi Care Score menghasilkan distribusi jalur masuk akal (log laporan)
 - [ ] Ekor terlihat bertambah di sprite sesuai tahap
 - [ ] Evolusi terpicu tepat di hari yang benar (time-lapse test)
@@ -167,9 +179,11 @@
 - [ ] Scene Taman lengkap (koi, lentera, makan koi, event CTA, Doc 12 §5) — Tgl: ____
 
 ### 🚧 Blokir & Catatan
+
 - (kosong)
 
 ### ✅ Definition of Done — M4
+
 - [ ] Ketiga mini-game mainable sentuh-saja 60fps; koin masuk sesuai formula
 - [ ] Ganti fase waktu terlihat mulus; ganti musim mengubah katalog & suasana
 - [ ] Event musiman terpicu tepat; omikuji memberi bonus yang benar
@@ -193,9 +207,11 @@
 - [ ] Playtest internal 5 orang + catatan perbaikan — Tgl: ____
 
 ### 🚧 Blokir & Catatan
+
 - (kosong)
 
 ### ✅ Definition of Done — M5
+
 - [ ] Tidak ada lagi aset placeholder di build
 - [ ] Playtest: pemain baru paham alur tanpa penjelasan luar
 - [ ] Laporan balance memenuhi target GDD §13 (atau keputusan penyesuaian tercatat)
@@ -216,9 +232,11 @@
 - [ ] Non-verbal emoji reaksi (💢💧💤❤️) untuk feedback instan — Tgl: ____
 
 ### 🚧 Blokir & Catatan
+
 - (kosong)
 
 ### ✅ Definition of Done — M6
+
 - [ ] 5 kepribadian terasa berbeda saat dibaca (uji baca manual, catatan di Blokir)
 - [ ] Dialog lalai muncul tepat & bisa dimaafkan; tidak menghakimi kasar
 - [ ] Chat Tier 1 berfungsi penuh offline
@@ -239,9 +257,11 @@
 - [ ] 1000 simulasi genetika → laporan distribusi (DoD Doc 07 §6) — Tgl: ____
 
 ### 🚧 Blokir & Catatan
+
 - (kosong)
 
 ### ✅ Definition of Done — M7
+
 - [ ] Dari pet mati → keturunan jalan dengan warisan benar, pemain tak mulai dari nol
 - [ ] Silsilah 3 generasi tampil benar di Album
 - [ ] Semua syarat & biaya dari data, ditegakkan di UI + core
@@ -262,9 +282,11 @@
 - [ ] Sinkronisasi save opsional (cloud backup, konflik = last-write-wins + diff warning) — Tgl: ____
 
 ### 🚧 Blokir & Catatan
+
 - (kosong)
 
 ### ✅ Definition of Done — M8
+
 - [ ] Dua pemain uji-e2e: tukar kode → telur turunan muncul di keduanya
 - [ ] Tanpa koneksi: fitur online nonaktif mulus, game lokal utuh
 - [ ] API key Supabase aman (anon key saja, RLS aktif)
@@ -288,9 +310,11 @@
 - [ ] Uji prompt provokatif ×20 kasus → guardrail tahan — Tgl: ____
 
 ### 🚧 Blokir & Catatan
+
 - (kosong)
 
 ### ✅ Definition of Done — M9
+
 - [ ] Chat LLM konsisten kepribadian lintas provider (uji 5 elemen × 3 provider)
 - [ ] Matikan internet di tengah chat → beralih Tier 1 tanpa crash
 - [ ] Audit: tidak ada API key di bundle klien; data chat tidak disimpan >24 jam
@@ -307,9 +331,8 @@
 
 ## 📝 Log Revisi Roadmap
 
-| Tanggal | Perubahan | Alasan |
-|---|---|---|
-| 01/09/2026 | Dibuat (M1–M9 + backlog) | Acuan pengerjaan dengan checklist |
-| 01/09/2026 | M1 Fase A selesai (5/5 tugas); M1 → 🔨 | Monorepo + core/data/web scaffold + 9 test lulus |
+| Tanggal    | Perubahan                                                                                                                                                    | Alasan                                                                                 |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| 01/09/2026 | Dibuat (M1–M9 + backlog)                                                                                                                                     | Acuan pengerjaan dengan checklist                                                      |
+| 01/09/2026 | M1 Fase A selesai (5/5 tugas); M1 → 🔨                                                                                                                       | Monorepo + core/data/web scaffold + 9 test lulus                                       |
 | 01/09/2026 | **Keputusan arsitektur v0.5:** UI layer = React + TSX di atas Phaser (docs/09 & 12, GDD §11 direvisi); apps/web dimigrasi ke Vite+React, komponen TSX dibuat | UI state-driven butuh deklaratif; canvas+React shell = pola mapan; core tetap TS murni |
-

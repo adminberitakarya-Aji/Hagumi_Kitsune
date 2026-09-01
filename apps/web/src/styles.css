@@ -6,8 +6,13 @@
   --ink: #2b2b33;
   --wood: #c9a87c;
 }
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html, body {
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html,
+body {
   height: 100%;
   background: var(--ink);
   font-family: "DotGothic16", "Courier New", monospace;
@@ -25,12 +30,17 @@ html, body {
   background: var(--washi);
   overflow: hidden;
 }
-.game-canvas { position: absolute; inset: 0; }
+.game-canvas {
+  position: absolute;
+  inset: 0;
+}
 
 /* ===== HUD ATAS (48px, Doc 12 §1.3) ===== */
 .hud {
   position: absolute;
-  top: 0; left: 0; right: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 48px;
   display: flex;
   align-items: center;
@@ -40,27 +50,71 @@ html, body {
   border-bottom: 2px solid var(--indigo);
   z-index: 3;
 }
-.hud .pet-info { font-size: 12px; color: var(--indigo); white-space: nowrap; }
-.hud .stats {
-  display: grid; grid-template-columns: repeat(2, auto); gap: 2px 8px;
-  flex: 1; min-width: 0;
+.hud .pet-info {
+  font-size: 12px;
+  color: var(--indigo);
+  white-space: nowrap;
 }
-.stat { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--indigo); }
-.stat__bar { width: 28px; height: 8px; background: #e8e0ce; border-radius: 4px; overflow: hidden; }
-.stat__bar > i { display: block; height: 100%; transition: width 0.4s ease-out; }
-.stat--urgent .stat__icon { animation: blink 1s step-end infinite; }
-@keyframes blink { 50% { opacity: 0; } }
-.hud .coins { font-size: 13px; color: var(--hanko); }
-.hud .gear { width: 32px; height: 32px; font-size: 16px; background: none; border: none; cursor: pointer; }
+.hud .stats {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 2px 8px;
+  flex: 1;
+  min-width: 0;
+}
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--indigo);
+}
+.stat__bar {
+  width: 28px;
+  height: 8px;
+  background: #e8e0ce;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.stat__bar > i {
+  display: block;
+  height: 100%;
+  transition: width 0.4s ease-out;
+}
+.stat--urgent .stat__icon {
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+.hud .coins {
+  font-size: 13px;
+  color: var(--hanko);
+}
+.hud .gear {
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
 .health-pill {
-  font-size: 11px; color: #fff; background: var(--hanko);
-  padding: 2px 6px; border-radius: 8px;
+  font-size: 11px;
+  color: #fff;
+  background: var(--hanko);
+  padding: 2px 6px;
+  border-radius: 8px;
 }
 
 /* ===== ACTION BAR (44px, Doc 12 §3.2 — grid 6 tetap) ===== */
 .action-bar {
   position: absolute;
-  bottom: 0; left: 0; right: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
   height: 44px;
   display: flex;
   gap: 4px;
@@ -81,7 +135,9 @@ html, body {
   border-radius: 8px;
   cursor: pointer;
 }
-.action-bar button:active { transform: scale(0.94); }
+.action-bar button:active {
+  transform: scale(0.94);
+}
 
 /* ===== HankoButton (CTA, Doc 12 §2.2) ===== */
 .hanko {
@@ -96,8 +152,27 @@ html, body {
   border-radius: 8px;
   cursor: pointer;
 }
-.hanko:active:not(:disabled) { transform: scale(0.94); background: #a93a33; }
-.hanko:disabled { opacity: 0.45; cursor: default; }
-.hanko--lg { width: 152px; height: 44px; font-size: 15px; }
-.hanko--md { width: 96px; height: 36px; font-size: 13px; }
-.hanko__cap { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--washi); }
+.hanko:active:not(:disabled) {
+  transform: scale(0.94);
+  background: #a93a33;
+}
+.hanko:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.hanko--lg {
+  width: 152px;
+  height: 44px;
+  font-size: 15px;
+}
+.hanko--md {
+  width: 96px;
+  height: 36px;
+  font-size: 13px;
+}
+.hanko__cap {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--washi);
+}

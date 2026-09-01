@@ -4,23 +4,25 @@
 
 ## 1. Syarat Breeding
 
-| Syarat | Nilai |
-|---|---|
-| Tahap | `adult` (hari 20–60) |
-| Health & Happiness | masing-masing ≥ 80 |
-| Cooldown | 7 hari per pet |
-| Kuota | maks 4 keturunan per pet seumur hidup |
-| Biaya | 500 koin (jalur NPC) |
+| Syarat             | Nilai                                 |
+| ------------------ | ------------------------------------- |
+| Tahap              | `adult` (hari 20–60)                  |
+| Health & Happiness | masing-masing ≥ 80                    |
+| Cooldown           | 7 hari per pet                        |
+| Kuota              | maks 4 keturunan per pet seumur hidup |
+| Biaya              | 500 koin (jalur NPC)                  |
 
 ## 2. Dua Jalur
 
 **A. Breeding House — NPC (Fase 1, offline):**
+
 1. Masuk S11 dengan pet memenuhi syarat → altar menyala.
 2. Pilih mitra NPC dari 3 pilihan harian (elemen berbeda, ditampilkan preview warna anak).
 3. Bayar 500 koin → animasi tali merah mengikat → telur muncul di altar rumah (inkubasi normal, Doc 01 §3).
 4. Pet induk mendapat cooldown 7 hari + Happiness +10.
 
 **B. Breeding Antar-Pemain (Fase 2, online asinkron):**
+
 - Pemain menyalin **Breeding Code** (base64 berisi hash gen pet: element, warna, personality, careTier).
 - Menu "Tukar Kode" → tempel kode teman → request terkirim ke API sederhana (endpoint: `POST /breeding-requests`, polling saat buka game).
 - Hasil telur muncul saat kedua pihak buka game. **Tidak butuh real-time server.**
@@ -45,6 +47,7 @@ child.startBonus:
 
 child.careScore awal = 50 (netral)
 ```
+
 - `careTier` induk (jalur Zenko/Yako saat ini) hanya memengaruhi % warna langka — tidak menjamin anak sama (mencegah "farm tenko").
 
 ## 4. Lineage Tree (Album Keluarga — Doc 02 S12)
@@ -58,16 +61,17 @@ child.careScore awal = 50 (netral)
   "ancestors": [ /* rekursif, maks tampil 3 generasi */ ]
 }
 ```
+
 - Bonus generasi: tiap gen ≥2 → title di profil + koin warisan +10% kumulatif (maks +50%).
 
 ## 5. Warisan (Saat Pet Mati)
 
-| Warisan | Nilai |
-|---|---|
-| Koin kenangan | 100 + 10×livedDays melewati 30 (maks 600) |
-| Item kesayangan | 1 item decor/toy terpilih diwariskan |
+| Warisan         | Nilai                                                               |
+| --------------- | ------------------------------------------------------------------- |
+| Koin kenangan   | 100 + 10×livedDays melewati 30 (maks 600)                           |
+| Item kesayangan | 1 item decor/toy terpilih diwariskan                                |
 | Keturunan hidup | Telur/anak yang sudah ada tetap jalan (pemain tidak mulai dari nol) |
-| Memorial | foto + nama + jalur evolusi tersimpan di Album |
+| Memorial        | foto + nama + jalur evolusi tersimpan di Album                      |
 
 ## 6. Acceptance Criteria
 

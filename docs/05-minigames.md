@@ -4,14 +4,14 @@
 
 ## 1. Aturan Umum Semua Mini-Game
 
-| Aturan | Nilai |
-|---|---|
-| Energi | −12 per sesi (ditolak bila energy < 15 — Doc 01 §2) |
-| Happiness | +8 sampai +20 sesuai performa |
-| Koin | formula di §5 |
-| Cooldown | 30 menit (semua mini-game berbagi cooldown) |
+| Aturan      | Nilai                                                                                               |
+| ----------- | --------------------------------------------------------------------------------------------------- |
+| Energi      | −12 per sesi (ditolak bila energy < 15 — Doc 01 §2)                                                 |
+| Happiness   | +8 sampai +20 sesuai performa                                                                       |
+| Koin        | formula di §5                                                                                       |
+| Cooldown    | 30 menit (semua mini-game berbagi cooldown)                                                         |
 | Skala sulit | mengikuti tahap hidup: baby terkunci · teen mudah · adult sedang · elder pelan tapi bonus +10% koin |
-| Elemen | bonus elemen per game (§2–§4) |
+| Elemen      | bonus elemen per game (§2–§4)                                                                       |
 
 ## 2. Kingyo-Sukui (Tangkap Ikan Koi) 🎏
 
@@ -31,7 +31,7 @@
 - Jarak 10 m = 1 poin; koin jalur = 2 koin langsung.
 - **Bonus elemen `fire`:** dash sekali per sesi (tembus rintangan).
 
-*(Elemen `earth`: +1 poi/lembaran cadangan di dua game pertama; `mystic`: koin akhir +10% — semua elemen punya keunggulan.)*
+_(Elemen `earth`: +1 poi/lembaran cadangan di dua game pertama; `mystic`: koin akhir +10% — semua elemen punya keunggulan.)_
 
 ## 5. Formula Koin
 
@@ -41,6 +41,7 @@ koin = floor(base_poin × 0.5)
      × dayPhaseMultiplier (siang ×1.1 — Doc 03 §3)
      + streakDailyBonus (bila hari login ke-7)
 ```
+
 Contoh: poin 120, siang, biasa → `floor(120×0.5)=60 ×1.1 = 66 koin`.
 
 ## 6. UI Mini-Game

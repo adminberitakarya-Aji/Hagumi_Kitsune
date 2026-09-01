@@ -5,7 +5,6 @@
  */
 import type { IAudio, IClock, ILogger, INotifier, IRng, IStorage } from "./ports";
 
-
 /** Penyimpanan di memori — untuk unit test headless dan fallback saat storage platform gagal. */
 export class MemoryStorage implements IStorage {
   private map = new Map<string, string>();
@@ -136,4 +135,3 @@ export class BufferedLogger implements ILogger {
     return out;
   }
 }
-

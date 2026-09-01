@@ -36,35 +36,36 @@ describe("PetStats — Pure Functions & Decay (Doc 01 §2, §3, §4)", () => {
 
   describe("Decay Rates & Element Passives (Doc 01 §2 & §4)", () => {
     it("menghitung decay siang standar", () => {
-      // Day: hunger -8, happiness -6, energy -5, hygiene -4
-      expect(getEffectiveDecayRate("hunger", "day")).toBe(-8);
-      expect(getEffectiveDecayRate("happiness", "day")).toBe(-6);
+      // Day: hunger -5, happiness -3, energy -5, hygiene -3 (rebalance 03/09)
+      expect(getEffectiveDecayRate("hunger", "day")).toBe(-5);
+      expect(getEffectiveDecayRate("happiness", "day")).toBe(-3);
       expect(getEffectiveDecayRate("energy", "day")).toBe(-5);
-      expect(getEffectiveDecayRate("hygiene", "day")).toBe(-4);
+      expect(getEffectiveDecayRate("hygiene", "day")).toBe(-3);
     });
 
     it("menghitung decay malam sadar & tidur standar", () => {
-      // Night Awake: hunger -6, happiness -5, energy -8, hygiene -3
+      // Night Awake: hunger -4, happiness -2, energy -8, hygiene -2
       expect(getEffectiveDecayRate("energy", "nightAwake")).toBe(-8);
-      // Sleeping: hunger -3, happiness -2, energy +30, hygiene -2
+      // Sleeping: hunger -2, happiness -1, energy +30, hygiene -1
       expect(getEffectiveDecayRate("energy", "sleeping")).toBe(30);
     });
 
     it("menerapkan bonus pasif elemen (Doc 01 §4)", () => {
       // Fire: energy regen +10% (30 * 1.1 = 33)
       expect(getEffectiveDecayRate("energy", "sleeping", "fire")).toBeCloseTo(33);
-      // Water: hygiene decay -25% (-4 * 0.75 = -3)
-      expect(getEffectiveDecayRate("hygiene", "day", "water")).toBe(-3);
+      // Water: hygiene decay -25% (-3 * 0.75 = -2.25)
+      expect(getEffectiveDecayRate("hygiene", "day", "water")).toBeCloseTo(-2.25);
       // Wind: energy decay -15% (-5 * 0.85 = -4.25)
       expect(getEffectiveDecayRate("energy", "day", "wind")).toBe(-4.25);
-      // Earth: hunger decay -15% (-8 * 0.85 = -6.8)
-      expect(getEffectiveDecayRate("hunger", "day", "earth")).toBeCloseTo(-6.8);
-      // Mystic: all decay -10% (-8 * 0.9 = -7.2)
-      expect(getEffectiveDecayRate("hunger", "day", "mystic")).toBeCloseTo(-7.2);
+      // Earth: hunger decay -15% (-5 * 0.85 = -4.25)
+      expect(getEffectiveDecayRate("hunger", "day", "earth")).toBeCloseTo(-4.25);
+      // Mystic: all decay -10% (-5 * 0.9 = -4.5)
+      expect(getEffectiveDecayRate("hunger", "day", "mystic")).toBeCloseTo(-4.5);
     });
 
-    it("tahap bayi mengalami decay hunger ×1.5 (Doc 01 §3)", () => {
-      expect(getEffectiveDecayRate("hunger", "day", undefined, "baby")).toBe(-12);
+    it("tahap bayi mengalami decay hunger ×1.5 & happiness ×0.5 (Doc 01 §3)", () => {
+      expect(getEffectiveDecayRate("hunger", "day", undefined, "baby")).toBe(-7.5);
+      expect(getEffectiveDecayRate("happiness", "day", undefined, "baby")).toBe(-1.5); // mudah senang
     });
   });
 
@@ -149,10 +150,10 @@ describe("PetStats — Pure Functions & Decay (Doc 01 §2, §3, §4)", () => {
       };
 
       const result = applyDecay(initial, 2, "day");
-      expect(result.hunger).toBe(84); // 100 - 8*2
-      expect(result.happiness).toBe(88); // 100 - 6*2
+      expect(result.hunger).toBe(90); // 100 - 5*2
+      expect(result.happiness).toBe(94); // 100 - 3*2
       expect(result.energy).toBe(90); // 100 - 5*2
-      expect(result.hygiene).toBe(92); // 100 - 4*2
+      expect(result.hygiene).toBe(94); // 100 - 3*2
       expect(result.health).toBe(100);
     });
 

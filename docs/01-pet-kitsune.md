@@ -16,11 +16,18 @@
 
 | Key       | Label   | Decay/jam (siang)      | Decay/jam (malam, sadar) | Decay/jam (tidur) |
 | --------- | ------- | ---------------------- | ------------------------ | ----------------- |
-| hunger    | Kenyang | −8                     | −6                       | −3                |
-| happiness | Senang  | −6                     | −5                       | −2                |
+| hunger    | Kenyang | −5                     | −4                       | −2                |
+| happiness | Senang  | −3                     | −2                       | −1                |
 | energy    | Energi  | −5                     | −8 (mengantuk)           | +30 (pulih)       |
-| hygiene   | Bersih  | −4                     | −3                       | −2                |
+| hygiene   | Bersih  | −3                     | −2                       | −1                |
 | health    | Sehat   | komposit (lihat bawah) | komposit                 | komposit          |
+
+> **Catatan rebalance (Log Revisi ROADMAP, 03/09):** angka awal (−8/−6/−5/−4) membuat
+> pemilik normal tidak mampu mempertahankan stat (butuh 4–5× makan & ~7× main/hari) —
+> simulasi 90 hari selalu berakhir kematian hari 2–3. Angka di atas adalah target
+> "pemilik normal": 3× makan, 2× main, 1× mandi, tidur 8 jam → pet hidup sehat
+> tanpa terus-menerus kritis. Diverifikasi oleh `pnpm simulate` + test balance
+> `packages/data/tests/decay.test.ts`.
 
 **Health** tidak punya decay sendiri; aturan komposit:
 

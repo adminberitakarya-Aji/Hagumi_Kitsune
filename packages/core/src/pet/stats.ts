@@ -55,9 +55,13 @@ export function getEffectiveDecayRate(
     rate *= 0.9;
   }
 
-  // Tahap Bayi (Doc 01 §3): decay hunger ×1.5
+  // Tahap Bayi (Doc 01 §3): decay hunger ×1.5, happiness ×0.5 (mudah senang —
+  // kompensasi tombol main terkunci selama fase bayi)
   if (stage === "baby" && stat === "hunger" && rate < 0) {
     rate *= 1.5;
+  }
+  if (stage === "baby" && stat === "happiness" && rate < 0) {
+    rate *= 0.5;
   }
 
   return rate;

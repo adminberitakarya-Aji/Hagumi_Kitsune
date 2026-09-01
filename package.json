@@ -13,13 +13,16 @@
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "simulate": "tsx tools/simulate.ts"
   },
   "devDependencies": {
+    "@hagumi/core": "workspace:*",
     "@eslint/js": "^9.0.0",
     "eslint": "^9.0.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "prettier": "^3.3.0",
+    "tsx": "^4.23.13",
     "typescript": "^5.6.0",
     "typescript-eslint": "^8.0.0",
     "vitest": "^3.0.0"

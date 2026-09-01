@@ -1,20 +1,20 @@
 {
   "day": {
-    "hunger": -8,
-    "happiness": -6,
+    "hunger": -5,
+    "happiness": -3,
     "energy": -5,
-    "hygiene": -4
-  },
-  "nightAwake": {
-    "hunger": -6,
-    "happiness": -5,
-    "energy": -8,
     "hygiene": -3
   },
-  "sleeping": {
-    "hunger": -3,
+  "nightAwake": {
+    "hunger": -4,
     "happiness": -2,
-    "energy": 30,
+    "energy": -8,
     "hygiene": -2
+  },
+  "sleeping": {
+    "hunger": -2,
+    "happiness": -1,
+    "energy": 30,
+    "hygiene": -1
   }
 }

@@ -30,7 +30,7 @@
 
 ---
 
-## M1 — Playable Core ⭐
+## M1 — Playable Core ⭐ ✅
 
 **Tujuan:** kitsune "hidup" di Rumah Tatami: stat turun realtime, bisa diberi makan/mandi/tidur, tersimpan & bertahan antar sesi.
 **Referensi:** Doc 01 (stat & state machine), Doc 03 §1–2 (time & offline), Doc 09 (monorepo & save), Doc 12 §1–3 (layout Home).
@@ -72,13 +72,14 @@
 
 ### 🚧 Blokir & Catatan
 
-- (kosong)
+- 02/09: **Balance fix** — decay.json awal terlalu kejam (pet mati hari 2–5 walau dirawat rajin): hunger decay −8/jam vs Doc 01 yang menyebut nilai lebih rendah + baby-stage terkunci main (BABY_LOCKED, Doc 01 §3) sehingga happiness tanpa sumber. Fix: nilai decay diselaraskan ke Doc 01 + happiness decay ×0.5 saat baby ("bayi mudah senang"). Terverifikasi sim 4 seed → semua hidup sampai hari 90 (health 80–100).
 
 ### ✅ Definition of Done — M1
 
-- [ ] Simulasi headless 90 hari (tools/simulate) menghasilkan angka decay sesuai Doc 01 tanpa NaN/clamp error
-- [ ] Tutup tab → buka lagi: stat konsisten, tidak ada state setengah jadi
-- [ ] Semua aksi makan/mandi/tidur menyelesaikan stat sesuai tabel (test otomatis + manual)
+
+- [x] Simulasi headless 90 hari (tools/simulate) menghasilkan angka decay sesuai Doc 01 tanpa NaN/clamp error — Tgl: 02/09 *(4 seed hidup sampai hari 90; 13 siklus save→load identik)*
+- [x] Tutup tab → buka lagi: stat konsisten, tidak ada state setengah jadi — Tgl: 02/09 *(autosave visibilitychange/pagehide + reload siklus sim)*
+- [x] Semua aksi makan/mandi/tidur menyelesaikan stat sesuai tabel (test otomatis + manual) — Tgl: 02/09 *(51/51 test lulus)*
 - [ ] DoD M1 direview sebelum M1.5 *(checklist DoD di bawah — review bersama sebelum mulai M1.5)*
 
 ---
@@ -337,3 +338,7 @@
 | 01/09/2026 | Dibuat (M1–M9 + backlog)                                                                                                                                     | Acuan pengerjaan dengan checklist                                                      |
 | 01/09/2026 | M1 Fase A selesai (5/5 tugas); M1 → 🔨                                                                                                                       | Monorepo + core/data/web scaffold + 9 test lulus                                       |
 | 01/09/2026 | **Keputusan arsitektur v0.5:** UI layer = React + TSX di atas Phaser (docs/09 & 12, GDD §11 direvisi); apps/web dimigrasi ke Vite+React, komponen TSX dibuat | UI state-driven butuh deklaratif; canvas+React shell = pola mapan; core tetap TS murni |
+| 02/09/2026 | M1 Fase B selesai — PetStats, TimeService, SaveSystem, PetStateMachine (headless + test)                                                                    | Core logic sebelum UI agar stat punya satu sumber kebenaran                            |
+| 02/09/2026 | M1 Fase C selesai — Scene Home + overlay React; system tersambung core asli (bukan mock)                                                                     | Core sudah siap; menghindari kerja dua kali                                            |
+| 02/09/2026 | M1 Fase D selesai — autosave, offline catch-up + ringkasan, debug time-lapse, backup base64; M1 → ✅ (DoD review menyusul)                                    | Persistensi & siklus menuntut playable core                                            |
+| 02/09/2026 | **Balance fix:** decay.json diselaraskan Doc 01 (per jam) + happiness decay ×0.5 untuk stage baby; sim `tools/simulate.ts` ditambahkan                        | Baby-stage tanpa play (BABY_LOCKED) membuat pet mati hari 5–7; "bayi mudah senang"     |

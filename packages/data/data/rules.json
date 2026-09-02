@@ -20,8 +20,9 @@
     "cooldownHours": 4
   },
   "health": {
-    "regenPerHour": 2,
-    "regenStatThreshold": 60
+    "regenPerHour": 3,
+    "regenStatThreshold": 55,
+    "preEvolutionFloor": 20
   },
   "inventory": {
     "foodCapacity": 20

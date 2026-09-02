@@ -68,7 +68,9 @@ Setiap pet memiliki 6 stat inti (skala 0–100). Angka decay di bawah ini **hasi
 
 **Aturan komposit (sinkron `stats.ts`):**
 
-- Jika 2+ stat di bawah 25 → Health turun −10/jam.
+- Setiap stat di bawah 25 → Health turun −1/jam **per stat** (tuning M5: sebelumnya flat −10/jam bila ≥2 stat rendah).
+- Health pulih alami +3/jam bila tidak sakit, tidak ada drain, dan **rata-rata** 4 stat utama ≥ 55.
+- Sebelum evolusi final (hari-20), Health tidak turun di bawah 20 (floor) — menjamin jalur negatif Yako/Nogitsune tetap terjangkau.
 - Pet **menolak makan** jika Hunger > 90, **menolak main** jika Energy < 15.
 - Tidur memulihkan Energy +30/jam; decay stat lain turun ke ±⅓–⅔ nilai aktif (lihat tabel).
 

@@ -80,16 +80,24 @@ describe("PetStats — Pure Functions & Decay (Doc 01 §2, §3, §4)", () => {
       expect(breakdown.totalDrainPerHour).toBe(0);
     });
 
-    it("health pulih alami +2/jam saat semua stat >= 60 dan tidak sakit (keseimbangan M3)", () => {
+    it("health pulih alami +2/jam saat rata-rata stat >= threshold dan tidak sakit (keseimbangan M3+M5)", () => {
       const stats = { hunger: 80, happiness: 80, energy: 80, hygiene: 80, health: 40 };
       const result = applyDecay(stats, 1, "day");
-      expect(result.health).toBe(42); // 40 + 2 — semua stat akhir masih >= 60
+      expect(result.health).toBe(43); // 40 + 3 — rata-rata stat akhir masih >= threshold
     });
 
-    it("tidak ada regen health jika ada stat di bawah threshold 60 (zona stabil)", () => {
-      const stats = { hunger: 50, happiness: 80, energy: 80, hygiene: 80, health: 40 };
+    it("tidak ada regen health jika rata-rata stat di bawah threshold 55 (zona stabil)", () => {
+      const stats = { hunger: 50, happiness: 50, energy: 50, hygiene: 50, health: 40 };
       const result = applyDecay(stats, 5, "day");
       expect(result.health).toBe(40); // netral — tidak drain, tidak regen
+    });
+
+    it("regen tetap jalan saat SATU stat lemah — threshold rata-rata, bukan AND (tuning M5)", () => {
+      // hygiene 30 → 27 setelah 1 jam; rata-rata (80+80+80+27)/4 ≈ 66,75 >= 55,
+      // tidak ada stat < 25 -> +3/jam
+      const stats = { hunger: 80, happiness: 80, energy: 80, hygiene: 30, health: 40 };
+      const result = applyDecay(stats, 1, "day");
+      expect(result.health).toBe(43);
     });
 
     it("tidak ada regen health saat sakit meski stat prima", () => {
@@ -98,15 +106,15 @@ describe("PetStats — Pure Functions & Decay (Doc 01 §2, §3, §4)", () => {
       expect(result.health).toBe(40);
     });
 
-    it("jika >= 2 stat di bawah 25 -> health -10/jam", () => {
+    it("setiap stat di bawah 25 -> health -1/jam per stat (tuning M5)", () => {
       const breakdown = calculateHealthDrainPerHour({
         hunger: 20,
         happiness: 24,
         energy: 50,
         hygiene: 80,
       });
-      expect(breakdown.lowStatsDrainPerHour).toBe(10);
-      expect(breakdown.totalDrainPerHour).toBe(10);
+      expect(breakdown.lowStatsDrainPerHour).toBe(2); // 2 stat rendah × -1
+      expect(breakdown.totalDrainPerHour).toBe(2);
     });
 
     it("sakit tidak diobati >= 12 jam -> health -10/jam tambahan", () => {
@@ -123,37 +131,37 @@ describe("PetStats — Pure Functions & Decay (Doc 01 §2, §3, §4)", () => {
       expect(breakdown.totalDrainPerHour).toBe(10);
     });
 
-    it("setiap stat bernilai 0 menggerus health -5/jam (maks -15/jam)", () => {
-      // 1 stat = 0 -> -5
+    it("setiap stat bernilai 0 menggerus health -3/jam (maks -12/jam)", () => {
+      // 1 stat = 0 -> -3
       const b1 = calculateHealthDrainPerHour({
         hunger: 0,
         happiness: 80,
         energy: 80,
         hygiene: 80,
       });
-      expect(b1.zeroStatsDrainPerHour).toBe(5);
+      expect(b1.zeroStatsDrainPerHour).toBe(3);
 
-      // 2 stat = 0 -> lowStats (10) + zeroStats (10) = 20
+      // 2 stat = 0 -> lowStats (2 × -1) + zeroStats (6) = 8
       const b2 = calculateHealthDrainPerHour({
         hunger: 0,
         happiness: 0,
         energy: 80,
         hygiene: 80,
       });
-      expect(b2.lowStatsDrainPerHour).toBe(10);
-      expect(b2.zeroStatsDrainPerHour).toBe(10);
-      expect(b2.totalDrainPerHour).toBe(20);
+      expect(b2.lowStatsDrainPerHour).toBe(2);
+      expect(b2.zeroStatsDrainPerHour).toBe(6);
+      expect(b2.totalDrainPerHour).toBe(8);
 
-      // 4 stat = 0 -> lowStats (10) + zeroStats capped (15) = 25
+      // 4 stat = 0 -> lowStats (4 × -1) + zeroStats capped (12) = 16
       const b4 = calculateHealthDrainPerHour({
         hunger: 0,
         happiness: 0,
         energy: 0,
         hygiene: 0,
       });
-      expect(b4.lowStatsDrainPerHour).toBe(10);
-      expect(b4.zeroStatsDrainPerHour).toBe(15);
-      expect(b4.totalDrainPerHour).toBe(25);
+      expect(b4.lowStatsDrainPerHour).toBe(4);
+      expect(b4.zeroStatsDrainPerHour).toBe(12);
+      expect(b4.totalDrainPerHour).toBe(16);
     });
   });
 
@@ -189,8 +197,26 @@ describe("PetStats — Pure Functions & Decay (Doc 01 §2, §3, §4)", () => {
       expect(result.happiness).toBe(5);
       expect(result.energy).toBe(5);
       expect(result.hygiene).toBe(5);
-      // Health tetap berkurang karena 4 stat < 25 (10/jam * 5 jam = -50)
-      expect(result.health).toBe(50);
+      // Health tetap berkurang karena 4 stat < 25 (−1/jam/stat × 4 × 5 jam = −20)
+      expect(result.health).toBe(80);
+    });
+
+    it("healthFloor pra-evolusi: health berhenti di ambang, tidak menyembuhkan di atasnya (tuning M5)", () => {
+      const stats: PetStats = {
+        hunger: 10,
+        happiness: 10,
+        energy: 10,
+        hygiene: 10,
+        health: 100,
+      };
+      // Drain 4/jam × 5 jam = −20 → tanpa floor health = 80; dengan floor 20 tetap 80.
+      // Verifikasi floor benar-benar bekerja: cukup jam agar health menembus ambang.
+      const result = applyDecay(stats, 85, "day", { floor: 5, healthFloor: 20 });
+      expect(result.health).toBe(20); // terhenti di floor (tanpa floor: 100 − 340 → 0)
+
+      const low: PetStats = { hunger: 10, happiness: 10, energy: 10, hygiene: 10, health: 10 };
+      const result2 = applyDecay(low, 5, "day", { floor: 5, healthFloor: 20 });
+      expect(result2.health).toBe(20); // sudah di bawah floor — diangkat ke floor (garansi)
     });
   });
 

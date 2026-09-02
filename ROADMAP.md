@@ -165,8 +165,8 @@
 - [x] Ekor terlihat bertambah di sprite sesuai tahap — Tgl: 09/09 *(placeholder emoji-tails, final M5)*
 - [x] Evolusi terpicu tepat di hari yang benar (time-lapse test) — Tgl: 09/09
 
-**Laporan distribusi (1000 sim, 4 persona):** survival 71,2% · normal 400/400 hidup (semua zenko) · rajin 300/300 (zenko) · santai 12/200 · lalai 0/100 · jalur zenko 74,4% / biasa 25,6% · evolusi hari-10 913×, hari-20 866×, hari-60 745× · nol pelanggaran invariant.
-**⚠️ Temuan untuk didiskusikan (tidak memblokir M4):** (1) jalur negatif yako/nogitsune tidak pernah tercapai — pet meninggal sebelum evolusi ketika care <50; (2) survival santai rendah (6%) vs janji GDD "buruk = 80 hari" — perlu tuning decay atau toleransi health.
+**Laporan distribusi (1000 sim, 4 persona):** survival 80,7% · normal 400/400 hidup (semua zenko) · rajin 300/300 (zenko) · santai 107/200 · lalai 0/100 (mati hari 21–23, setelah evolusi final hari-20) · jalur zenko 78,4% / biasa 12,2% / yako 9,1% / nogitsune 0,3% · evolusi hari-10 1000×, hari-20 1000×, hari-60 836× · nol pelanggaran invariant. *(revisi 09/09 pasca-tuning M5)*
+**✅ Temuan lama (09/09) teratasi via tuning + bugfix:** (1) jalur negatif kini terjangkau — yako 91×, nogitsune 3× (sebelumnya 0×); (2) survival santai 53,5% dengan kematian berskala hari (median 48, maks 88) — sesuai kurva GDD "buruk = puluhan hari". Dua perbaikan kunci: (a) **bug "sakit-abadi"** — feed/bathe saat sakit menimpa state `sick` tanpa membersihkan `sickSince`, sehingga drain −10/jam terus menyala pada pet sehat; diperbaiki dengan menolak aksi saat sakit (`IS_SICK`) + drain sakit hanya saat pet benar-benar sakit; (b) **tuning drain-regen**: tier stat rendah −1/jam per stat (sebelumnya flat −10), stat nol −3/jam per stat (maks −12), regen threshold rata-rata ≥55 (sebelumnya AND-semua-stat ≥60) + health floor pra-hari-20 (`preEvolutionFloor`).
 
 ---
 

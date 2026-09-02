@@ -34,6 +34,12 @@ export class PetStateMachine {
     if (pet.state === "sleeping") {
       return { allowed: false, reason: "ALREADY_SLEEPING" };
     }
+    // Sakit: satu-satunya jalan keluar dari SICK adalah obat (GDD §5).
+    // Tanpa ini, feed/bathe menimpa state "sick" -> transient -> "idle" tanpa
+    // membersihkan sickSince, memicu drain sakit-abadi di time-service.
+    if (pet.state === "sick") {
+      return { allowed: false, reason: "IS_SICK" };
+    }
     if (pet.state === "eating" || pet.state === "bathing" || pet.state === "evolving") {
       return { allowed: false, reason: "IS_BUSY" };
     }
@@ -88,6 +94,12 @@ export class PetStateMachine {
     }
     if (pet.state === "sleeping") {
       return { allowed: false, reason: "ALREADY_SLEEPING" };
+    }
+    // Sakit: satu-satunya jalan keluar dari SICK adalah obat (GDD §5).
+    // Tanpa ini, bathe menimpa state "sick" -> "bathing" -> "idle" tanpa
+    // membersihkan sickSince, memicu drain sakit-abadi di time-service.
+    if (pet.state === "sick") {
+      return { allowed: false, reason: "IS_SICK" };
     }
     if (pet.state === "eating" || pet.state === "bathing" || pet.state === "evolving") {
       return { allowed: false, reason: "IS_BUSY" };

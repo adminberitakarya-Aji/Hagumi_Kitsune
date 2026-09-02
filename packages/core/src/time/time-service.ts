@@ -4,6 +4,7 @@
  */
 
 import type { DecayPhase } from "@hagumi/data";
+import { evolutionConfig, rulesConfig } from "@hagumi/data";
 import { applyDecay } from "../pet/stats";
 import type { PetData, PetState } from "../pet/types";
 import type {
@@ -163,12 +164,30 @@ export function processOfflineCatchUp(
   // Telur tidak mengalami decay stat biasa
   if (pet.stage !== "egg") {
     for (const seg of segments) {
-      if (sickSince !== null && seg.startMs - sickSince >= 12 * MS_PER_HOUR) {
+      // Drain sakit tak terobati HANYA bila pet memang masih sakit selama segmen
+      // ini. Tanpa cek currentState, sickSince yang tersisa dari episode sakit
+      // lampau (yang berakhir tanpa cure) memicu drain −10/jam abadi pada pet
+      // yang sudah sehat (bug "sakit-abadi", tuning M5).
+      if (
+        currentState === "sick" &&
+        sickSince !== null &&
+        seg.startMs - sickSince >= 12 * MS_PER_HOUR
+      ) {
         isUntreatedSickPast12h = true;
       }
 
       const isSleeping = currentState === "sleeping";
       const decayPhase = mapToDecayPhase(seg.phase, isSleeping);
+
+      // Floor health pra-evolusi (tuning M5): sebelum hari-20 (evolusi final),
+      // health tidak turun di bawah ambang rules.json — menjamin jalur negatif
+      // yako/nogitsune terjangkau. Bisa di-override lewat options.healthFloor.
+      const ageDays = pet.birthAt > 0 ? (seg.startMs - pet.birthAt) / MS_PER_DAY : 0;
+      const healthFloor =
+        options?.healthFloor ??
+        (ageDays < evolutionConfig.finalEvolutionDay
+          ? rulesConfig.health.preEvolutionFloor
+          : 0);
 
       currentStats = applyDecay(currentStats, seg.hours, decayPhase, {
         element: pet.element,
@@ -176,6 +195,7 @@ export function processOfflineCatchUp(
         isUntreatedSickPast12h,
         isSick: currentState === "sick",
         floor,
+        healthFloor,
       });
 
       // Kematian offline jika health habis

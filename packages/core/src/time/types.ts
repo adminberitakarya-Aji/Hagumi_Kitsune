@@ -19,6 +19,8 @@ export interface PhaseSegment {
 
 export interface OfflineCatchUpOptions {
   floor?: number;
+  /** Override floor health pra-evolusi (default: rules.json bila usia < finalEvolutionDay). */
+  healthFloor?: number;
   maxPoopOffline?: number;
 }
 

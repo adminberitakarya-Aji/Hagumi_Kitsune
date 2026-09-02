@@ -29,11 +29,13 @@
 > tanpa terus-menerus kritis. Diverifikasi oleh `pnpm simulate` + test balance
 > `packages/data/tests/decay.test.ts`.
 
-**Health** tidak punya decay sendiri; aturan komposit:
+**Health** tidak punya decay sendiri; aturan komposit (tuning M5 — Log Revisi ROADMAP):
 
-- Jika ≥2 stat di bawah 25 → `health −10/jam`.
+- Setiap stat di bawah 25 → `health −1/jam` **per stat** (sebelumnya flat −10/jam bila ≥2 stat rendah).
 - Sakit tidak diobati 12 jam → `health −10/jam` tambahan.
-- Stat lain = 0 → stat tersebut mulai menggerus health −5/jam (maks −15/jam gabungan).
+- Stat lain = 0 → stat tersebut mulai menggerus health −3/jam (maks −12/jam gabungan; tuning M5: sebelumnya −5, maks −15).
+- Pemulihan alami: `health +3/jam` bila tidak sakit, tanpa drain, dan **rata-rata** 4 stat utama ≥ 55.
+- Floor evolusi: sebelum hari-20 (evolusi final), `health` tidak turun di bawah 20 — menjamin jalur negatif (Yako/Nogitsune) tetap terjangkau dan teruji.
 
 **Aturan penolakan aksi:**
 

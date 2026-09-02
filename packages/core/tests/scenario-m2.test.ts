@@ -132,11 +132,15 @@ describe("DoD M2 #2 — kematian & memorial; mulai baru tidak merusak data lama"
     const oldSave = createDefaultSave({ petName: "Kohaku", element: "water", nowMs: START });
     expect(saveSystem.save(oldSave).success).toBe(true);
 
-    // Penelalaan total: tick per jam tanpa perawatan apa pun
+    // Penelalaan total: tick per jam tanpa perawatan apa pun.
+    // Tuning M5: floor health pra-evolusi (rules.health.preEvolutionFloor = 20)
+    // menjamin pet tidak mati sebelum evolusi final hari-20 — jalur negatif
+    // yako/nogitsune tetap terjangkau. Kematian terjadi segera setelah hari-20
+    // saat floor nonaktif (drain penuh: stat 0 −15/jam + sakit −10/jam).
     let pet = oldSave.pet;
     let lastTick = START;
     let ticks = 0;
-    while (pet.stage !== "dead" && ticks < 96) {
+    while (pet.stage !== "dead" && ticks < 25 * 24) {
       clock.advance(MS_PER_HOUR);
       const now = clock.now();
       pet = processOfflineCatchUp(pet, lastTick, now).pet;
@@ -145,7 +149,8 @@ describe("DoD M2 #2 — kematian & memorial; mulai baru tidak merusak data lama"
       expectFiniteStats(pet);
     }
 
-    expect(pet.stage).toBe("dead"); // mati dalam ≤4 hari
+    expect(pet.stage).toBe("dead"); // mati setelah floor pra-evolusi berakhir
+    expect(ticks).toBeGreaterThanOrEqual(20 * 24); // garansi: tidak mati sebelum hari-20
     expect(pet.stats.health).toBe(0);
 
     // Simpan kondisi mati (layar memorial membaca data ini)

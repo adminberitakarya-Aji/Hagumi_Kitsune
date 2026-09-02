@@ -26,7 +26,7 @@ import {
   type PetStats,
   type SaveData,
 } from "@hagumi/core";
-import { evolutionConfig } from "@hagumi/data";
+import { evolutionConfig, rulesConfig } from "@hagumi/data";
 
 const DAYS = 90;
 const START = 1_735_000_000_000; // konstanta, mulai pagi
@@ -50,7 +50,7 @@ const EV_PARAMS: EvolutionParams = {
 const STAT_KEYS = ["hunger", "happiness", "energy", "hygiene", "health"] as const;
 
 /** Persona pemilik untuk mode distribusi (DoD M3: distribusi "masuk akal" ≠ satu perilaku). */
-interface OwnerProfile {
+export interface OwnerProfile {
   name: string;
   playMax: number; // main bila happiness <
   playProb: number; // peluang per jam bangun
@@ -61,13 +61,14 @@ interface OwnerProfile {
   wakeProb: number;
   sleepProb: number;
   strokeProb: number; // belai spontan per jam bangun (bonus poin care)
+  cureProb: number; // beri obat saat pet sakit, peluang per jam bangun
 }
 
 const PROFILES: Record<string, OwnerProfile> = {
-  rajin: { name: "rajin", playMax: 90, playProb: 0.5, feedMax: 55, feedProb: 0.95, batheMax: 50, batheProb: 0.9, wakeProb: 0.95, sleepProb: 0.8, strokeProb: 0.1 },
-  normal: { name: "normal", playMax: 80, playProb: 0.35, feedMax: 45, feedProb: 0.8, batheMax: 40, batheProb: 0.8, wakeProb: 0.9, sleepProb: 0.7, strokeProb: 0.03 },
-  santai: { name: "santai", playMax: 70, playProb: 0.25, feedMax: 40, feedProb: 0.7, batheMax: 35, batheProb: 0.6, wakeProb: 0.8, sleepProb: 0.6, strokeProb: 0.01 },
-  lalai: { name: "lalai", playMax: 60, playProb: 0.12, feedMax: 30, feedProb: 0.55, batheMax: 25, batheProb: 0.4, wakeProb: 0.6, sleepProb: 0.5, strokeProb: 0 },
+  rajin: { name: "rajin", playMax: 90, playProb: 0.5, feedMax: 55, feedProb: 0.95, batheMax: 50, batheProb: 0.9, wakeProb: 0.95, sleepProb: 0.8, strokeProb: 0.1, cureProb: 0.9 },
+  normal: { name: "normal", playMax: 80, playProb: 0.35, feedMax: 45, feedProb: 0.8, batheMax: 40, batheProb: 0.8, wakeProb: 0.9, sleepProb: 0.7, strokeProb: 0.03, cureProb: 0.7 },
+  santai: { name: "santai", playMax: 70, playProb: 0.25, feedMax: 40, feedProb: 0.7, batheMax: 35, batheProb: 0.6, wakeProb: 0.8, sleepProb: 0.6, strokeProb: 0.01, cureProb: 0.4 },
+  lalai: { name: "lalai", playMax: 60, playProb: 0.12, feedMax: 30, feedProb: 0.55, batheMax: 25, batheProb: 0.4, wakeProb: 0.6, sleepProb: 0.5, strokeProb: 0, cureProb: 0.05 },
 };
 
 interface SimSummary {
@@ -82,8 +83,10 @@ interface SimSummary {
   violations: string[];
 }
 
+export const SIM_PROFILES = PROFILES;
+
 /** Satu simulasi headless 90 hari dengan persona pemilik tertentu. */
-function runSimulation(seed: number, trace = false, profile: OwnerProfile = PROFILES.normal!): SimSummary {
+export function runSimulation(seed: number, trace = false, profile: OwnerProfile = PROFILES.normal!): SimSummary {
   const rng = new SeededRng(seed);
   const storage = new MemoryStorage();
   const clock = { now: () => simNow };
@@ -91,7 +94,7 @@ function runSimulation(seed: number, trace = false, profile: OwnerProfile = PROF
 
   let save: SaveData = createDefaultSave({ petName: `Sim-${seed}`, element: "fire", nowMs: simNow });
   const violations: string[] = [];
-  const actionCounts = { feed: 0, bathe: 0, sleep: 0, wake: 0, play: 0, pet: 0 };
+  const actionCounts = { feed: 0, bathe: 0, sleep: 0, wake: 0, play: 0, pet: 0, cure: 0 };
   let deathDay: number | null = null;
   const evolutionDays: string[] = [];
 
@@ -248,6 +251,20 @@ function randomAction(hourTag: string): void {
       strokesSinceSample++;
     }
   }
+  // Obati saat sakit (Doc 06: cooldown 4 jam dari rules.json) — pemilik nyata
+  // mendapat notifikasi & bisa memberi obat; tanpa ini simulator mematikan
+  // persona santai secara tidak adil (sick drain −10/jam tak berujung).
+  const pet4 = save.pet;
+  if (pet4.stage !== "dead" && pet4.state === "sick" && rng.next() < profile.cureProb) {
+    const r = PetStateMachine.cure(pet4, {
+      nowMs: simNow,
+      cooldownMs: rulesConfig.cure.cooldownHours * MS_PER_HOUR,
+    });
+    if (r.success) {
+      save = { ...save, pet: PetStateMachine.finishTransientState(r.pet) };
+      actionCounts.cure++;
+    }
+  }
   checkInvariants(`aksi@${hourTag}`);
 }
 
@@ -310,7 +327,7 @@ function printVerbose(s: SimSummary): void {
 
 function printDistribution(total: number): void {
   const tally = new Map<string, number>();
-  const byProfile = new Map<string, { total: number; alive: number; careSum: number; paths: Map<string, number> }>();
+  const byProfile = new Map<string, { total: number; alive: number; careSum: number; paths: Map<string, number>; deaths: number[] }>();
   const evoDayTally = new Map<number, number>();
   const tailTally = new Map<number, number>();
   let survivors = 0;
@@ -338,9 +355,10 @@ function printDistribution(total: number): void {
       const day = Number(e.split(":")[0]);
       if (!Number.isNaN(day)) evoDayTally.set(day, (evoDayTally.get(day) ?? 0) + 1);
     }
-    const bucket = byProfile.get(s.profile) ?? { total: 0, alive: 0, careSum: 0, paths: new Map() };
+    const bucket = byProfile.get(s.profile) ?? { total: 0, alive: 0, careSum: 0, paths: new Map(), deaths: [] as number[] };
     bucket.total++;
     if (s.stage !== "dead") bucket.alive++;
+    else if (s.deathDay !== null) bucket.deaths.push(s.deathDay);
     bucket.careSum += s.careScore;
     bucket.paths.set(s.path, (bucket.paths.get(s.path) ?? 0) + 1);
     byProfile.set(s.profile, bucket);
@@ -356,6 +374,15 @@ function printDistribution(total: number): void {
       `  ${name.padEnd(7)} alive ${String(b.alive).padStart(3)}/${String(b.total).padEnd(3)}` +
         ` care ${(b.careSum / b.total).toFixed(0).padStart(3)} | ${paths}`,
     );
+    if (b.deaths.length > 0) {
+      const sorted = [...b.deaths].sort((a, b2) => a - b2);
+      const median = sorted[Math.floor(sorted.length / 2)]!;
+      const min = sorted[0]!;
+      const max = sorted[sorted.length - 1]!;
+      console.log(
+        `          └ hari kematian: min ${min} · median ${median} · maks ${max} (${b.deaths.length} kematian)`,
+      );
+    }
   }
   console.log(`\nJalur evolusi (semua):`);
   for (const [path, count] of [...tally.entries()].sort((a, b) => b[1] - a[1])) {

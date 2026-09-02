@@ -27,6 +27,7 @@ export const rulesConfigSchema = z.object({
   health: z.object({
     regenPerHour: z.number().nonnegative(),
     regenStatThreshold: z.number().min(0).max(100),
+    preEvolutionFloor: z.number().int().min(0).max(100),
   }),
   inventory: z.object({ foodCapacity: z.number().int().positive() }),
   loginRewards: z.array(z.number().int().positive()).min(1),

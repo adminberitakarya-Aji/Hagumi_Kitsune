@@ -75,11 +75,17 @@ export interface HealthDrainBreakdown {
 }
 
 /**
- * Menghitung pengurangan health komposit per jam (Doc 01 §2).
+ * Menghitung pengurangan health komposit per jam (Doc 01 §2 — tuning M5).
  * Health tidak punya decay alami; murni bergantung pada kondisi:
- * 1. Jika >= 2 stat (hunger, happiness, energy, hygiene) < 25 -> -10/jam.
+ * 1. Setiap stat (hunger, happiness, energy, hygiene) < 25 -> -1/jam per stat.
+ *    (Tuning M5: sebelumnya flat -10/jam bila >= 2 stat rendah — menghabiskan
+ *    pet caretaker "santai" dalam ~10 jam dan membuat jalur negatif mustahil.
+ *    Kelalaian sejati tetap mematikan cepat via aturan 2 & 3.)
  * 2. Sakit tidak diobati >= 12 jam -> -10/jam tambahan.
- * 3. Stat lain = 0 -> menggerus health -5/jam per stat (maks -15/jam gabungan).
+ * 3. Stat = 0 -> menggerus health -3/jam per stat (maks -12/jam gabungan).
+ *    (Tuning M5: sebelumnya -5/jam per stat, maks -15 — hunger yang menyentuh 0
+ *    di malam hari menghabiskan caretaker "santai". Kelalaian sejati tetap
+ *    mematikan cepat karena gabungan aturan 1+2+3.)
  */
 export function calculateHealthDrainPerHour(
   stats: Pick<PetStats, "hunger" | "happiness" | "energy" | "hygiene">,
@@ -87,16 +93,16 @@ export function calculateHealthDrainPerHour(
 ): HealthDrainBreakdown {
   const primaryStats = [stats.hunger, stats.happiness, stats.energy, stats.hygiene];
 
-  // 1. Aturan >= 2 stat di bawah 25
+  // 1. Drain proporsional: -1/jam per stat di bawah 25 (tuning M5)
   const lowStatCount = primaryStats.filter((val) => val < 25).length;
-  const lowStatsDrain = lowStatCount >= 2 ? 10 : 0;
+  const lowStatsDrain = lowStatCount;
 
   // 2. Aturan sakit tak terobati >= 12 jam
   const sickDrain = isUntreatedSickPast12h ? 10 : 0;
 
-  // 3. Aturan stat = 0 (maks -15/jam gabungan)
+  // 3. Aturan stat = 0 (maks -12/jam gabungan) — tuning M5: -3/stat
   const zeroStatCount = primaryStats.filter((val) => val <= 0).length;
-  const zeroStatsDrain = Math.min(15, zeroStatCount * 5);
+  const zeroStatsDrain = Math.min(12, zeroStatCount * 3);
 
   const totalDrain = lowStatsDrain + sickDrain + zeroStatsDrain;
 
@@ -109,24 +115,27 @@ export function calculateHealthDrainPerHour(
 }
 
 /**
- * Pemulihan health alami (keseimbangan hasil uji main M3 — pelengkap Doc 01 §2).
- * Health sebelumnya hanya punya drain tanpa pemulihan: health yang jatuh saat
- * fase bayi tidak pernah pulih meski perawatan kembali baik. Aturan:
- * Jika TIDAK sakit, tidak ada drain, dan SEMUA stat utama >= threshold
+ * Pemulihan health alami (keseimbangan hasil uji main M3 — pelengkap Doc 01 §2;
+ * tuning M5: threshold berbasis RATA-RATA, bukan AND-semua-stat).
+ * Aturan: Jika TIDAK sakit, tidak ada drain, dan rata-rata stat utama >= threshold
  * (rules.health.regenStatThreshold) -> +regenPerHour sampai 100.
+ * Satu stat lemah tidak lagi membatalkan regen untuk tiga stat lain yang baik.
  */
 export function calculateHealthRegenPerHour(
   stats: Pick<PetStats, "hunger" | "happiness" | "energy" | "hygiene">,
   isSick: boolean = false,
+  isUntreatedSickPast12h: boolean = false,
 ): number {
   if (isSick) return 0;
   const { regenPerHour, regenStatThreshold } = rulesConfig.health;
   if (regenPerHour <= 0) return 0;
   const primaryStats = [stats.hunger, stats.happiness, stats.energy, stats.hygiene];
-  const hasDrain = calculateHealthDrainPerHour(stats).totalDrainPerHour > 0;
+  const hasDrain =
+    calculateHealthDrainPerHour(stats, isUntreatedSickPast12h).totalDrainPerHour > 0;
   if (hasDrain) return 0;
-  const allAboveThreshold = primaryStats.every((val) => val >= regenStatThreshold);
-  return allAboveThreshold ? regenPerHour : 0;
+  // Tuning M5: rata-rata stat >= threshold (sebelumnya: SEMUA stat >= threshold)
+  const average = primaryStats.reduce((sum, val) => sum + val, 0) / primaryStats.length;
+  return average >= regenStatThreshold ? regenPerHour : 0;
 }
 
 /**
@@ -143,6 +152,8 @@ export function applyDecay(
     isUntreatedSickPast12h?: boolean;
     isSick?: boolean;
     floor?: number;
+    /** Floor health komposit (tuning M5): dipakai pra-hari-20 agar jalur negatif terjangkau. */
+    healthFloor?: number;
   },
 ): PetStats {
   if (hours <= 0) return { ...stats };
@@ -181,11 +192,21 @@ export function applyDecay(
       hygiene: newHygiene,
     },
     isSick,
+    isUntreatedSickPast12h,
   );
 
-  const newHealth = clampStat(
+  let newHealth = clampStat(
     stats.health + (healthRegen - healthDrain.totalDrainPerHour) * hours,
   );
+
+  // Floor health komposit (tuning M5): sebelum evolusi final (hari-20), health
+  // tidak boleh turun di bawah ambang — garansi jalur negatif yako/nogitsune
+  // tetap terjangkau dan teruji. Bila health sudah di bawah floor, floor tetap
+  // mengangkatnya (garansi bertahan, bukan sekadar memperlambat).
+  const healthFloor = options?.healthFloor ?? 0;
+  if (healthFloor > 0 && newHealth < healthFloor) {
+    newHealth = healthFloor;
+  }
 
   return {
     hunger: newHunger,

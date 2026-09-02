@@ -26,6 +26,12 @@ export interface LoginRewardUi {
   coins: number;
 }
 
+export interface EvolutionUi {
+  kind: "first" | "final" | "elder";
+  tier: string;
+  path?: string;
+}
+
 export interface GameUiState {
   /** Layar aktif: splash (dengan onboarding di dalamnya) atau home. */
   screen: "splash" | "home";
@@ -53,6 +59,16 @@ export interface GameUiState {
   loginReward: LoginRewardUi | null;
   /** Hasil offline catch-up saat buka game (Doc 12 §11.1); null = tidak tampil. */
   offline: OfflineSummaryUi | null;
+  /** Cutscene evolusi aktif (Doc 12 §11.3); null = tidak tampil. */
+  evolution: EvolutionUi | null;
+  /** Jalur folklor terkunci (tenko/zenko/biasa/yako/nogitsune) — label tier HUD. */
+  path: string;
+  /** Elemen pet (fire/water/wind/earth/mystic) — untuk tint/visual scene. */
+  element: string;
+  /** Jumlah ekor saat ini (1–9) — indikator tahap hidup (Doc 01 §3). */
+  tails: number;
+  /** Care Score 0–100 (dibulatkan) — ditampilkan di HUD sejak M3. */
+  careScore: number;
   /** Kode backup base64 hasil ekspor (Doc 09 §4). */
   backupCode: string;
 }
@@ -74,6 +90,11 @@ const initialState: GameUiState = {
   inventory: { food: {}, medicine: {}, owned: [] },
   loginReward: null,
   offline: null,
+  evolution: null,
+  path: "biasa",
+  element: "fire",
+  tails: 1,
+  careScore: 50,
   backupCode: "",
 };
 

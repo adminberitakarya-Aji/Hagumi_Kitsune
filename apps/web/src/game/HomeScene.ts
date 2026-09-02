@@ -2,6 +2,7 @@
  * Scene hanya RENDER + kirim input ke EventBus; stat diubah oleh gameSystem. */
 import Phaser from "phaser";
 import { eventBus } from "../lib/eventBus";
+import { getGameState } from "../store/gameState";
 
 const FOX_HOME = { x: 180, y: 470 };
 const WALK_AREA = { minX: 60, maxX: 300, minY: 430, maxY: 540 };
@@ -14,9 +15,26 @@ const POOP_SPOTS = [
 ]; // 3 titik tatami (maks poop = 3, Doc 12 §3.3)
 const SCOOP_HOLD_MS = 400; // Doc 12 §3.3: sapu = tahan 400ms
 
+/** Palet jalur (M3 — placeholder palette swap; sprite final M5, Doc 01 §4). */
+const PATH_TINT: Record<string, number> = {
+  tenko: 0xf5e6b0, // emas ilahi
+  zenko: 0xfdfaf2, // putih suci
+  biasa: 0xffffff, // oranye alami (tanpa tint)
+  yako: 0xb59a86, // kecoklatan kusam
+  nogitsune: 0x9a7ab8, // ungu gelap
+};
+const TAIL_COLOR: Record<string, number> = {
+  tenko: 0xf5e6b0,
+  zenko: 0xfdfaf2,
+  biasa: 0xe8874a,
+  yako: 0x9a7f6a,
+  nogitsune: 0x6b4a7a,
+};
+
 export class HomeScene extends Phaser.Scene {
   private fox!: Phaser.GameObjects.Container;
   private foxBody!: Phaser.GameObjects.Text;
+  private tailsG!: Phaser.GameObjects.Graphics;
   private bubble!: Phaser.GameObjects.Container;
   private bubbleBg!: Phaser.GameObjects.Rectangle;
   private bubbleText!: Phaser.GameObjects.Text;
@@ -58,7 +76,9 @@ export class HomeScene extends Phaser.Scene {
       eventBus.on("pet/sleep", ({ on }) => this.setSleeping(on)),
       eventBus.on("fx/hearts", () => this.hearts()),
       eventBus.on("poop/count", ({ count }) => this.setPoopCount(count)),
+      eventBus.on("pet/appearance", (a) => this.setAppearance(a)),
       eventBus.on("fx/scoop", ({ index }) => this.scoopFx(index)),
+      eventBus.on("fx/evolve", () => this.evolveFlash()),
     ];
     // Shutdown scene → lepas listener & timer (hindari leak saat destroy)
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -66,6 +86,38 @@ export class HomeScene extends Phaser.Scene {
       this.walkTimer?.remove();
       this.bubbleTimer?.remove();
       this.scoopTimer?.remove();
+    });
+  }
+
+  /** Kilat aura evolusi (Doc 12 §11.3): kilatan putih-emas + cahaya memancar dari kitsune. */
+  private evolveFlash(): void {
+    this.walkTimer?.remove();
+    this.tweens.killTweensOf(this.foxBody);
+    const light = this.add.circle(this.fox.x, this.fox.y, 8, 0xf5e6b0, 0.95).setDepth(6);
+    const flash = this.add.rectangle(180, 320, 360, 544, 0xffffff, 0).setDepth(7);
+    this.tweens.add({ targets: flash, fillAlpha: 0.85, duration: 180, yoyo: true, repeat: 1 });
+    this.tweens.add({
+      targets: light,
+      radius: 260,
+      alpha: 0,
+      duration: 1400,
+      ease: "Cubic.easeOut",
+      onComplete: () => {
+        light.destroy();
+        flash.destroy();
+      },
+    });
+    this.tweens.add({
+      targets: this.fox,
+      angle: { from: -8, to: 8 },
+      duration: 90,
+      yoyo: true,
+      repeat: 9, // gemetar kuat — tubuh berubah
+      onComplete: () => {
+        this.fox.setAngle(0);
+        this.startBob();
+        this.scheduleWalk();
+      },
     });
   }
 
@@ -108,10 +160,32 @@ export class HomeScene extends Phaser.Scene {
   }
 
   private createFox(): void {
+    this.tailsG = this.add.graphics();
     const shadow = this.add.ellipse(0, 26, 40, 12, 0x000000, 0.18);
     this.foxBody = this.add.text(0, 0, "🦊", { fontSize: "44px" }).setOrigin(0.5);
-    this.fox = this.add.container(FOX_HOME.x, FOX_HOME.y, [shadow, this.foxBody]).setDepth(2);
+    this.fox = this.add.container(FOX_HOME.x, FOX_HOME.y, [this.tailsG, shadow, this.foxBody]).setDepth(2);
     this.fox.setSize(72, 72).setInteractive({ useHandCursor: true });
+    // Tampilan awal dari state yang sudah ada (event appearance dikirim sebelum scene jalan)
+    const g = getGameState();
+    this.setAppearance({ element: g.element, path: g.path, tails: g.tails });
+  }
+
+  /** Ekor bertambah + tint jalur (M3 DoD: ekor terlihat bertambah di sprite). */
+  private setAppearance({ path, tails }: { element: string; path: string; tails: number }): void {
+    const tint = PATH_TINT[path] ?? 0xffffff;
+    this.foxBody.setTint(tint);
+    const color = TAIL_COLOR[path] ?? 0xe8874a;
+    const g = this.tailsG;
+    g.clear();
+    // Kipas ekor di belakang tubuh: puff kecil menumpuk dari bawah ke atas
+    for (let i = 0; i < Math.max(tails, 1); i++) {
+      const px = -24 - (i % 2) * 5;
+      const py = 8 - i * 7;
+      g.fillStyle(color, 0.95);
+      g.fillCircle(px, py, 7);
+      g.fillStyle(0xffffff, 0.25);
+      g.fillCircle(px - 2, py - 2, 2.5);
+    }
   }
 
   // ===== Input kanvas: ketuk = patok, usap ≥120px = belai (Doc 12 §3) =====

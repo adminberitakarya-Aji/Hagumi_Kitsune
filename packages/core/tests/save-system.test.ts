@@ -4,7 +4,7 @@ import { SaveSystem } from "../src/save/save-system";
 import { createDefaultSave, SAVE_STORAGE_KEY, type SaveData } from "../src/save/schema";
 
 describe("SaveSystem (Doc 09 §3 & §4)", () => {
-  it("bisa menyimpan dan membaca SaveData v1 yang valid", () => {
+  it("bisa menyimpan dan membaca SaveData v2 yang valid", () => {
     const storage = new MemoryStorage();
     const clock = new FakeClock(1_735_000_000_000);
     const saveSys = new SaveSystem(storage, clock);
@@ -23,7 +23,9 @@ describe("SaveSystem (Doc 09 §3 & §4)", () => {
     if (loadRes.success) {
       expect(loadRes.data.pet.name).toBe("Kogitsune");
       expect(loadRes.data.pet.element).toBe("fire");
-      expect(loadRes.data.version).toBe(1);
+      expect(loadRes.data.version).toBe(2);
+      expect(loadRes.data.pet.careHistory).toEqual([]);
+      expect(loadRes.data.pet.recoverSince).toBeNull();
       expect(loadRes.data.lastTick).toBe(1_735_000_000_000);
     }
   });
@@ -57,7 +59,7 @@ describe("SaveSystem (Doc 09 §3 & §4)", () => {
     expect(storage.get(SAVE_STORAGE_KEY)).toBe('{"version": 1, "invalidField": true}');
   });
 
-  it("migrasi skema lama v0 ke v1 berhasil", () => {
+  it("migrasi skema lama v0 ke v2 berhasil (via v1)", () => {
     const storage = new MemoryStorage();
     const clock = new FakeClock();
     const saveSys = new SaveSystem(storage, clock);
@@ -88,8 +90,10 @@ describe("SaveSystem (Doc 09 §3 & §4)", () => {
     expect(loadRes.success).toBe(true);
     if (loadRes.success) {
       expect(loadRes.migrated).toBe(true);
-      expect(loadRes.data.version).toBe(1);
+      expect(loadRes.data.version).toBe(2);
       expect(loadRes.data.pet.name).toBe("Yuki");
+      expect(loadRes.data.pet.careHistory).toEqual([]);
+      expect(loadRes.data.pet.recoverSince).toBeNull();
       expect(loadRes.data.inventory).toBeDefined();
       expect(loadRes.data.settings.sound).toBe(true);
     }
@@ -111,7 +115,7 @@ describe("SaveSystem (Doc 09 §3 & §4)", () => {
     if (importRes.success) {
       expect(importRes.data.pet.name).toBe("Inari");
       expect(importRes.data.pet.element).toBe("mystic");
-      expect(importRes.data.version).toBe(1);
+      expect(importRes.data.version).toBe(2);
     }
 
     // Uji dengan string rusak

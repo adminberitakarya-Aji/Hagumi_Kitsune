@@ -299,13 +299,14 @@ export class PetStateMachine {
     };
   }
 
-  /** Transisi selesai animasi sementara (eating, bathing, playing, petted) -> kembali ke IDLE */
+  /** Transisi selesai animasi sementara (eating, bathing, playing, petted, evolving) -> kembali ke IDLE */
   static finishTransientState(pet: PetData): PetData {
     if (
       pet.state === "eating" ||
       pet.state === "bathing" ||
       pet.state === "playing" ||
-      pet.state === "petted"
+      pet.state === "petted" ||
+      pet.state === "evolving"
     ) {
       return {
         ...pet,

@@ -1,0 +1,17 @@
+{
+  "firstEvolutionDay": 10,
+  "finalEvolutionDay": 20,
+  "elderDay": 60,
+  "recoveryDays": 7,
+  "sampleIntervalHours": 1,
+  "historyWindowHours": 24,
+  "interactionBonus": { "stroke": 0.5, "play": 2 },
+  "neglectPenalty": { "statZero": 5, "sickUntreatedPerDay": 3 },
+  "paths": {
+    "tenko": { "min": 90, "max": 100, "tails": [8, 9], "tier": "Zenko Ilahi", "aura": "#FFD700" },
+    "zenko": { "min": 70, "max": 89, "tails": [5, 7], "tier": "Zenko", "aura": "#FFF7E0" },
+    "biasa": { "min": 40, "max": 69, "tails": [3, 4], "tier": "Kitsune Biasa", "aura": "#F59E42" },
+    "yako": { "min": 15, "max": 39, "tails": [1, 2], "tier": "Yako", "aura": "#9A8C7A" },
+    "nogitsune": { "min": 0, "max": 14, "tails": [1, 1], "tier": "Nogitsune", "aura": "#4B3B53" }
+  }
+}

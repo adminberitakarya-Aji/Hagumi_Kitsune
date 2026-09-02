@@ -174,6 +174,7 @@ export function processOfflineCatchUp(
         element: pet.element,
         stage: pet.stage,
         isUntreatedSickPast12h,
+        isSick: currentState === "sick",
         floor,
       });
 

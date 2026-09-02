@@ -5,7 +5,7 @@
 import { z } from "zod";
 import { PET_ELEMENTS, PET_EVOLUTION_PATHS, PET_STAGES, PET_STATES } from "../pet/types";
 
-export const CURRENT_SAVE_VERSION = 1;
+export const CURRENT_SAVE_VERSION = 2;
 export const SAVE_STORAGE_KEY = "hagumi_save_v1";
 
 export const petStatsSchema = z.object({
@@ -22,6 +22,13 @@ export const memoryLogEntrySchema = z.object({
   detail: z.string(),
 });
 
+export const petCareSampleSchema = z.object({
+  t: z.number(),
+  v: z.number().min(0).max(100),
+  b: z.number().min(0),
+  p: z.number().min(0),
+});
+
 export const petDataSchema = z.object({
   name: z.string().min(1).max(12),
   element: z.enum(PET_ELEMENTS),
@@ -30,6 +37,10 @@ export const petDataSchema = z.object({
   state: z.enum(PET_STATES),
   stats: petStatsSchema,
   careScore: z.number().min(0).max(100),
+  /** Riwayat sample Care Score rolling 24 jam (M3, GDD §4). */
+  careHistory: z.array(petCareSampleSchema).default([]),
+  /** Penghitung kegigihan pemulihan jalur (M3: Nogitsune→Yako→…). */
+  recoverSince: z.number().nullable().default(null),
   tails: z.number().min(0).max(9),
   path: z.enum(PET_EVOLUTION_PATHS),
   sickSince: z.number().nullable(),
@@ -78,7 +89,21 @@ export const saveDataSchemaV1 = z.object({
 });
 
 export type SaveDataV1 = z.infer<typeof saveDataSchemaV1>;
-export type SaveData = SaveDataV1;
+
+/** v2 (M3): + pet.careHistory, pet.recoverSince. */
+export const saveDataSchemaV2 = z.object({
+  version: z.literal(2),
+  lastTick: z.number(),
+  player: playerDataSchema,
+  pet: petDataSchema,
+  inventory: inventoryDataSchema,
+  breeding: breedingDataSchema,
+  settings: settingsDataSchema,
+});
+
+export type SaveDataV2 = z.infer<typeof saveDataSchemaV2>;
+
+export type SaveData = SaveDataV2;
 
 /** Fungsi pembuat save data awal default (Starter kit onboarding — Doc 04 & Doc 09). */
 export function createDefaultSave(params: {
@@ -87,7 +112,7 @@ export function createDefaultSave(params: {
   nowMs: number;
 }): SaveData {
   return {
-    version: 1,
+    version: 2,
     lastTick: params.nowMs,
     player: {
       coins: 100,
@@ -110,6 +135,8 @@ export function createDefaultSave(params: {
         health: 100,
       },
       careScore: 50,
+      careHistory: [],
+      recoverSince: null,
       tails: 1,
       path: "biasa",
       sickSince: null,

@@ -3,7 +3,7 @@
  * Fungsi-fungsi murni untuk manipulasi stat: decay, komposit health, aksi pemain, clamping [0, 100].
  */
 
-import { decayConfig, type DecayPhase, type StatKey } from "@hagumi/data";
+import { decayConfig, rulesConfig, type DecayPhase, type StatKey } from "@hagumi/data";
 import type { PetElement, PetStage, PetStats } from "./types";
 
 export const STAT_MIN = 0;
@@ -109,6 +109,27 @@ export function calculateHealthDrainPerHour(
 }
 
 /**
+ * Pemulihan health alami (keseimbangan hasil uji main M3 — pelengkap Doc 01 §2).
+ * Health sebelumnya hanya punya drain tanpa pemulihan: health yang jatuh saat
+ * fase bayi tidak pernah pulih meski perawatan kembali baik. Aturan:
+ * Jika TIDAK sakit, tidak ada drain, dan SEMUA stat utama >= threshold
+ * (rules.health.regenStatThreshold) -> +regenPerHour sampai 100.
+ */
+export function calculateHealthRegenPerHour(
+  stats: Pick<PetStats, "hunger" | "happiness" | "energy" | "hygiene">,
+  isSick: boolean = false,
+): number {
+  if (isSick) return 0;
+  const { regenPerHour, regenStatThreshold } = rulesConfig.health;
+  if (regenPerHour <= 0) return 0;
+  const primaryStats = [stats.hunger, stats.happiness, stats.energy, stats.hygiene];
+  const hasDrain = calculateHealthDrainPerHour(stats).totalDrainPerHour > 0;
+  if (hasDrain) return 0;
+  const allAboveThreshold = primaryStats.every((val) => val >= regenStatThreshold);
+  return allAboveThreshold ? regenPerHour : 0;
+}
+
+/**
  * Terapkan decay waktu (fungsi murni) terhadap stat pet selama durasi `hours`.
  * Menghitung decay 4 stat utama + penurunan health komposit.
  */
@@ -120,6 +141,7 @@ export function applyDecay(
     element?: PetElement;
     stage?: PetStage;
     isUntreatedSickPast12h?: boolean;
+    isSick?: boolean;
     floor?: number;
   },
 ): PetStats {
@@ -129,6 +151,7 @@ export function applyDecay(
   const element = options?.element;
   const stage = options?.stage;
   const isUntreatedSickPast12h = options?.isUntreatedSickPast12h ?? false;
+  const isSick = options?.isSick ?? isUntreatedSickPast12h;
 
   const hungerRate = getEffectiveDecayRate("hunger", phase, element, stage);
   const happinessRate = getEffectiveDecayRate("happiness", phase, element, stage);
@@ -140,7 +163,7 @@ export function applyDecay(
   const newEnergy = Math.max(floor, clampStat(stats.energy + energyRate * hours));
   const newHygiene = Math.max(floor, clampStat(stats.hygiene + hygieneRate * hours));
 
-  // Health dihitung berdasarkan kondisi rata-rata atau state baru
+  // Health = drain komposit − regen alami (hanya bila kondisi prima & tidak sakit)
   const healthDrain = calculateHealthDrainPerHour(
     {
       hunger: newHunger,
@@ -150,8 +173,19 @@ export function applyDecay(
     },
     isUntreatedSickPast12h,
   );
+  const healthRegen = calculateHealthRegenPerHour(
+    {
+      hunger: newHunger,
+      happiness: newHappiness,
+      energy: newEnergy,
+      hygiene: newHygiene,
+    },
+    isSick,
+  );
 
-  const newHealth = clampStat(stats.health - healthDrain.totalDrainPerHour * hours);
+  const newHealth = clampStat(
+    stats.health + (healthRegen - healthDrain.totalDrainPerHour) * hours,
+  );
 
   return {
     hunger: newHunger,

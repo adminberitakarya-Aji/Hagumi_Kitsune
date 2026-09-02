@@ -30,6 +30,8 @@ function createMockPet(overrides?: Partial<PetData>): PetData {
     lastPoopAt: null,
     poopCount: 0,
     lastCuredAt: 0,
+    careHistory: [],
+    recoverSince: null,
     memoryLog: [],
     ...overrides,
   };

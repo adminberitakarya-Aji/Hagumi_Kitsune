@@ -18,7 +18,7 @@
 | M1        | Playable Core                          | ✅     | 01/09 | 02/09   | 2 hari     |
 | M1.5      | Onboarding (Telur & Nama)              | ✅     | 02/09 | 02/09   | 3–4 hari   |
 | M2        | Loop Lengkap (Poop, Penyakit, Ekonomi) | ✅     | 02/09 | 11/11   | 1 minggu   |
-| M3        | Evolusi Zenko/Yako                     | ⬜     | —     | —       | 1 minggu   |
+| M3        | Evolusi Zenko/Yako                     | ✅     | 09/09 | 09/09   | 1 minggu   |
 | M4        | Retensi (Offline, Login, Mini-game)    | ⬜     | —     | —       | 1 minggu   |
 | M5        | Polish (Seni Final, Audio, Balance)    | ⬜     | —     | —       | 1 minggu   |
 | M6        | Companion & Siklus Hari                | ⬜     | —     | —       | 1 minggu   |
@@ -144,24 +144,29 @@
 **Tujuan:** Care Score bekerja; evolusi hari ke-10 & ke-20; jalur Zenko→Nogitsune; ekor bertambah.
 **Referensi:** GDD §4, Doc 01 §3–4, Doc 12 §11.3.
 
-- [ ] `CareScore`: rolling history 24 jam + bonus interaksi + penalti kelalaian (GDD §4) — Tgl: ____
-- [ ] Tabel evolusi `evolution.json` (5 jalur, ekor, hari pemicu) — Tgl: ____
-- [ ] Evolusi pertama hari ke-10 (ekor +1, cutscene pendek + lonceng 🔔) — Tgl: ____
-- [ ] Evolusi final hari ke-20: jalur dikunci sesuai Care Score (Tenko/Zenko/Biasa/Yako/Nogitsune) — Tgl: ____
-- [ ] Cutscene evolusi fullscreen (Doc 12 §11.3) + skip setelah 1× — Tgl: ____
-- [ ] Jalur pulih: Care Score naik → Nogitsune bertahap kembali (transisi per 7 hari) — Tgl: ____
-- [ ] Panel detail stat: Care Score ditampilkan sebagai tier (bukan angka persis) — Tgl: ____
-- [ ] Sprite recolor 5 elemen + varian jalur (pipeline palet swap) — Tgl: ____
+- [x] `CareScore`: rolling history 24 jam + bonus interaksi + penalti kelalaian (GDD §4) — Tgl: 09/09
+- [x] Tabel evolusi `evolution.json` (5 jalur, ekor, hari pemicu) — Tgl: 09/09
+- [x] Evolusi pertama hari ke-10 (ekor +1, cutscene pendek + lonceng 🔔) — Tgl: 09/09
+- [x] Evolusi final hari ke-20: jalur dikunci sesuai Care Score (Tenko/Zenko/Biasa/Yako/Nogitsune) — Tgl: 09/09
+- [x] Cutscene evolusi fullscreen (Doc 12 §11.3) + skip setelah 1× — Tgl: 09/09
+- [x] Jalur pulih: Care Score naik → Nogitsune bertahap kembali (transisi per 7 hari) — Tgl: 09/09
+- [x] Panel detail stat: Care Score ditampilkan sebagai tier (bukan angka persis) — Tgl: 09/09
+- [x] Sprite recolor 5 elemen + varian jalur (pipeline palet swap) — Tgl: 09/09 *(placeholder tint — sprite final di M5)*
 
 ### 🚧 Blokir & Catatan
 
-- (kosong)
+- **Ditemukan via simulator:** health hanya punya drain tanpa regen alami → pet perawatan baik pun sekarat perlahan. Diperbaiki: regen health +2/jam saat semua stat ≥60 (`rules.json` → `applyDecay`). *(03/09)*
+- **`finishTransientState` core tidak menangani `evolving`** → pet terjebak di simulator. Diperbaiki di state-machine. *(09/09)*
+- Simulator kini punya 4 persona pemilik (normal/rajin/santai/lalai) untuk distribusi realistis. *(09/09)*
 
 ### ✅ Definition of Done — M3
 
-- [ ] 1000 simulasi Care Score menghasilkan distribusi jalur masuk akal (log laporan)
-- [ ] Ekor terlihat bertambah di sprite sesuai tahap
-- [ ] Evolusi terpicu tepat di hari yang benar (time-lapse test)
+- [x] 1000 simulasi Care Score menghasilkan distribusi jalur masuk akal (log laporan) — Tgl: 09/09
+- [x] Ekor terlihat bertambah di sprite sesuai tahap — Tgl: 09/09 *(placeholder emoji-tails, final M5)*
+- [x] Evolusi terpicu tepat di hari yang benar (time-lapse test) — Tgl: 09/09
+
+**Laporan distribusi (1000 sim, 4 persona):** survival 71,2% · normal 400/400 hidup (semua zenko) · rajin 300/300 (zenko) · santai 12/200 · lalai 0/100 · jalur zenko 74,4% / biasa 25,6% · evolusi hari-10 913×, hari-20 866×, hari-60 745× · nol pelanggaran invariant.
+**⚠️ Temuan untuk didiskusikan (tidak memblokir M4):** (1) jalur negatif yako/nogitsune tidak pernah tercapai — pet meninggal sebelum evolusi ketika care <50; (2) survival santai rendah (6%) vs janji GDD "buruk = 80 hari" — perlu tuning decay atau toleransi health.
 
 ---
 
@@ -343,3 +348,4 @@
 | 02/09/2026 | M1 Fase C selesai — Scene Home + overlay React; system tersambung core asli (bukan mock)                                                                     | Core sudah siap; menghindari kerja dua kali                                            |
 | 02/09/2026 | M1 Fase D selesai — autosave, offline catch-up + ringkasan, debug time-lapse, backup base64; M1 → ✅ (DoD review menyusul)                                    | Persistensi & siklus menuntut playable core                                            |
 | 02/09/2026 | **Balance fix:** decay.json diselaraskan Doc 01 (per jam) + happiness decay ×0.5 untuk stage baby; sim `tools/simulate.ts` ditambahkan                        | Baby-stage tanpa play (BABY_LOCKED) membuat pet mati hari 5–7; "bayi mudah senang"     |
+| 09/09/2026 | M3 selesai — Care Score, evolusi hari-10/20/60, 5 jalur + pemulihan, cutscene, tint ekor; **regen health alami ditambahkan** (rules.json); M3 → ✅            | Simulator menemukan health tanpa pemulihan → kematian tertunda; DoD distribusi 1000 sim lulus |

@@ -14,6 +14,9 @@ importers:
       '@hagumi/core':
         specifier: workspace:*
         version: link:packages/core
+      '@hagumi/data':
+        specifier: workspace:*
+        version: link:packages/data
       eslint:
         specifier: ^9.0.0
         version: 9.39.5

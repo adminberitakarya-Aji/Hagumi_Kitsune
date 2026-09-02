@@ -39,6 +39,17 @@ export interface MemoryLogEntry {
   detail: string;
 }
 
+/** Satu sampel Care Score (GDD §4) — disimpan rolling 24 jam di save. */
+export interface CareSample {
+  t: number;
+  /** Rata-rata 5 stat pada waktu sample (0–100). 0 utk entri bonus/penalti murni. */
+  v: number;
+  /** Poin bonus interaksi (membelai, main). */
+  b: number;
+  /** Poin penalti kelalaian (stat 0, sakit tak diobati). */
+  p: number;
+}
+
 export interface PetData {
   name: string;
   element: PetElement;
@@ -47,6 +58,10 @@ export interface PetData {
   state: PetState;
   stats: PetStats;
   careScore: number;
+  /** Riwayat sample Care Score (rolling 24 jam) — GDD §4. */
+  careHistory: CareSample[];
+  /** Waktu mulai bertahannya Care Score di ambang jalur lebih tinggi (untuk pemulihan). */
+  recoverSince: number | null;
   tails: number;
   path: PetEvolutionPath;
   sickSince: number | null;

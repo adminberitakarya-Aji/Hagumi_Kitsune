@@ -10,21 +10,26 @@ import {
   PetStateMachine,
   SaveSystem,
   SystemClock,
+  checkPathRecovery,
   createDefaultSave,
+  evolveIfNeeded,
   processOfflineCatchUp,
+  samplePetCare,
   shouldSpawnPoop,
   spawnPoop,
   scoopPoop,
   updateLoginStreak,
   type ActionRejectReason,
   type DayPhase,
+  type EvolutionParams,
   type PetData,
   type PetElement,
+  type PetStats,
   type SaveData,
 } from "@hagumi/core";
-import { getItemById, rulesConfig } from "@hagumi/data"; // katalog asli M2 (Doc 06 — fail-fast JSON)
+import { evolutionConfig, getItemById, rulesConfig } from "@hagumi/data"; // katalog asli M2/M3 (fail-fast JSON)
 import { eventBus } from "../lib/eventBus";
-import { setUiState } from "../store/gameState";
+import { getGameState, setUiState } from "../store/gameState";
 import { pushToast } from "../store/toastStore";
 import { WebStorage } from "./webStorage";
 
@@ -62,6 +67,29 @@ const FIRST_GREETING: Record<PetElement, string> = {
   mystic: "...Kau dapat melihatku?",
 };
 
+/** Parameter evolusi dari evolution.json (sumber angka M3 — GDD §4, Doc 01 §3–4). */
+const EV_PARAMS: EvolutionParams = {
+  firstEvolutionDay: evolutionConfig.firstEvolutionDay,
+  finalEvolutionDay: evolutionConfig.finalEvolutionDay,
+  elderDay: evolutionConfig.elderDay,
+  recoveryDays: evolutionConfig.recoveryDays,
+  sampleIntervalHours: evolutionConfig.sampleIntervalHours,
+  interactionBonus: evolutionConfig.interactionBonus,
+  neglectPenalty: evolutionConfig.neglectPenalty,
+  paths: evolutionConfig.paths,
+  care: {
+    windowHours: evolutionConfig.historyWindowHours,
+    msPerHour: MS_PER_HOUR,
+  },
+};
+
+/** Balon bicara setelah cutscene evolusi ditutup (Doc 12 §11.3). */
+const EVOLVE_LINES = {
+  first: "Aku tumbuh! Ekor baruku, lihat!",
+  final: "Jalurku telah ditentukan...",
+  elder: "Tubuhku menua, tapi hatiku tetap muda~",
+} as const;
+
 class GameRuntime {
   private readonly saveSystem: SaveSystem;
   /** null = belum ada save (onboarding berjalan — Doc 04 §6: save dibuat tepat setelah menetas). */
@@ -76,6 +104,16 @@ class GameRuntime {
   private tickCount = 0;
   /** Makan sejak poop terakhir — mempercepat interval poop berikutnya (Doc 12 §3.3). */
   private feedsSincePoop = 0;
+  /** Care sampling (M3): waktu sample terakhir + interaksi & penalti sejak sample. */
+  private lastCareSampleAt = Date.now();
+  private strokesSinceSample = 0;
+  private playsSinceSample = 0;
+  /** Akumulasi poin penalti kelalaian sejak sample terakhir (GDD §4). */
+  private penaltySinceSample = 0;
+  /** Stat yang sedang nol — penalti hanya sekali per kejadian, bukan tiap tick. */
+  private zeroStats = new Set<keyof PetStats>();
+  /** Mulai akumulasi penalti sakit tak diobati (0 = tidak sakit). */
+  private sickPenaltyFrom = 0;
 
   constructor() {
     const primary = new SaveSystem(new WebStorage(), new SystemClock());
@@ -98,6 +136,13 @@ class GameRuntime {
     this.simNow = Date.now();
     this.saveData.lastTick = this.simNow;
     this.recentFeeds = [];
+    this.lastCareSampleAt = this.simNow;
+    this.strokesSinceSample = 0;
+    this.playsSinceSample = 0;
+    this.penaltySinceSample = 0;
+    this.zeroStats.clear();
+    this.sickPenaltyFrom = 0;
+    this.feedsSincePoop = 0;
     this.hasSave = true;
     this.persist();
     this.sync();
@@ -163,8 +208,101 @@ class GameRuntime {
       this.feedsSincePoop = 0;
       pushToast("💩 Kitsune meninggalkan sesuatu di tatami...");
     }
+    pet = this.applyGrowth(pet);
     this.saveData = { ...save, pet };
     this.sync();
+  }
+
+  /** Mesin pertumbuhan M3: care sampling berkala → evolusi tahap → pemulihan jalur (GDD §4). */
+  private applyGrowth(pet: PetData): PetData {
+    if (pet.stage === "dead" || pet.stage === "egg" || pet.state === "evolving") return pet;
+
+    // 0) Akumulasi penalti kelalaian sejak sample terakhir (GDD §4)
+    this.accrueNeglect(pet);
+
+    // 1) Care sampling tiap sampleIntervalHours — interaksi dikonversi ke poin bonus dari JSON
+    let result = pet;
+    if (this.simNow - this.lastCareSampleAt >= EV_PARAMS.sampleIntervalHours * MS_PER_HOUR) {
+      const bonusPoints =
+        this.strokesSinceSample * EV_PARAMS.interactionBonus.stroke +
+        this.playsSinceSample * EV_PARAMS.interactionBonus.play;
+      result = samplePetCare(result, this.simNow, EV_PARAMS, {
+        b: bonusPoints,
+        p: this.penaltySinceSample,
+      });
+      this.lastCareSampleAt = this.simNow;
+      this.strokesSinceSample = 0;
+      this.playsSinceSample = 0;
+      this.penaltySinceSample = 0;
+    }
+
+    // 2) Evolusi tahap (hari-10 ekor+1, hari-20 jalur terkunci, hari-60 senior)
+    const evo = evolveIfNeeded(result, this.simNow, EV_PARAMS);
+    if (evo.kind) {
+      result = evo.pet;
+      setUiState({
+        evolution: { kind: evo.kind, tier: evo.tier ?? "", path: evo.path },
+      });
+      eventBus.emit("fx/evolve", { kind: evo.kind });
+      pushToast(`✨ Evolusi — ${evo.tier ?? "berubah"}!`);
+      this.persist();
+      return result; // evolving: pemulihan jalur ditunda sampai selesai cutscene
+    }
+
+    // 3) Pemulihan jalur (Nogitsune/Yako yang dirawat baik naik tier — GDD §4)
+    const recovery = checkPathRecovery(result, this.simNow, EV_PARAMS);
+    if (recovery.promotedTo) {
+      const tier = EV_PARAMS.paths[recovery.promotedTo]?.tier ?? recovery.promotedTo;
+      pushToast(`🌟 ${result.name} dipromosikan ke ${tier}!`);
+      eventBus.emit("pet/say", { text: "Aku menjadi lebih baik berkatmu!" });
+    }
+    return recovery.pet;
+  }
+
+  /** Catat interaksi untuk bonus Care Score (GDD §4: stroke/play — play dipanggil dari mini-game M4). */
+  noteInteraction(kind: "stroke" | "play"): void {
+    if (kind === "stroke") this.strokesSinceSample++;
+    else this.playsSinceSample++;
+  }
+
+  /** Penalti kelalaian (GDD §4): stat menyentuh 0 (sekali per kejadian) + sakit tak diobati per hari. */
+  private accrueNeglect(pet: PetData): void {
+    const statKeys: Array<keyof PetStats> = ["hunger", "happiness", "energy", "hygiene", "health"];
+    for (const key of statKeys) {
+      if (pet.stats[key] <= 0 && !this.zeroStats.has(key)) {
+        this.zeroStats.add(key);
+        this.penaltySinceSample += EV_PARAMS.neglectPenalty.statZero;
+      } else if (pet.stats[key] > 5) {
+        this.zeroStats.delete(key); // pulih — kejadian berikutnya dihitung lagi
+      }
+    }
+    if (pet.state === "sick" && pet.sickSince !== null) {
+      if (this.sickPenaltyFrom === 0) {
+        this.sickPenaltyFrom = Math.max(pet.sickSince, this.lastCareSampleAt);
+      }
+      const days = Math.floor((this.simNow - this.sickPenaltyFrom) / MS_PER_DAY);
+      if (days >= 1) {
+        this.penaltySinceSample += EV_PARAMS.neglectPenalty.sickUntreatedPerDay * days;
+        this.sickPenaltyFrom += days * MS_PER_DAY;
+      }
+    } else {
+      this.sickPenaltyFrom = 0; // sembuh/obat — penghitung sakit reset
+    }
+  }
+
+  /** Tutup cutscene evolusi → pet kembali IDLE (Doc 12 §11.3). */
+  evolveContinue(): void {
+    const save = this.saveData;
+    if (!save) return;
+    const evo = getGameState().evolution;
+    this.saveData = {
+      ...save,
+      pet: PetStateMachine.finishTransientState(save.pet),
+    };
+    this.persist();
+    this.sync();
+    setUiState({ evolution: null });
+    if (evo) eventBus.emit("pet/say", { text: EVOLVE_LINES[evo.kind] });
   }
 
   private get pet(): PetData {
@@ -188,6 +326,10 @@ class GameRuntime {
       poopCount: pet.poopCount,
       sick: pet.state === "sick",
       dead: pet.state === "dead" || pet.stage === "dead",
+      path: pet.path,
+      tails: pet.tails,
+      element: pet.element,
+      careScore: Math.round(pet.careScore),
       inventory: {
         food: { ...save.inventory.food },
         medicine: { ...save.inventory.medicine },
@@ -201,6 +343,7 @@ class GameRuntime {
       },
     });
     eventBus.emit("poop/count", { count: pet.poopCount });
+    eventBus.emit("pet/appearance", { element: pet.element, path: pet.path, tails: pet.tails });
   }
 
   private persist(): void {
@@ -574,8 +717,12 @@ export function initGameSystem(): () => void {
     eventBus.on("ui/buy", ({ itemId }) => runtime?.buy(itemId)),
     eventBus.on("ui/use-medicine", () => runtime?.useFirstMedicine()),
     eventBus.on("ui/memorial-continue", () => runtime?.resetAfterDeath()),
+    eventBus.on("ui/evolve-continue", () => runtime?.evolveContinue()),
     eventBus.on("game/pet-tap", () => runtime?.poke()),
-    eventBus.on("game/pet-stroke", () => runtime?.stroke()),
+    eventBus.on("game/pet-stroke", () => {
+      runtime?.stroke();
+      runtime?.noteInteraction("stroke");
+    }),
     eventBus.on("game/poop-scoop", () => runtime?.scoop()),
     eventBus.on("ui/backup-export", () => runtime?.exportBackup()),
     eventBus.on("ui/backup-import", ({ code }) => runtime?.importBackup(code)),

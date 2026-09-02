@@ -18,6 +18,7 @@ import { ShopSheet } from "./components/ShopSheet";
 import { SickBanner } from "./components/SickBanner";
 import { MemorialScreen } from "./components/MemorialScreen";
 import { LoginRewardSheet } from "./components/LoginRewardSheet";
+import { EvolutionCutscene } from "./components/EvolutionCutscene";
 import { PhaserHost } from "./game/PhaserHost";
 import { eventBus } from "./lib/eventBus";
 import { initGameSystem } from "./system/gameSystem";
@@ -73,6 +74,7 @@ export default function App() {
           <DebugPanel />
           <OfflineSummarySheet />
           <LoginRewardSheet />
+          <EvolutionCutscene />
           {sheet && (
             <WashiPanel open title={SHEET_TITLES[sheet]} onClose={() => setSheet(null)}>
               {sheet === "dapur" && <KitchenSheet onFed={() => setSheet(null)} />}

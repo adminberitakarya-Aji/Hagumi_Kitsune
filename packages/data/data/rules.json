@@ -19,6 +19,10 @@
   "cure": {
     "cooldownHours": 4
   },
+  "health": {
+    "regenPerHour": 2,
+    "regenStatThreshold": 60
+  },
   "inventory": {
     "foodCapacity": 20
   },

@@ -910,3 +910,61 @@ body {
   border-radius: 6px;
   cursor: pointer;
 }
+
+/* ===== Cutscene evolusi (Doc 12 §11.3 — overlay minimal 1,2 dtk sebelum interaktif) ===== */
+.evo-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  overflow: hidden;
+}
+.evo-flash {
+  position: absolute;
+  inset: 0;
+  animation: evoFlashIn 0.5s ease-out;
+  pointer-events: none;
+}
+@keyframes evoFlashIn {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.evo-kind {
+  font-size: 16px;
+  color: var(--washi);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  animation: evoRise 0.6s ease-out;
+}
+.evo-fox {
+  font-size: 96px;
+  animation: evoFoxPop 0.9s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+@keyframes evoFoxPop {
+  from {
+    transform: scale(0.2) rotate(-12deg);
+    opacity: 0;
+  }
+}
+@keyframes evoRise {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+}
+.evo-tier {
+  padding: 8px 18px;
+  border: 2px solid;
+  border-radius: 10px;
+  background: rgba(245, 239, 224, 0.94);
+  font-size: 14px;
+  color: var(--ink);
+  animation: evoRise 0.8s ease-out;
+}

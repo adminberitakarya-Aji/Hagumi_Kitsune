@@ -80,6 +80,24 @@ describe("PetStats — Pure Functions & Decay (Doc 01 §2, §3, §4)", () => {
       expect(breakdown.totalDrainPerHour).toBe(0);
     });
 
+    it("health pulih alami +2/jam saat semua stat >= 60 dan tidak sakit (keseimbangan M3)", () => {
+      const stats = { hunger: 80, happiness: 80, energy: 80, hygiene: 80, health: 40 };
+      const result = applyDecay(stats, 1, "day");
+      expect(result.health).toBe(42); // 40 + 2 — semua stat akhir masih >= 60
+    });
+
+    it("tidak ada regen health jika ada stat di bawah threshold 60 (zona stabil)", () => {
+      const stats = { hunger: 50, happiness: 80, energy: 80, hygiene: 80, health: 40 };
+      const result = applyDecay(stats, 5, "day");
+      expect(result.health).toBe(40); // netral — tidak drain, tidak regen
+    });
+
+    it("tidak ada regen health saat sakit meski stat prima", () => {
+      const stats = { hunger: 80, happiness: 80, energy: 80, hygiene: 80, health: 40 };
+      const result = applyDecay(stats, 5, "day", { isSick: true });
+      expect(result.health).toBe(40);
+    });
+
     it("jika >= 2 stat di bawah 25 -> health -10/jam", () => {
       const breakdown = calculateHealthDrainPerHour({
         hunger: 20,

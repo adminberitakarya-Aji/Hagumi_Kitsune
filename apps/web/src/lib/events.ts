@@ -9,6 +9,7 @@ export interface GameEventMap {
   "ui/buy": { itemId: string }; // Toko Dagashiya (Doc 12 §6)
   "ui/use-medicine": undefined; // banner sakit / Dapur tab Obat
   "ui/memorial-continue": undefined; // memorial → hapus save → Splash (Doc 12 §11.4)
+  "ui/evolve-continue": undefined; // tutup cutscene evolusi → kembali IDLE (Doc 12 §11.3)
   /* Phaser → system (input di kanvas) */
   "game/pet-tap": undefined; // patok
   "game/pet-stroke": undefined; // belai (usap ≥120px)
@@ -18,8 +19,10 @@ export interface GameEventMap {
   "pet/say": { text: string };
   "pet/sleep": { on: boolean };
   "poop/count": { count: number }; // sinkron visual poop di tatami
+  "pet/appearance": { element: string; path: string; tails: number }; // ekor + tint jalur (M3)
   "fx/hearts": undefined;
   "fx/scoop": { index: number }; // partikel sapu berhasil
+  "fx/evolve": { kind: "first" | "final" | "elder" }; // kilat aura evolusi (Doc 12 §11.3)
   /* Backup (Doc 09 §4) — SettingsSheet → system */
   "ui/backup-export": undefined;
   "ui/backup-import": { code: string };

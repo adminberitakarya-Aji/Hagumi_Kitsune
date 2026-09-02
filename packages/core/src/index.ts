@@ -35,6 +35,7 @@ export {
   SIX_HOURS_MS,
   applyDecay,
   calculateHealthDrainPerHour,
+  calculateHealthRegenPerHour,
   clampStat,
   clampStats,
   getEffectiveDecayRate,
@@ -76,10 +77,30 @@ export {
 // Save System
 export type { LoadSaveResult } from "./save/save-system";
 export { SaveSystem } from "./save/save-system";
-export type { SaveData, SaveDataV1 } from "./save/schema";
+export type { SaveData, SaveDataV1, SaveDataV2 } from "./save/schema";
 export {
   CURRENT_SAVE_VERSION,
   SAVE_STORAGE_KEY,
   createDefaultSave,
-  saveDataSchemaV1,
+  saveDataSchemaV2,
 } from "./save/schema";
+
+// Care Score & Evolution (M3 — GDD §4)
+export type { CareSample, CareScoreParams } from "./pet/care-score";
+export {
+  addCareBonus,
+  addCarePenalty,
+  computeCareScore,
+  pruneCareHistory,
+  pushCareSample,
+  sampleCareStats,
+} from "./pet/care-score";
+export type { EvolutionKind, EvolutionParams, EvolutionResult, PathRuleShape, RecoveryResult } from "./pet/evolution";
+export {
+  checkPathRecovery,
+  evolveIfNeeded,
+  lockPathForScore,
+  refreshCareScore,
+  samplePetCare,
+  tailsForPath,
+} from "./pet/evolution";

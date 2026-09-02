@@ -4,7 +4,7 @@
  */
 
 import type { IClock, ILogger, IStorage } from "../ports";
-import { SAVE_STORAGE_KEY, saveDataSchemaV1, type SaveData } from "./schema";
+import { CURRENT_SAVE_VERSION, SAVE_STORAGE_KEY, saveDataSchemaV2, type SaveData } from "./schema";
 
 export type LoadSaveResult =
   | { success: true; data: SaveData; migrated: boolean }
@@ -47,7 +47,7 @@ export class SaveSystem {
     try {
       const parsedJson: unknown = JSON.parse(raw);
       const migrated = this.migrate(parsedJson);
-      const validation = saveDataSchemaV1.safeParse(migrated.data);
+      const validation = saveDataSchemaV2.safeParse(migrated.data);
 
       if (!validation.success) {
         this.logger?.error("Save data korup / tidak valid", validation.error.format());
@@ -89,7 +89,7 @@ export class SaveSystem {
       lastTick: this.clock.now(),
     };
 
-    const validation = saveDataSchemaV1.safeParse(toSave);
+    const validation = saveDataSchemaV2.safeParse(toSave);
     if (!validation.success) {
       this.logger?.error("Gagal menyimpan: data tidak memenuhi skema", validation.error);
       return { success: false, error: "VALIDATION_FAILED" };
@@ -135,6 +135,21 @@ export class SaveSystem {
         settings: data.settings ?? { sound: true, notify: true },
       };
       currentVersion = 1;
+      wasMigrated = true;
+    }
+
+    // v1 -> v2 (M3): + pet.careHistory, pet.recoverSince
+    if (currentVersion === 1) {
+      const pet = data.pet as Record<string, unknown> | undefined;
+      data = {
+        ...data,
+        version: CURRENT_SAVE_VERSION,
+        pet: {
+          ...pet,
+          careHistory: pet?.careHistory ?? [],
+          recoverSince: pet?.recoverSince ?? null,
+        },
+      };
       wasMigrated = true;
     }
 
@@ -203,7 +218,7 @@ export class SaveSystem {
 
       const jsonStr = new TextDecoder().decode(new Uint8Array(bytes));
       const parsed: unknown = JSON.parse(jsonStr);
-      const validation = saveDataSchemaV1.safeParse(parsed);
+      const validation = saveDataSchemaV2.safeParse(parsed);
 
       if (!validation.success) {
         return { success: false, error: "Data backup tidak valid sesuai skema Hagumi v1." };

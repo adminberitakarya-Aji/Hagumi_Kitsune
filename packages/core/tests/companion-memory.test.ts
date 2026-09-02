@@ -43,7 +43,7 @@ describe("memoryLog (Doc 08 §4)", () => {
   });
 
   it("memori dimaafkan → tak lagi pending & hasUnforgivenNeglect false", () => {
-    let log = addMemory([entry(2, "evolved")], entry(3, "starved_6h"));
+    const log = addMemory([entry(2, "evolved")], entry(3, "starved_6h"));
     expect(hasUnforgivenNeglect(log)).toBe(true);
     const { log: log2, count } = forgiveNeglectMemories(log);
     expect(count).toBe(1);

@@ -36,10 +36,6 @@ export type SfxId =
   | "fail"
   | "koi";
 
-const SFX_IDS: readonly string[] = [
-  "stamp", "bell", "splash", "bite", "coin", "hatch", "breath", "sneeze", "click", "heart", "pop", "fail", "koi",
-];
-
 function isSeason(v: string): v is Season {
   return v === "spring" || v === "summer" || v === "autumn" || v === "winter";
 }

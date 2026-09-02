@@ -13,4 +13,20 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
     },
   },
+  // Service worker berjalan di konteks ServiceWorkerGlobalScope, bukan DOM/Node —
+  // deklarasikan globals-nya agar no-undef tidak salah flags (apps/web/public/sw.js).
+  {
+    files: ["**/sw.js"],
+    languageOptions: {
+      globals: {
+        self: "readonly",
+        caches: "readonly",
+        fetch: "readonly",
+        URL: "readonly",
+        clients: "readonly",
+        Request: "readonly",
+        Response: "readonly",
+      },
+    },
+  },
 );

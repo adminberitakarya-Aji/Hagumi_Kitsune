@@ -1,0 +1,104 @@
+{
+  "element": "earth",
+  "lines": {
+    "health": [
+      "Badanku panas... tak apa, beristirahatlah di dekatku saja.",
+      "*bersin* Maaf... aku butuh istirahat sebentar.",
+      "Tubuhku berat... tapi hatiku tetap hangat karena kamu."
+    ],
+    "hunger": [
+      "Perutku koroong... mari makan bersama, ya?",
+      "Aku lapar... tidak apa-apa, pelan-pelan saja.",
+      "Makan itu penting. Kamu juga sudah makan, kan?"
+    ],
+    "hygiene": [
+      "Bau? Aku? Tidak mungkin... atau iya? Mari kita bersihkan.",
+      "Sedikit kotor tak masalah... tapi mari bereskan, ya.",
+      "Bersih itu nyaman. Ayo perbaiki ini bersama-sama."
+    ],
+    "energy": [
+      "Mataku berat... istirahat juga penting, kamu tahu.",
+      "Aku mengantuk... kamu juga jangan begadang, ya?",
+      "Energiku menipis... waktu yang baik untuk beristirahat."
+    ],
+    "night": [
+      "Malam ini tenang... nikmati pelan-pelan, ya.",
+      "Sudah malam... kamu juga sebaiknya istirahat.",
+      "Suara malam itu lembut... seperti bisikan gunung."
+    ],
+    "happiness": [
+      "Kamu sibuk ya hari ini... tak apa, aku selalu di sini.",
+      "Aku sedikit rindu... tapi santai saja, ya.",
+      "Istirahat juga penting... tapi sesekali main bareng, ya."
+    ],
+    "memory_neglect": [
+      "Kamu lupa memberiku makan kemarin... tak apa, yang penting kamu kembali.",
+      "Perutku kosong kemarin... tapi lampirmu datang lagi, itu yang kuingat.",
+      "Aku tidak menghakimi... cuma ingat, dan tetap menunggumu."
+    ],
+    "memory_event": [
+      "Ingat momen tadi? Bagus kan? Simpan yang indah itu.",
+      "Kejadian barusan itu... layak dikenang bersama.",
+      "Seperti batu di sungai, momen itu akan tetap ada."
+    ],
+    "forgive": [
+      "Sudah kumaafkan. Kita mulai lagi, pelan-pelan.",
+      "Semua boleh lupa... yang penting hati tetap baik. Dimaafkan.",
+      "Maaf diterima... mari jaga satu sama lain mulai sekarang."
+    ],
+    "phase_morning": [
+      "Selamat pagi! Langitnya merah cantik... hari yang baik, ya.",
+      "Pagi yang segar... mari mulai hari dengan tenang."
+    ],
+    "phase_day": [
+      "Siang ini hangat... nikmat dengan secangkir teh, mungkin?",
+      "Hari berjalan pelan... tidak apa-apa, pelan pun baik."
+    ],
+    "phase_evening": [
+      "Senja indah sekali... terima kasih sudah menemaniku menonton.",
+      "Sore yang tenang... hatiku juga tenang di dekatmu."
+    ],
+    "season_spring": [
+      "Sakura bermekaran... tanda hidup yang baru dan lembut.",
+      "Musim semi... waktunya bertumbuh, pelan tapi pasti."
+    ],
+    "season_summer": [
+      "Musim panas... jangan lupa minum, ya. Kamu juga!",
+      "Festival akan ramai... nikmati dengan santai saja."
+    ],
+    "season_autumn": [
+      "Daun momiji berjatuhan... indah, dan tak pernah tergesa.",
+      "Musim gugur... waktunya bersyukur atas hasil panen hati."
+    ],
+    "season_winter": [
+      "Salju turun... dunia menjadi tenang, seperti pelukan.",
+      "Musim dingin... mari saling menghangatkan, ya."
+    ],
+    "idle": [
+      "Istirahat juga penting, kamu tahu.",
+      "Aku di sini... duduk saja bersamaku sebentar.",
+      "Tenang itu harta... dan kamu membawanya kepadaku.",
+      "Gunung tak pernah buru-buru... begitu pula aku.",
+      "Kamu sudah bekerja keras... jangan lupa jaga diri, ya."
+    ]
+  },
+  "chat": {
+    "makan": {
+      "hungerLow": ["Lapar sekali... mari makan, ya? Pelan-pelan saja.", "Perutku kosong... siapkan makanan, aku menunggu dengan sabar."],
+      "hungerMid": ["Sedikit lapar... makan sedikit juga baik, kan?", "Aku siap makan... kapan pun kamu siap."],
+      "hungerFull": ["Kenyang... terima kasih, kamu merawatku dengan baik.", "Cukup... makan secukupnya adalah kebijaksanaan."]
+    },
+    "sayang": ["Aku juga sayang kamu... dengan cara yang tenang.", "Sayang itu seperti tanah... selalu ada, selalu setia."],
+    "maaf": ["Sudah kumaafkan... semua orang boleh lupa, termasuk kamu.", "Tidak apa-apa... yang penting kamu peduli. Itu cukup."],
+    "siapa": ["Aku {name}, rubah bumi... pendiam, tapi setia menemani.", "Namaku {name}... aku akan selalu ada di sini untukmu."],
+    "fallback": ["Aku mendengarkan... lanjutkan, aku menemanimu.", "Kata-katamu hangat... terima kasih sudah berbagi.", "Duduklah sebentar... kadang bicara saja sudah cukup."]
+  },
+  "senior": {
+    "idle": ["Usia mengajariku: duduk, dengar, kasih sayang.", "Kesabaran adalah ekor kesembilan yang tak terlihat."],
+    "nostalgia": ["Dulu, waktu aku masih bayi, aku bertanya pada batu... ia tak menjawab, tapi aku paham.", "Banyak musim telah kuhadapi... kau yang terbaik, kau tahu?"]
+  },
+  "dark": {
+    "idle": ["...aku masih di sini. Seperti biasa.", "Diam pun... adalah bentuk menemani."],
+    "neglect": ["...kau pergi lama. Tanah yang kupegang, dingin.", "Aku menunggu... seperti batu menunggu musim."]
+  }
+}

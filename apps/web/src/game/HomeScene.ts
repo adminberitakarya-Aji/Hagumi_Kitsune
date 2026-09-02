@@ -1,9 +1,11 @@
-/** S4 Rumah Tatami (Doc 12 §3, Doc 02 S4) — visual placeholder, interaksi nyata.
+/** S4 Rumah Tatami (Doc 12 §3, Doc 02 S4) — sprite final + bg final (M5).
  * Scene hanya RENDER + kirim input ke EventBus; stat diubah oleh gameSystem. */
 import Phaser from "phaser";
 import { eventBus } from "../lib/eventBus";
 import { getGameState } from "../store/gameState";
 import { getSky } from "./timeVisual";
+import { kitsuneAnim, type ClipName } from "./art/kitsuneArt";
+import { getSeason } from "@hagumi/core";
 
 const FOX_HOME = { x: 180, y: 470 };
 const WALK_AREA = { minX: 60, maxX: 300, minY: 430, maxY: 540 };
@@ -34,7 +36,10 @@ const TAIL_COLOR: Record<string, number> = {
 
 export class HomeScene extends Phaser.Scene {
   private fox!: Phaser.GameObjects.Container;
-  private foxBody!: Phaser.GameObjects.Text;
+  private foxSprite!: Phaser.GameObjects.Sprite;
+  private element = "fire";
+  private stage = "baby";
+  private currentClip: ClipName = "idle";
   private tailsG!: Phaser.GameObjects.Graphics;
   private bubble!: Phaser.GameObjects.Container;
   private bubbleBg!: Phaser.GameObjects.Rectangle;
@@ -42,7 +47,6 @@ export class HomeScene extends Phaser.Scene {
   private bubbleTail!: Phaser.GameObjects.Graphics;
   private bubbleTimer?: Phaser.Time.TimerEvent;
   private bubbleTween?: Phaser.Tweens.Tween;
-  private zzz?: Phaser.GameObjects.Text;
   private walkTimer?: Phaser.Time.TimerEvent;
   private poops: Phaser.GameObjects.Container[] = [];
   private scoopTimer?: Phaser.Time.TimerEvent;
@@ -77,10 +81,12 @@ export class HomeScene extends Phaser.Scene {
       eventBus.on("pet/say", ({ text }) => this.say(text)),
       eventBus.on("pet/sleep", ({ on }) => this.setSleeping(on)),
       eventBus.on("fx/hearts", () => this.hearts()),
+      eventBus.on("fx/bathe", () => this.playOnce("bathe")),
       eventBus.on("poop/count", ({ count }) => this.setPoopCount(count)),
       eventBus.on("pet/appearance", (a) => this.setAppearance(a)),
       eventBus.on("fx/scoop", ({ index }) => this.scoopFx(index)),
       eventBus.on("fx/evolve", () => this.evolveFlash()),
+      eventBus.on("pet/reaction", ({ emoji }) => this.reaction(emoji)), // M6 (Doc 08 §1)
     ];
     // Shutdown scene → lepas listener & timer (hindari leak saat destroy)
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -94,7 +100,8 @@ export class HomeScene extends Phaser.Scene {
   /** Kilat aura evolusi (Doc 12 §11.3): kilatan putih-emas + cahaya memancar dari kitsune. */
   private evolveFlash(): void {
     this.walkTimer?.remove();
-    this.tweens.killTweensOf(this.foxBody);
+    this.tweens.killTweensOf(this.foxSprite);
+    this.playOnce("evolve"); // klip evolusi 10 frame (Doc 01 §6)
     const light = this.add.circle(this.fox.x, this.fox.y, 8, 0xf5e6b0, 0.95).setDepth(6);
     const flash = this.add.rectangle(180, 320, 360, 544, 0xffffff, 0).setDepth(7);
     this.tweens.add({ targets: flash, fillAlpha: 0.85, duration: 180, yoyo: true, repeat: 1 });
@@ -123,11 +130,16 @@ export class HomeScene extends Phaser.Scene {
     });
   }
 
-  // ===== Ruangan (placeholder blok warna — bg final pixel-art di M5) =====
+  // ===== Ruangan (bg final dari texture prosedural — M5) =====
 
   private drawRoom(): void {
-    // Dinding washi (y48..232 — 48px atas tertutup HUD)
-    this.add.rectangle(180, 140, 360, 184, 0xede4cc);
+    // BG final `bg_home_<musim>`: dinding washi + seigaiha + tatami + kotatsu
+    const seasonKey = `bg_home_${getSeason(getGameState().nowMs)}`;
+    if (this.textures.exists(seasonKey)) {
+      this.add.image(180, 320, seasonKey).setDepth(0);
+    } else {
+      this.add.rectangle(180, 320, 360, 640, 0xede4cc);
+    }
     // Jendela shōji + langit — warna mengikuti fase waktu (Doc 03 §3)
     this.windowSky = this.add.rectangle(180, 118, 280, 96, 0xa8c8e8);
     this.refreshWindowSky();
@@ -138,25 +150,13 @@ export class HomeScene extends Phaser.Scene {
     frame.lineStyle(4, 0xf5efe0, 1);
     frame.lineBetween(180, 70, 180, 166);
     frame.lineBetween(40, 118, 320, 118);
-    // Lantai tatami (y232..596) + garis mat & binding hijau
-    this.add.rectangle(180, 414, 360, 364, 0xd6c084);
-    const tatami = this.add.graphics();
-    tatami.lineStyle(2, 0x3e5f3e, 0.3);
-    for (let y = 274; y <= 590; y += 84) tatami.lineBetween(0, y, 360, y);
-    tatami.lineBetween(120, 232, 120, 400);
-    tatami.lineBetween(240, 232, 240, 400);
-    // Kotatsu
-    this.add.rectangle(260, 276, 112, 64, 0xa84438).setStrokeStyle(3, 0x7a2f28);
-    this.add.rectangle(260, 248, 72, 16, 0x8b6b4a).setStrokeStyle(2, 0x5e4630);
-    // Pintu kiri (→ Taman) & kanan (→ Dapur) — navigasi stub
+    // Pintu kiri (→ Taman) & kanan (→ Dapur) — area sentuh ≥48px (Doc 10 §4)
     this.add
-      .rectangle(20, 300, 40, 130, 0xe8e0ce)
-      .setStrokeStyle(2, 0x3d4a6b)
+      .rectangle(20, 300, 48, 130, 0xe8e0ce, 0.01)
       .setInteractive({ useHandCursor: true })
       .on("pointerdown", () => eventBus.emit("scene/goto", { key: "garden" }));
     this.add
-      .rectangle(340, 300, 40, 130, 0xe8e0ce)
-      .setStrokeStyle(2, 0x3d4a6b)
+      .rectangle(340, 300, 48, 130, 0xe8e0ce, 0.01)
       .setInteractive({ useHandCursor: true })
       .on("pointerdown", () => eventBus.emit("ui/action", { id: "door-kitchen" }));
     this.add.text(20, 300, "⛩️", { fontSize: "16px" }).setOrigin(0.5);
@@ -171,19 +171,63 @@ export class HomeScene extends Phaser.Scene {
 
   private createFox(): void {
     this.tailsG = this.add.graphics();
-    const shadow = this.add.ellipse(0, 26, 40, 12, 0x000000, 0.18);
-    this.foxBody = this.add.text(0, 0, "🦊", { fontSize: "44px" }).setOrigin(0.5);
-    this.fox = this.add.container(FOX_HOME.x, FOX_HOME.y, [this.tailsG, shadow, this.foxBody]).setDepth(2);
+    const shadow = this.add.ellipse(0, 30, 44, 12, 0x000000, 0.18);
+    const g = getGameState();
+    this.element = g.element;
+    this.stage = "baby"; // stage sinkron lewat pet/appearance (tails>=3 → dewasa)
+    this.foxSprite = this.add.sprite(0, 0, `kitsune_${this.element}`).setOrigin(0.5, 0.75);
+    this.fox = this.add.container(FOX_HOME.x, FOX_HOME.y, [this.tailsG, shadow, this.foxSprite]).setDepth(2);
     this.fox.setSize(72, 72).setInteractive({ useHandCursor: true });
     // Tampilan awal dari state yang sudah ada (event appearance dikirim sebelum scene jalan)
-    const g = getGameState();
     this.setAppearance({ element: g.element, path: g.path, tails: g.tails });
+    // Audit klip ambient: happiness <30 → idle_sad, >80 (10%) → idle_happy (Doc 01 §6)
+    this.time.addEvent({ delay: 2000, loop: true, callback: () => this.refreshAmbientClip() });
+  }
+
+  /** Skala bulat sesuai tahap (Doc 10 §1: ×1/×2 — anti blur). */
+  private applyStageScale(): void {
+    const scale = this.stage === "baby" || this.stage === "teen" ? 2 : 3;
+    this.foxSprite.setScale(scale);
+  }
+
+  /** Ganti klip ambient bila tidak sedang transien (makan/mandi/tidur/evolusi). */
+  private refreshAmbientClip(): void {
+    if (this.sleeping || this.eating) return;
+    const transient = ["eat", "petted", "bathe", "evolve", "dead"];
+    if (transient.includes(this.currentClip)) return;
+    const g = getGameState();
+    let clip: ClipName = "idle";
+    if (g.sick) clip = "sick";
+    else if (g.stats.happiness < 30) clip = "idle_sad";
+    else if (g.stats.happiness > 80 && Math.random() < 0.1) clip = "idle_happy";
+    this.playClip(clip);
+  }
+
+  /** Putar klip loop (jika beda dari sekarang). */
+  private playClip(clip: ClipName): void {
+    if (this.currentClip === clip && this.foxSprite.anims.isPlaying) return;
+    this.currentClip = clip;
+    this.foxSprite.play(kitsuneAnim(this.element, clip));
+  }
+
+  /** Putar klip sekali → kembali idle. */
+  private playOnce(clip: ClipName): void {
+    this.currentClip = clip;
+    this.foxSprite.play(kitsuneAnim(this.element, clip));
+    this.foxSprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+      if (this.currentClip === clip) this.playClip("idle");
+    });
   }
 
   /** Ekor bertambah + tint jalur (M3 DoD: ekor terlihat bertambah di sprite). */
-  private setAppearance({ path, tails }: { element: string; path: string; tails: number }): void {
+  private setAppearance({ element, path, tails }: { element: string; path: string; tails: number }): void {
+    const elementChanged = element !== this.element;
+    this.element = element;
+    this.stage = tails >= 3 ? "adult" : "baby";
+    if (elementChanged) this.foxSprite.setTexture(`kitsune_${element}`);
+    this.applyStageScale();
     const tint = PATH_TINT[path] ?? 0xffffff;
-    this.foxBody.setTint(tint);
+    this.foxSprite.setTint(tint);
     const color = TAIL_COLOR[path] ?? 0xe8874a;
     const g = this.tailsG;
     g.clear();
@@ -196,6 +240,7 @@ export class HomeScene extends Phaser.Scene {
       g.fillStyle(0xffffff, 0.25);
       g.fillCircle(px - 2, py - 2, 2.5);
     }
+    this.playClip("idle");
   }
 
   // ===== Input kanvas: ketuk = patok, usap ≥120px = belai (Doc 12 §3) =====
@@ -231,7 +276,7 @@ export class HomeScene extends Phaser.Scene {
   private eat(label: string): void {
     this.eating = true;
     this.walkTimer?.remove();
-    this.tweens.killTweensOf(this.foxBody);
+    this.tweens.killTweensOf(this.foxSprite);
     const food = this.add
       .text(this.fox.x, this.fox.y - 80, label, { fontSize: "24px" })
       .setOrigin(0.5)
@@ -243,19 +288,11 @@ export class HomeScene extends Phaser.Scene {
       ease: "Quad.easeIn",
       onComplete: () => {
         food.destroy();
-        this.tweens.add({
-          targets: this.foxBody,
-          scaleX: 1.15,
-          duration: 110,
-          yoyo: true,
-          repeat: 5, // kunyah 3×
-          onComplete: () => {
-            this.foxBody.setScale(1);
-            this.eating = false;
-            this.hearts();
-            this.startBob();
-            this.scheduleWalk();
-          },
+        this.playOnce("eat"); // klip makan 6 frame (Doc 01 §6)
+        this.time.delayedCall(1000, () => {
+          this.eating = false;
+          this.hearts();
+          this.scheduleWalk();
         });
       },
     });
@@ -279,21 +316,30 @@ export class HomeScene extends Phaser.Scene {
     });
   }
 
+  /** Emoji reaksi non-verbal (M6 — Doc 08 §1): feedback instan aksi, melayang di atas pet. */
+  private reaction(emoji: string): void {
+    const emo = this.add
+      .text(this.fox.x, this.fox.y - 40, emoji, { fontSize: "22px" })
+      .setOrigin(0.5)
+      .setDepth(8);
+    this.tweens.add({
+      targets: emo,
+      y: this.fox.y - 74,
+      alpha: 0,
+      duration: 900,
+      ease: "Cubic.easeOut",
+      onComplete: () => emo.destroy(),
+    });
+  }
+
   private setSleeping(on: boolean): void {
     this.sleeping = on;
     if (on) {
       this.walkTimer?.remove();
-      this.tweens.killTweensOf(this.foxBody);
-      this.foxBody.setScale(1, 0.7);
-      this.foxBody.setY(10);
-      this.zzz = this.add.text(this.fox.x + 30, this.fox.y - 44, "💤", { fontSize: "20px" }).setDepth(3);
-      this.tweens.add({ targets: this.zzz, y: "-=24", alpha: 0.2, duration: 1500, yoyo: true, repeat: -1 });
+      this.tweens.killTweensOf(this.foxSprite);
+      this.playClip("sleep"); // klip tidur (rebah + Z z Z baked — Doc 01 §6)
     } else {
-      this.zzz?.destroy();
-      this.zzz = undefined;
-      this.foxBody.setScale(1);
-      this.foxBody.setY(0);
-      this.startBob();
+      this.playClip("idle");
       this.scheduleWalk();
     }
   }
@@ -355,6 +401,7 @@ export class HomeScene extends Phaser.Scene {
   }
 
   private hearts(): void {
+    this.playOnce("petted"); // klip belai — wajah senang (Doc 01 §6)
     for (let i = 0; i < 3; i++) {
       const heart = this.add
         .text(this.fox.x + Phaser.Math.Between(-24, 24), this.fox.y - 30, "❤️", { fontSize: "18px" })
@@ -374,15 +421,7 @@ export class HomeScene extends Phaser.Scene {
   // ===== Perilaku ambient =====
 
   private startBob(): void {
-    this.tweens.killTweensOf(this.foxBody);
-    this.tweens.add({
-      targets: this.foxBody,
-      y: 3,
-      duration: 900,
-      yoyo: true,
-      repeat: -1,
-      ease: "Sine.easeInOut",
-    });
+    // klip idle final sudah punya bob baked — tween lama emoji tidak diperlukan lagi
   }
 
   private scheduleWalk(): void {
@@ -394,14 +433,18 @@ export class HomeScene extends Phaser.Scene {
       }
       const tx = Phaser.Math.Between(WALK_AREA.minX, WALK_AREA.maxX);
       const ty = Phaser.Math.Between(WALK_AREA.minY, WALK_AREA.maxY);
-      this.foxBody.setFlipX(tx < this.fox.x);
+      this.foxSprite.setFlipX(tx < this.fox.x);
+      this.playClip("walk"); // klip jalan 6 frame (Doc 01 §6)
       this.tweens.add({
         targets: this.fox,
         x: tx,
         y: ty,
         duration: 900 + Math.abs(tx - this.fox.x) * 6,
         ease: "Sine.easeInOut",
-        onComplete: () => this.scheduleWalk(),
+        onComplete: () => {
+          this.playClip("idle");
+          this.scheduleWalk();
+        },
       });
     });
   }

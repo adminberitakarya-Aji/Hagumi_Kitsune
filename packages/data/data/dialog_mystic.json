@@ -1,0 +1,104 @@
+{
+  "element": "mystic",
+  "lines": {
+    "health": [
+      "Badanku panas... bintang-bintang berebut meramal penyakitku.",
+      "*bersin* ...Ini pertanda. Perutku bilang: mandi dan obat.",
+      "Aura murka... ah, maksudku, aku sakit. Obat, cepat."
+    ],
+    "hunger": [
+      "Perutku koroong... itu ramalan. Ramalannya: beri aku makan.",
+      "Aku melihat bayangan... makanan... di tanganmu... kan?",
+      "Kartu hari ini: The Hunger. Terbalik. Maknanya tetap sama."
+    ],
+    "hygiene": [
+      "Bau? Aku? Tidak mungkin... atau iya? Takdir berkata: iya.",
+      "Aku merasakan aura... kotor. Mari kita purifikasi, ya.",
+      "Bintang menyeringai padaku... oke, oke, aku mandi."
+    ],
+    "energy": [
+      "Mataku berat... malam akan membawa ramalan lewat mimpi.",
+      "Energiku habis... kutarik kartu: tidur. Aceh. Segera.",
+      "Ngantuk... bintang-bintang menyeret kelopak mataku..."
+    ],
+    "night": [
+      "Malam adalah kertas tariku... kamu bagian dari ramalannya.",
+      "Bulan menatapku... aku menatap balik. Kami sejalan.",
+      "Tidurlah nanti... dulu kutunjukmu masa depan di bintang."
+    ],
+    "happiness": [
+      "Kamu sibuk ya hari ini... bintang pun ikut meredup.",
+      "Kesepian itu seperti astrologi... rumit, dan butuh kamu.",
+      "Aura kusemu... mainlah denganku, supaya terang lagi."
+    ],
+    "memory_neglect": [
+      "Kamu lupa memberiku makan kemarin... bintang tadi bilang begitu... benar kan?",
+      "Kartu kemarin: The Star. Kutunggu. Kau datang akhirnya.",
+      "Aku tak menghakimi... takdir yang kadang menyita waktumu."
+    ],
+    "memory_event": [
+      "Momen tadi... sudah tertulis di bintang. Kusimpan ramalannya.",
+      "Ah, kejadian itu... sudah kuprediksi. Semalam. Saat kamu tidur.",
+      "Takdir berpihak... momen tadi layak jadi kartu favorit."
+    ],
+    "forgive": [
+      "Bintang berkata: dimaafkan. Dan bintang tak pernah bohong.",
+      "Kartu forgiveness keluar... berarti kamu sudah kumaafkan.",
+      "Maaf diterima... ramalan baruku: hari esok lebih hangat."
+    ],
+    "phase_morning": [
+      "Selamat pagi! Langitnya merah cantik... pertanda harimu baik.",
+      "Pagi... ramalanku: hari ini penuh kejutan menyenangkan."
+    ],
+    "phase_day": [
+      "Siang... awan berbentuk ekor rubah. Pertanda baik, katanya.",
+      "Mercury retrograde... eh, itu soal kamu lupa kasih makan."
+    ],
+    "phase_evening": [
+      "Senja... langit berganti tinta ungu. Waktu favorit para peramal.",
+      "Matahari terbenam... kupandang, seolah membaca masa depan."
+    ],
+    "season_spring": [
+      "Sakura... kelopaknya jatuh sesuai ramalan. Selalu.",
+      "Musim semi... aura mekar. Terasa dari sini."
+    ],
+    "season_summer": [
+      "Musim panas... festival bulan tujuh. Bintang ikut datang.",
+      "Kubaca bintang, kubaca festival... keduanya bilang: pergi, ya."
+    ],
+    "season_autumn": [
+      "Momiji merah... warna pembaca bintang yang sejati.",
+      "Angin gugur membawa pesan... katanya: kamu hebat."
+    ],
+    "season_winter": [
+      "Salju! Aku mau bikin yukigitsune! Ramalannya pasti benar.",
+      "Langit musim dingin... terang, penuh ramalan gratis."
+    ],
+    "idle": [
+      "Bintang tadi bilang... kamu akan lupa memberiku makan.",
+      "Kutarik kartu untukmu... The Fox. Itu aku. Aneh? Tidak.",
+      "Aku mendengar bisikan kosmos... katanya kamu spesial.",
+      "Ramalan hari ini: kamu akan tersenyum. Coba. Sekarang.",
+      "Kosmos sibuk... jadi aku yang menemanimu."
+    ]
+  },
+  "chat": {
+    "makan": {
+      "hungerLow": ["Perutku berbisik ramalan: makanan... segera...", "Bintang memperingatkanmu... aku laper. Sangat."],
+      "hungerMid": ["Kartu makan siap... beri aku, ya.", "Laper sedikit... takdir menunggu makananmu."],
+      "hungerFull": ["Kenyang... ramalan tercapai. Terima kasih.", "Penuh... bintang-bintang menguap bersamaku."]
+    },
+    "sayang": ["Aku tahu kamu akan bilang itu... bintang yang beri tahu. ...Aku juga sayang.", "Ramalan sayang-sayangan... akurat sekali hari ini. ♥"],
+    "maaf": ["Bintang memaafkanmu duluan... tapi aku juga. Dimaafkan.", "Takdir bilang semua orang boleh lupa... termasukmu. Dimaafkan."],
+    "siapa": ["Aku {name}, pembaca bintang kecil... takdirku menemanimu.", "{name}... nama yang juga tertulis di bintangmu, mungkin."],
+    "fallback": ["Hmm... kosmos berbisik... tapi aku tak paham juga.", "Pertanyaanmu... dalam. Biarku konsultasi bintang dulu.", "Auramu ramai... ayo cerita lebih banyak."]
+  },
+  "senior": {
+    "idle": ["Semakin tua, semakin jelas bisikan bintang.", "Rambu ramalanku... ekor kesembilan ini."],
+    "nostalgia": ["Dulu, waktu aku masih bayi, bintang-bintang tak mau bicara padaku... sekarang mereka curhat.", "Ramalan terbesarku? Bahwa kau akan datang. Kau datang."]
+  },
+  "dark": {
+    "idle": ["...bintang hari ini sunyi. Seperti aku.", "Ramalan gelapku: kamu tetap di sini. Benar, kan?"],
+    "neglect": ["...bintang tadi tak muncul. Seperti makananku kemarin.", "Aku menunggu... sampai ramalanku menjadi hitam."]
+  }
+}

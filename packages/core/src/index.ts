@@ -113,3 +113,40 @@ export {
 export type { MinigameGateResult, MinigameReward, MinigameRewardParams } from "./player/minigame";
 export { calculateMinigameReward, canPlayMinigame } from "./player/minigame";
 
+// Companion: dialog, memori, chat Tier 1 (M6 — Doc 08, Doc 11 §1–2)
+export {
+  OfflineLlmProvider,
+  DialogueEngine,
+  MEMORY_MAX,
+  NEGLECT_MEMORY_KEYS,
+  addMemory,
+  applyChatQuota,
+  canChatHappiness,
+  chatQuotaLeft,
+  emptyChatQuota,
+  findPendingMemory,
+  forgiveNeglectMemories,
+  hasUnforgivenNeglect,
+  isNeglectMemoryKey,
+  markMemorySpoken,
+  matchChatKeyword,
+  reactionFor,
+  rollChatQuotaDay,
+} from "./companion";
+export type {
+  ChatContext,
+  ChatKeyword,
+  ChatPools,
+  ChatQuota,
+  ChatReply,
+  ChatRequest,
+  DialogueContext,
+  DialogueEngineOptions,
+  DialoguePick,
+  DialoguePools,
+  DialogueTriggerKey,
+  ILlmProvider,
+  PendingMemory,
+  ReactionAction,
+} from "./companion";
+

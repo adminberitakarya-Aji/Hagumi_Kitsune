@@ -11,3 +11,10 @@ createRoot(root).render(
     <App />
   </StrictMode>,
 );
+
+// PWA (M5): service worker offline shell — hanya produksi, hindari ganggu HMR dev
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    void navigator.serviceWorker.register("/sw.js");
+  });
+}

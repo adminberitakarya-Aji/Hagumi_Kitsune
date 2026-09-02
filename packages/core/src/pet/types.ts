@@ -37,6 +37,8 @@ export interface MemoryLogEntry {
   t: number;
   key: string;
   detail: string;
+  /** M6 (Doc 08 §5): true = lalai ini sudah dimaafkan lewat chat. */
+  forgiven?: boolean;
 }
 
 /** Satu sampel Care Score (GDD §4) — disimpan rolling 24 jam di save. */

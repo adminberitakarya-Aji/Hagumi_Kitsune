@@ -4,16 +4,27 @@
  * persistensi lewat SaveSystem. React & Phaser tidak pernah menyentuh core langsung.
  */
 import {
+  MathRng,
   MemoryStorage,
   MS_PER_DAY,
   MS_PER_HOUR,
+  OfflineLlmProvider,
   PetStateMachine,
+  addMemory,
   calculateMinigameReward,
   canPlayMinigame,
+  chatQuotaLeft,
   clampStats,
+  DialogueEngine,
+  findPendingMemory,
+  forgiveNeglectMemories,
   getDayPhase,
   getSeason,
   getSeasonEvent,
+  hasUnforgivenNeglect,
+  markMemorySpoken,
+  rollChatQuotaDay,
+  reactionFor,
   SaveSystem,
   SystemClock,
   checkPathRecovery,
@@ -26,6 +37,8 @@ import {
   scoopPoop,
   updateLoginStreak,
   type ActionRejectReason,
+  type ChatContext,
+  type ChatPools,
   type DayPhase,
   type EvolutionParams,
   type PetData,
@@ -33,11 +46,20 @@ import {
   type PetStats,
   type SaveData,
 } from "@hagumi/core";
-import { evolutionConfig, getItemById, minigamesConfig, getMinigameById, getStageRule, rulesConfig } from "@hagumi/data"; // katalog asli M2/M3/M4 (fail-fast JSON)
+import type { ChatMessageUi } from "../store/gameState";
+import { evolutionConfig, getDialogConfig, getItemById, minigamesConfig, getMinigameById, getStageRule, rulesConfig } from "@hagumi/data"; // katalog asli M2/M3/M4 (fail-fast JSON)
 import { eventBus } from "../lib/eventBus";
 import { getGameState, setUiState } from "../store/gameState";
 import { pushToast } from "../store/toastStore";
 import { WebStorage } from "./webStorage";
+import { audioEngine } from "./audioEngine";
+import { webNotifier } from "./webNotifier";
+
+/** Terapkan flag audio dari save ke AudioEngine (M5 — Doc 10 §5). */
+function applyAudioSettings(s: { music: boolean; sfx: boolean }): void {
+  audioEngine.setMusicEnabled(s.music);
+  audioEngine.setSfxEnabled(s.sfx);
+}
 
 const REJECT_TEXT: Record<ActionRejectReason, string> = {
   TOO_FULL: "Mou kenyang... 🍙",
@@ -59,7 +81,6 @@ const PAT_LINES = ["Kyuu~!", "Laper...", "Main yuk!", "Ehehe~", "Hari ini cerah,
 
 const UNSCRIPTED: Record<string, string> = {
   album: "📖 Album",
-  chat: "💬 Chat",
   "door-garden": "⛩️ Taman",
   "door-kitchen": "🍵 Dapur (scene)",
 };
@@ -96,6 +117,15 @@ const EVOLVE_LINES = {
   elder: "Tubuhku menua, tapi hatiku tetap muda~",
 } as const;
 
+/** M5 — musik ambient: track mengikuti musim kalender + siang/malam (Doc 10 §5). */
+function startAmbientMusic(): void {
+  if (!getGameState().hasSave) return;
+  const now = getGameState().nowMs;
+  const season = getSeason(now);
+  const night = getDayPhase(now) === "night";
+  audioEngine.playMusic(`music_${season}${night ? "_night" : ""}`);
+}
+
 class GameRuntime {
   private readonly saveSystem: SaveSystem;
   /** null = belum ada save (onboarding berjalan — Doc 04 §6: save dibuat tepat setelah menetas). */
@@ -120,6 +150,18 @@ class GameRuntime {
   private zeroStats = new Set<keyof PetStats>();
   /** Mulai akumulasi penalti sakit tak diobati (0 = tidak sakit). */
   private sickPenaltyFrom = 0;
+  /** Notifikasi lokal (M5): throttle per stat + flag episode sakit. */
+  private notifiedAt = new Map<keyof PetStats, number>();
+  private sickNotified = false;
+  /** M6 — mesin dialog + provider chat Tier 1 (Doc 08, Doc 11 §1–2). */
+  private dialogue: DialogueEngine | null = null;
+  private dialogueElement: string | null = null;
+  private chatProvider: OfflineLlmProvider | null = null;
+  private chatProviderElement: string | null = null;
+  /** Riwayat pesan layar Chat (Doc 12 §8) — bertahan selama sesi runtime. */
+  private chatMessages: ChatMessageUi[] = [];
+  /** Lalai yang menunggu dicatat ke memoryLog (di-drain pada tick dialog). */
+  private pendingNeglect: Array<{ key: string; detail: string }> = [];
 
   constructor() {
     const primary = new SaveSystem(new WebStorage(), new SystemClock());
@@ -216,7 +258,42 @@ class GameRuntime {
     }
     pet = this.applyGrowth(pet);
     this.saveData = { ...save, pet };
+    this.checkNotifications(pet);
     this.sync();
+    this.checkCompanionDialog(); // M6: dialog kontekstual (Doc 08 §2)
+  }
+
+  /**
+   * Notifikasi lokal (M5 — Doc 11/GDD §11): stat <20 & sakit.
+   * Throttle: satu notifikasi per stat per 4 jam; sakit sekali per episode.
+   */
+  private checkNotifications(pet: PetData): void {
+    if (!this.saveData?.settings.notify) return;
+    if (pet.stage === "dead" || pet.stage === "egg") return;
+    const THROTTLE_MS = 4 * MS_PER_HOUR;
+    const LOW: Array<[keyof PetStats, string]> = [
+      ["hunger", "perutnya koroong — beri makan!"],
+      ["happiness", "terlihat murung — ajak main!"],
+      ["energy", "mengantuk — sudutkan istirahat"],
+      ["hygiene", "butuh mandi di Onsen"],
+      ["health", "kondisinya memburuk — cek dia!"],
+    ];
+    for (const [key, message] of LOW) {
+      if (pet.stats[key] >= 20) {
+        this.notifiedAt.delete(key);
+        continue;
+      }
+      const last = this.notifiedAt.get(key) ?? 0;
+      if (this.simNow - last < THROTTLE_MS) continue;
+      this.notifiedAt.set(key, this.simNow);
+      webNotifier.notify(`${pet.name} butuh perhatian`, message);
+    }
+    if (pet.state === "sick" && !this.sickNotified) {
+      this.sickNotified = true;
+      webNotifier.notify(`${pet.name} sakit!`, "Beri obat dari Dapur sebelum kondisinya memburuk.");
+    } else if (pet.state !== "sick") {
+      this.sickNotified = false;
+    }
   }
 
   /** Mesin pertumbuhan M3: care sampling berkala → evolusi tahap → pemulihan jalur (GDD §4). */
@@ -251,6 +328,8 @@ class GameRuntime {
       });
       eventBus.emit("fx/evolve", { kind: evo.kind });
       pushToast(`✨ Evolusi — ${evo.tier ?? "berubah"}!`);
+      // M6 — catat momen evolusi ke memori (Doc 08 §4) → dialog "memory_event"
+      this.recordMemory("evolved", `${evo.kind} — ${evo.tier ?? "berubah"}`);
       this.persist();
       return result; // evolving: pemulihan jalur ditunda sampai selesai cutscene
     }
@@ -278,6 +357,8 @@ class GameRuntime {
       if (pet.stats[key] <= 0 && !this.zeroStats.has(key)) {
         this.zeroStats.add(key);
         this.penaltySinceSample += EV_PARAMS.neglectPenalty.statZero;
+        // M6 — catat lalai ke memoryLog (di-drain pada tick dialog, Doc 08 §4)
+        this.pendingNeglect.push({ key: `${key}_zero`, detail: `${key} menyentuh 0` });
       } else if (pet.stats[key] > 5) {
         this.zeroStats.delete(key); // pulih — kejadian berikutnya dihitung lagi
       }
@@ -388,6 +469,184 @@ class GameRuntime {
     }, ms);
   }
 
+  // ===== Companion & dialog kontekstual (M6 — Doc 08, Doc 11 §1–2) =====
+
+  /** Mesin dialog dibuat/diperbarui sesuai elemen + varian tahap/jalur (Doc 08 §3). */
+  private ensureDialogue(): DialogueEngine | null {
+    const save = this.saveData;
+    if (!save || save.pet.stage === "egg") return null;
+    if (!this.dialogue || this.dialogueElement !== save.pet.element) {
+      const cfg = getDialogConfig(save.pet.element);
+      this.dialogue = new DialogueEngine({
+        element: save.pet.element,
+        pools: {
+          lines: cfg.lines,
+          seniorIdle: cfg.senior.idle,
+          darkIdle: cfg.dark.idle,
+          darkNeglect: cfg.dark.neglect,
+        },
+        rng: new MathRng(),
+        nowMs: this.simNow,
+      });
+      this.dialogueElement = save.pet.element;
+    }
+    this.dialogue.setVariant(save.pet.stage, save.pet.path);
+    this.dialogue.tick(this.simNow);
+    return this.dialogue;
+  }
+
+  /** Provider chat Tier 1 (Doc 11 §2 ⭐ default offline — M9 tinggal ganti adapter). */
+  private ensureChatProvider(): OfflineLlmProvider | null {
+    const save = this.saveData;
+    if (!save || save.pet.stage === "egg") return null;
+    if (!this.chatProvider || this.chatProviderElement !== save.pet.element) {
+      const cfg = getDialogConfig(save.pet.element);
+      const pools: ChatPools = {
+        makan: cfg.chat.makan,
+        sayang: cfg.chat.sayang,
+        maaf: cfg.chat.maaf,
+        siapa: cfg.chat.siapa,
+        fallback: cfg.chat.fallback,
+      };
+      this.chatProvider = new OfflineLlmProvider(pools, new MathRng());
+      this.chatProviderElement = save.pet.element;
+    }
+    return this.chatProvider;
+  }
+
+  /** Catat momen ke memoryLog (terbaru di depan, maks 20 — Doc 08 §4). */
+  private recordMemory(key: string, detail: string): void {
+    const save = this.saveData;
+    if (!save) return;
+    this.saveData = {
+      ...save,
+      pet: {
+        ...save.pet,
+        memoryLog: addMemory(save.pet.memoryLog, { t: this.simNow, key, detail }),
+      },
+    };
+  }
+
+  /**
+   * Tick dialog (Doc 08 §2) — dipanggil tiap selesai sync: drain lalai tertunda,
+   * tandai memori terpendingk "spoken", lalu evaluasi prioritas 1–9.
+   */
+  private checkCompanionDialog(): void {
+    const dialogue = this.ensureDialogue();
+    let save = this.saveData;
+    if (!save || !dialogue) return;
+    if (save.pet.stage === "dead") return;
+    if (this.pendingNeglect.length > 0) {
+      let log = save.pet.memoryLog;
+      for (const n of this.pendingNeglect) {
+        log = addMemory(log, { t: this.simNow, key: n.key, detail: n.detail });
+      }
+      this.pendingNeglect = [];
+      this.saveData = { ...save, pet: { ...save.pet, memoryLog: log } };
+      save = this.saveData;
+    }
+    const pet = save.pet;
+    const pending = findPendingMemory(pet.memoryLog);
+    if (pending) {
+      // kolom `spoken` runtime-only — tak mengubah struktur save
+      this.saveData = {
+        ...save,
+        pet: { ...pet, memoryLog: markMemorySpoken(pet.memoryLog, pending.index) },
+      };
+    }
+    const pick = dialogue.pickByPriority(
+      {
+        stats: pet.stats,
+        state: pet.state,
+        phase: getDayPhase(this.simNow),
+        season: getSeason(this.simNow),
+        pendingMemory: pending?.entry ?? null,
+      },
+      Math.floor((this.simNow - pet.birthAt) / MS_PER_DAY),
+    );
+    if (pick) {
+      eventBus.emit("pet/say", { text: pick.text });
+      this.persist();
+    }
+  }
+
+  /** Buka layar Chat (Doc 12 §8). */
+  chatOpen(): void {
+    const save = this.saveData;
+    if (!save || save.pet.stage === "egg" || save.pet.stage === "dead" || save.pet.state === "dead") return;
+    setUiState({
+      chat: {
+        messages: [...this.chatMessages],
+        quotaLeft: chatQuotaLeft(rollChatQuotaDay(save.companion.chatQuota, this.dayKey(this.simNow))),
+        canForgive: hasUnforgivenNeglect(save.pet.memoryLog),
+      },
+    });
+  }
+
+  /** Tutup layar Chat. */
+  chatClose(): void {
+    setUiState({ chat: null });
+  }
+
+  /** Kirim pesan pemain → provider Tier 1 (Doc 08 §5): keyword id/en + kuota + pemaafan.
+   * Typing indicator 3 titik 1–2 dtk sebelum balasan (Doc 12 §8). */
+  chatSend(text: string): void {
+    const save = this.saveData;
+    const provider = this.ensureChatProvider();
+    if (!save || !provider) return;
+    const trimmed = text.trim().slice(0, 120);
+    if (!trimmed) return;
+    const pet = save.pet;
+    const context: ChatContext = {
+      petName: pet.name,
+      element: pet.element,
+      stats: pet.stats,
+      phase: getDayPhase(this.simNow),
+      season: getSeason(this.simNow),
+      ageDays: Math.floor((this.simNow - pet.birthAt) / MS_PER_DAY) + 1,
+      memoryLog: pet.memoryLog,
+      hasUnforgivenNeglect: hasUnforgivenNeglect(pet.memoryLog),
+      chatQuota: save.companion.chatQuota,
+      day: this.dayKey(this.simNow),
+    };
+    // pesan pemain langsung tampil + mulai "mengetik…"
+    this.chatMessages = [
+      ...this.chatMessages,
+      { from: "player" as const, text: trimmed },
+    ].slice(-20);
+    setUiState({ chat: { ...getGameState().chat!, typing: true } });
+    const delay = 1000 + Math.floor(Math.random() * 1000); // 1–2 dtk (Doc 12 §8)
+    window.setTimeout(() => {
+      void provider.chat({ text: trimmed, context }).then((reply) => {
+      const cur = this.saveData;
+      if (!cur) return;
+      let petNow = cur.pet;
+      if (reply.happiness > 0) petNow = this.addHappiness(petNow, reply.happiness);
+      if (reply.forgave) {
+        const { log } = forgiveNeglectMemories(petNow.memoryLog);
+        petNow = { ...petNow, memoryLog: log };
+        pushToast("💝 Memori lalai dimaafkan!");
+      }
+      this.saveData = { ...cur, pet: petNow, companion: { chatQuota: reply.chatQuota } };
+      this.chatMessages = [
+        ...this.chatMessages,
+        { from: "pet" as const, text: reply.text },
+      ].slice(-20); // riwayat sesi maks 20 bubble (privasi — Doc 12 §8)
+      setUiState({
+        chat: {
+          messages: [...this.chatMessages],
+          quotaLeft: chatQuotaLeft(reply.chatQuota),
+          canForgive: hasUnforgivenNeglect(petNow.memoryLog),
+          typing: false,
+        },
+      });
+      this.sync();
+      this.persist();
+      if (reply.happiness > 0) eventBus.emit("pet/reaction", { emoji: reactionFor("stroke") });
+      });
+    }, delay);
+  }
+
   feed(foodId: string): void {
     const save = this.saveData;
     if (!save) return;
@@ -424,6 +683,7 @@ class GameRuntime {
     pushToast(`${item.icon} ${item.name} — kenyang! 🍖+${item.hunger}`);
     if (result.overfeedWarning) pushToast("⚠️ Kegemukan! Jangan terlalu sering (health −5)");
     eventBus.emit("pet/eat", { label: item.icon });
+    eventBus.emit("pet/reaction", { emoji: reactionFor("feed") }); // M6 (Doc 08 §1)
     this.finishTransientAfter(1800);
   }
 
@@ -440,6 +700,7 @@ class GameRuntime {
     this.persist();
     pushToast("♨️ Wangi sedap! 😊+5");
     eventBus.emit("pet/say", { text: "Kyaa~ segarnya!" });
+    eventBus.emit("pet/reaction", { emoji: reactionFor("bath") }); // M6 (Doc 08 §1)
     this.finishTransientAfter(2000);
   }
 
@@ -460,13 +721,16 @@ class GameRuntime {
   }
 
   poke(): void {
-    const state = this.saveData?.pet.state;
-    eventBus.emit("pet/say", {
-      text:
-        state === "sleeping"
-          ? "Zzz..."
-          : (PAT_LINES[Math.floor(Math.random() * PAT_LINES.length)] ?? "Kyuu?"),
-    });
+    const save = this.saveData;
+    if (!save || save.pet.state === "sleeping") {
+      eventBus.emit("pet/say", { text: "Zzz..." });
+      return;
+    }
+    // M6 — baris sesuai kepribadian elemen (fallback: baris pat lama)
+    const line =
+      this.ensureDialogue()?.pick("idle") ??
+      (PAT_LINES[Math.floor(Math.random() * PAT_LINES.length)] ?? "Kyuu?");
+    eventBus.emit("pet/say", { text: line });
   }
 
   stroke(): void {
@@ -577,6 +841,8 @@ class GameRuntime {
       },
     };
     this.noteInteraction("play"); // Care Score bonus interaksi (GDD §4)
+    // M6 — rekor baru masuk memori (Doc 08 §4) → dialog "memory_event"
+    if (newRecord) this.recordMemory(`minigame_${gameId}`, `rekor baru ${def.name}: ${points}`);
     this.sync();
     this.persist();
     this.finishTransientAfter(1200); // playing → IDLE
@@ -867,6 +1133,21 @@ class GameRuntime {
     pushToast("📦 Kode backup dibuat — salin dan simpan!");
   }
 
+  /** Terapkan pengaturan audio/notify/offline-LLM (M5 — Doc 12 §3.2) + persist. */
+  applySettings(partial: { music?: boolean; sfx?: boolean; notify?: boolean; offlineLlm?: boolean }): void {
+    if (!this.saveData) return;
+    this.saveData = { ...this.saveData, settings: { ...this.saveData.settings, ...partial } };
+    applyAudioSettings(this.saveData.settings);
+    if (partial.notify !== undefined) webNotifier.setEnabled(partial.notify);
+    this.persist();
+  }
+
+  /** Flag audio saat ini (dipakai init untuk sinkronisasi awal AudioEngine). */
+  get settingsSnapshot(): { music: boolean; sfx: boolean } {
+    const s = this.saveData?.settings;
+    return { music: s?.music ?? true, sfx: s?.sfx ?? true };
+  }
+
   /** Impor kode base64 → ganti save aktif setelah validasi skema. */
   importBackup(code: string): void {
     const result = SaveSystem.importBase64(code);
@@ -939,6 +1220,18 @@ export function initGameSystem(): () => void {
   });
   if (runtime.hasSave) runtime.startTicker();
 
+  // M5 — musik ambient: mulai saat game berjalan & pantau perubahan musim/fase
+  if (runtime.hasSave) {
+    applyAudioSettings(runtime.settingsSnapshot);
+    startAmbientMusic();
+    window.setInterval(() => startAmbientMusic(), 10_000);
+    // Notifikasi lokal: minta izin dari interaksi pertama (kebijakan browser)
+    const askNotify = (): void => {
+      void webNotifier.requestPermission();
+    };
+    window.addEventListener("pointerdown", askNotify, { once: true });
+  }
+
   // Autosave: aksi (persist di tiap aksi) + visibilitychange + pagehide (Doc ROADMAP Fase D)
   const onVisibility = (): void => {
     if (document.hidden) runtime?.flush();
@@ -974,6 +1267,15 @@ export function initGameSystem(): () => void {
     eventBus.on("ui/event-cta", ({ id }) => runtime?.claimSeasonEvent(id)),
     eventBus.on("ui/backup-export", () => runtime?.exportBackup()),
     eventBus.on("ui/backup-import", ({ code }) => runtime?.importBackup(code)),
+    // M6 — layar Chat companion (Doc 12 §8, Doc 11 §2)
+    eventBus.on("ui/chat-open", () => runtime?.chatOpen()),
+    eventBus.on("ui/chat-close", () => runtime?.chatClose()),
+    eventBus.on("ui/chat-send", ({ text }) => runtime?.chatSend(text)),
+    // M5 — audio: SFX dari scene + pengaturan musik/SFX/notify/offline-LLM
+    eventBus.on("sfx/play", ({ id }) => audioEngine.playSfx(id)),
+    eventBus.on("ui/settings", (s) => runtime?.applySettings(s)),
+    // Musik ambient mengikuti musim & fase waktu (Doc 10 §5: 4 musim × siang/malam)
+    eventBus.on("ui/continue", () => startAmbientMusic()),
     eventBus.on("ui/continue", () => runtime?.continueGame()),
     eventBus.on("ui/new-game", ({ name, element }) => {
       runtime?.startNewGame(name, element);

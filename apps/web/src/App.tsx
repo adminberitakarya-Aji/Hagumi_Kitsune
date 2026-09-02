@@ -16,6 +16,7 @@ import { Splash } from "./components/Splash";
 import { TutorialHint } from "./components/TutorialHint";
 import { ShopSheet } from "./components/ShopSheet";
 import { MinigameResultSheet } from "./components/MinigameResultSheet";
+import { ChatScreen } from "./components/ChatScreen";
 import { SickBanner } from "./components/SickBanner";
 import { MemorialScreen } from "./components/MemorialScreen";
 import { LoginRewardSheet } from "./components/LoginRewardSheet";
@@ -70,13 +71,20 @@ export default function App() {
           <Hud />
           <SickBanner />
           <TutorialHint />
-          <ActionBar onAction={(id) => eventBus.emit("ui/action", { id })} />
+          <ActionBar
+            onAction={(id) =>
+              id === "chat"
+                ? eventBus.emit("ui/chat-open", undefined)
+                : eventBus.emit("ui/action", { id })
+            }
+          />
           <Toast />
           <DebugPanel />
           <OfflineSummarySheet />
           <LoginRewardSheet />
           <EvolutionCutscene />
           <MinigameResultSheet />
+          <ChatScreen />
           {sheet && (
             <WashiPanel open title={SHEET_TITLES[sheet]} onClose={() => setSheet(null)}>
               {sheet === "dapur" && <KitchenSheet onFed={() => setSheet(null)} />}

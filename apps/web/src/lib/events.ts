@@ -22,6 +22,7 @@ export interface GameEventMap {
   "pet/appearance": { element: string; path: string; tails: number }; // ekor + tint jalur (M3)
   "fx/hearts": undefined;
   "fx/scoop": { index: number }; // partikel sapu berhasil
+  "fx/bathe": undefined; // klip bathe (M5 — aksi onsen)
   "fx/evolve": { kind: "first" | "final" | "elder" }; // kilat aura evolusi (Doc 12 §11.3)
   /* Navigasi scene (M4) — React/system → Phaser */
   "scene/goto": {
@@ -42,6 +43,15 @@ export interface GameEventMap {
   /* Backup (Doc 09 §4) — SettingsSheet → system */
   "ui/backup-export": undefined;
   "ui/backup-import": { code: string };
+  /* Pengaturan lengkap (M5 — Doc 12 §3.2) — SettingsSheet → system */
+  "ui/settings": { music?: boolean; sfx?: boolean; notify?: boolean; offlineLlm?: boolean };
+  /* SFX dari scene (M5) — scene minta system memainkan efek (satu gerbang audio) */
+  "sfx/play": { id: string };
+  /* Companion & dialog kontekstual (M6 — Doc 08, Doc 12 §8) */
+  "ui/chat-open": undefined; // ActionBar 💬 → layar Chat
+  "ui/chat-close": undefined; // tutup layar Chat
+  "ui/chat-send": { text: string }; // kirim pesan pemain → provider (Doc 11 §2)
+  "pet/reaction": { emoji: string }; // reaksi emoji non-verbal di atas pet (Doc 08 §1)
   /* Onboarding (Doc 04) — Splash/Onboarding → system */
   "ui/continue": undefined;
   "ui/new-game": { name: string; element: "fire" | "water" | "wind" | "earth" };

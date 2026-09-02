@@ -1,0 +1,20 @@
+{
+  "name": "HAGUMI (育み) — Pet Kitsune",
+  "short_name": "HAGUMI",
+  "description": "Pet game kitsune — rawat kogitsune-mu dari telur hingga dewasa.",
+  "lang": "id",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#2B2B33",
+  "theme_color": "#2B2B33",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "element": "fire",
+  "lines": {
+    "health": [
+      "Badanku panas... *bersin* Jangan dekat-dekat!",
+      "Aku tidak sakit! ...Halo? dunia berputar...",
+      "Panas. Salahku? Tidak. Tetap salahmu. *bersin*"
+    ],
+    "hunger": [
+      "Perutku koroong! Laper!! Sekarang!",
+      "Laper... LAPER! Kamu dengar kan?!",
+      "Api di perutku padam... kasi makan dong!"
+    ],
+    "hygiene": [
+      "Bau? Aku? Tidak mungkin... ...okey mungkin iya!",
+      "Hmph! Kotor itu keren... tapi oke, cebok aku.",
+      "Kotoran itu bukti aku produktif! Tapi... yaudah bersihin."
+    ],
+    "energy": [
+      "Mataku berat... tapi main dulu... *menguap*... yaudah tidur.",
+      "Energiku habis... jangan paang-paangin aku...",
+      "Ugh... lima menit lagi... baru... tidur..."
+    ],
+    "night": [
+      "Malam-malam gini enaknya ngapain ya? Ngapain YA?",
+      "Aku ngantuk tapi males tidur. Paham kan? KAN?",
+      "Bintang banyak tuh. Aku lawan satu! ...kalah."
+    ],
+    "happiness": [
+      "Kamu sibuk ya hari ini... Hmph! Aku nggak kesepian kok!",
+      "Aku kesepian. Bukan menggantungkan diri, cuma fakta!",
+      "Main? Ayolah. Aku nggak minta banyak... YA SUDAH MINTA!"
+    ],
+    "memory_neglect": [
+      "Kamu lupa memberiku makan... tapi gapapa kok! ...sedikit.",
+      "Aku nggak ngambek soal kemarin. ...Bukti? Aku nulis ini HURUF BESAR SEMUA!",
+      "Laper kemarin, ya? Aku catat. Di hati. Selamanya. ♥"
+    ],
+    "memory_event": [
+      "Eh, inget kejadian barusan? Aku inget lho, selamanya!",
+      "Itu tadi seru banget! Cerita lagi dong— eh udah lewat ya.",
+      "Aku nyimpen momen itu di api terbesarku. Metafora!"
+    ],
+    "forgive": [
+      "Hmph! Sudah kumaafkan. Jangan ulangi! ...peluk dulu, boleh.",
+      "Bentar, aku pura-pura mikir keras... oke, dimaafkan!",
+      "Maaf diterima! Api amarahku padam jadi api cinta. Cheee."
+    ],
+    "phase_morning": [
+      "PAGI! Ayolah bangun, hari ini penuh PETUALANGAN!",
+      "Matahari udah naik, masa kamu masih rebahan?!"
+    ],
+    "phase_day": [
+      "Siang gini enaknya main! Ayo main! Sekarang!",
+      "Aku latihan lompat tadi. Gagal. Kita anggap pemanasan."
+    ],
+    "phase_evening": [
+      "Senja... indah ya. Tenang. ...OKE UDAH, MAIN YUK!",
+      "Langitnya oranye! Sama kayak ekorku. Kami satu jiwa."
+    ],
+    "season_spring": [
+      "Sakura! Aku mau nangkep satu! ...terbang. Okedeh.",
+      "Musim bunga? Aku juga mekar! Mekar kesal! Haha!"
+    ],
+    "season_summer": [
+      "PANAS! Aku suka! Kamu menderita? Hehe. Minum dulu sana!",
+      "Matsuri! Ayo ke festival! Lari duluan, kejar kalau bisa!"
+    ],
+    "season_autumn": [
+      "Daun momiji! Merah kayak aku! Aku koleksi buat hiasan.",
+      "Angin sejuk... cocok buat berlari. KECARPAN!"
+    ],
+    "season_winter": [
+      "Salju! Aku bikin yukigitsune! Punyaku paling keren!",
+      "Dingin?! Aku kan api! Gemetar kalian, tenang aku!"
+    ],
+    "idle": [
+      "Lambat banget! Main yuk, SEKARANG!",
+      "Aku kogitsune paling keren sedunia. Gaskeun.",
+      "Ekor ku bergoyang artinya aku bosan. Lihat. GOYANG.",
+      "Otta! Otta! Itu artinya halo dalam bahasa api.",
+      "Napas keluar asap tipis... keren kan? KEREN KAN?"
+    ]
+  },
+  "chat": {
+    "makan": {
+      "hungerLow": ["LAPER!! Beri makan SEKARANG, Master!", "Perutku sudah teriak dua kali! Kirim makanan!"],
+      "hungerMid": ["Bisa makan sih... tapi nggak segesit kamu! Hmph.", "Laper dikit. Jangan lama-lama ya!"],
+      "hungerFull": ["Kenyang! Kalau maksa, aku GEMOY kembar dua. Percaya.", "Penuh sampai leher! Nanti makan lagi!"]
+    },
+    "sayang": ["A-a-a-aku juga... EH BUKAN ITU MAKSUDKU! ♥", "Sayang? Pfft. ...ulangi deh. ♥"],
+    "maaf": ["Dimaafkan! Asal bayar pakai main bareng. Haha!", "Hmph... oke, maaf. Tapi catet, ya!"],
+    "siapa": ["Aku {name}, kogitsune api! Cepat marah, cepat sayang!", "{name} namaku! Master kamu, sahabat kamu!"],
+    "fallback": ["Hmm? Ngomong apaan sih! ...tapi aku dengerin kok!", "Gak paham, tapi semangat!", "Ciee ngobrol sama aku. Lanjut, aku simak!"]
+  },
+  "senior": {
+    "idle": ["Dulu aku lebih cepat... sekarang lebih bijak. Katanya.", "Ekor kesembilanku paling anggun. Lihat baik-baik."],
+    "nostalgia": ["Dulu, waktu aku masih bayi, aku juga seenergik ini. Lebih.", "Kau tahu... api pertamaku tak pernah benar-benar padam."]
+  },
+  "dark": {
+    "idle": ["...hmph. Pergi sana.", "Aku nggak butuh siapa-siapa. ...kecuali kamu. Sayang."],
+    "neglect": ["Kamu tinggalkan aku. Aku ingat. Selalu.", "...lama sekali kamu pergi. Api kecilku nyaris padam."]
+  }
+}

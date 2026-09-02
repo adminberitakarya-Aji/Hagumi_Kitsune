@@ -1,0 +1,104 @@
+{
+  "element": "water",
+  "lines": {
+    "health": [
+      "Badanku... panas... maaf... *bersin*",
+      "Aku... kurang sehat... tidak apa-apa, kok... mungkin...",
+      "Sakit... sedikit... jangan khawatir... oke... khawatir boleh..."
+    ],
+    "hunger": [
+      "Perutku... koroong... maaf, mengganggu...",
+      "Ehm... kalau... kalau ada makanan... gapapa juga sih kalau belum...",
+      "Laper... sedikit... banyak... banyak, sih..."
+    ],
+    "hygiene": [
+      "B-bau...? Maaf... aku takut kamu marah...",
+      "Kotor... ya... aku membersihkan diri sendiri... coba...",
+      "Maaf ya... jadi ribet karena aku..."
+    ],
+    "energy": [
+      "Mataku... berat... boleh tidur... dulu...?",
+      "Aku... ngantuk... tapi kalau kamu mau main... aku ikut...",
+      "Mengantuk... maaf... menguap di depanmu..."
+    ],
+    "night": [
+      "Malam... tenang sekali... aku suka... diam-diam...",
+      "Kamu masih bangun... aku tungguin... gapapa kok...",
+      "Bintangnya... banyak... indah... ya..."
+    ],
+    "happiness": [
+      "Kamu sibuk ya hari ini... gapapa... aku tunggu...",
+      "Aku... sedikit kesepian... tapi tidak apa-apa... kok...",
+      "Kalau... kalau kamu ada waktu... main... sama aku...?"
+    ],
+    "memory_neglect": [
+      "Kamu lupa memberiku makan kemarin... gapapa... aku hanya... sedih sedikit...",
+      "Kemarin... perutku kosong... tapi kamu datang lagi... itu cukup...",
+      "Aku tidak marah... cuma... jangan lupa lagi... ya...?"
+    ],
+    "memory_event": [
+      "Ingat... kejadian itu... aku masih terkejut... senang...",
+      "Momen tadi... aku simpan... di hatiku... diam-diam...",
+      "Itu tadi... seru... meski aku cuma di sebelahmu..."
+    ],
+    "forgive": [
+      "Sudah... kumaafkan... jangan sedih, ya...",
+      "Maaf... diterima... kita mulai lagi... dari sekarang...",
+      "Tidak apa-apa... semua orang... bisa lupa... aku juga..."
+    ],
+    "phase_morning": [
+      "Selamat pagi... semoga... harimu lembut...",
+      "Pagi... kabutnya masih ada... cantik... ya..."
+    ],
+    "phase_day": [
+      "Siang... hangat... aku menemanimu... dari sini...",
+      "Kalau... kamu butuh apa-apa... aku di sini... selalu..."
+    ],
+    "phase_evening": [
+      "Senja... warnanya... seperti ekorku... lembut...",
+      "Matahari... turun perlahan... aku suka menontonnya... berdua..."
+    ],
+    "season_spring": [
+      "Sakura... jatuh... seperti hujan perlahan... indah...",
+      "Musim bunga... aku... jadi ingin menari... sedikit... saja..."
+    ],
+    "season_summer": [
+      "Panas... tapi aku... air... kami berdamai... hehe...",
+      "Festival... kalau kamu takut tersesat... pegang tanganku... eh... maksudku..."
+    ],
+    "season_autumn": [
+      "Daun momiji... merah... tapi lembut... seperti caramu merawatku...",
+      "Udara sejuk... cocok... untuk duduk berdua... diam..."
+    ],
+    "season_winter": [
+      "Salju... jatuh tanpa suara... seperti aku... hehe...",
+      "Dingin... mari... saling berdekatan... kalau kamu mau..."
+    ],
+    "idle": [
+      "Ehm... kalau... kalau kamu tidak sibuk...",
+      "Aku... tidak apa-apa... benar-benar... mungkin...",
+      "Aku di sini... kalau kamu butuh... apa saja...",
+      "Kyuu... maaf, cuma mau bilang... hai...",
+      "Air tenang... itu aku... menyerahkan diri... pada waktu..."
+    ]
+  },
+  "chat": {
+    "makan": {
+      "hungerLow": ["Laper... sekali... boleh makan...?", "Perutku... kosong... maaf merepotkan..."],
+      "hungerMid": ["Laper... sedikit... kalau kamu mau... siapkan makanan...", "Aku... tidak keberatan... makan... sekarang..."],
+      "hungerFull": ["Kenyang... terima kasih... kau selalu... mengerti...", "Penuh... cukup... aku bahagia... diam-diam..."]
+    },
+    "sayang": ["A-aku... juga... sayang... jangan pandangi aku... malu...", "...aku... diam-diam senang sekali..."],
+    "maaf": ["Tidak apa-apa... aku... pernah lupa juga... jangan khawatir...", "Sudah... dimaafkan... mari... jangan sedih..."],
+    "siapa": ["Aku {name}... rubah air... pemalu... tapi setia...", "{name}... panggil aku... kapan saja... aku datang... perlahan..."],
+    "fallback": ["...ehm... aku dengarkan... lanjut, ya...", "Aku... tidak paham semua... tapi aku... menemanimu...", "Ceritamu... aku simpan... di hati..."]
+  },
+  "senior": {
+    "idle": ["Air... semakin lama... semakin tenang... begitupun aku...", "Dulu aku sangat pemalu... sekarang... masih... tapi lebih bijak..."],
+    "nostalgia": ["Dulu, waktu aku masih bayi... aku bahkan tak berani bersuara... hampir...", "Arus waktu... membawaku ke sini... kepadamu..."]
+  },
+  "dark": {
+    "idle": ["...aku di sini... saja...", "Diam... lebih aman... daripada kecewa..."],
+    "neglect": ["...kamu pergi... lama... airku beku...", "Aku menunggu... sampai... tidak berharap lagi... hampir..."]
+  }
+}

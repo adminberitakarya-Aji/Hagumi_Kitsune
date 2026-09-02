@@ -20,7 +20,10 @@ export const memoryLogEntrySchema = z.object({
   t: z.number(),
   key: z.string(),
   detail: z.string(),
+  /** M6 (Doc 08 §4–5): memori lalai yang sudah dimaafkan lewat chat. */
+  forgiven: z.boolean().optional(),
 });
+
 
 export const petCareSampleSchema = z.object({
   t: z.number(),
@@ -74,8 +77,13 @@ export const breedingDataSchema = z.object({
 });
 
 export const settingsDataSchema = z.object({
-  sound: z.boolean().default(true),
+  sound: z.boolean().default(true), // kompat v1 — digantikan music/sfx (M5)
   notify: z.boolean().default(true),
+  /** M5 (Doc 10 §5, Doc 12 §3.2): musik & SFX on/off terpisah — tersimpan di save. */
+  music: z.boolean().default(true),
+  sfx: z.boolean().default(true),
+  /** M5: toggle companion offline-LLM (Doc 11 §2 — provider-offline default). */
+  offlineLlm: z.boolean().default(true),
 });
 
 /** Rekor & cooldown mini-game (M4 — Doc 05 §7). */
@@ -84,6 +92,19 @@ export const minigamesDataSchema = z.object({
   lastPlayAt: z.number().default(0),
 });
 export type MinigamesData = z.infer<typeof minigamesDataSchema>;
+
+/** Companion chat Tier 1 (M6 — Doc 08 §5): kuota anti-spam harian. */
+export const companionDataSchema = z.object({
+  chatQuota: z
+    .object({
+      day: z.string().default(""),
+      happinessToday: z.number().min(0).default(0),
+      messagesToday: z.number().min(0).default(0),
+    })
+    .default({}),
+});
+export type CompanionData = z.infer<typeof companionDataSchema>;
+
 
 /** Event musiman & interaksi taman (M4 — Doc 03 §5, Doc 12 §5). */
 export const seasonEventsSchema = z.object({
@@ -112,7 +133,7 @@ export const saveDataSchemaV1 = z.object({
 
 export type SaveDataV1 = z.infer<typeof saveDataSchemaV1>;
 
-/** v2 (M3): + pet.careHistory, pet.recoverSince. v2+: + minigames, seasonEvents (field ber-default). */
+/** v2 (M3): + pet.careHistory, pet.recoverSince. v2+: + minigames, seasonEvents, companion (field ber-default). */
 export const saveDataSchemaV2 = z.object({
   version: z.literal(2),
   lastTick: z.number(),
@@ -123,6 +144,7 @@ export const saveDataSchemaV2 = z.object({
   settings: settingsDataSchema,
   minigames: minigamesDataSchema.default({ bestScores: {}, lastPlayAt: 0 }),
   seasonEvents: seasonEventsSchema.default({}),
+  companion: companionDataSchema.default({}),
 });
 
 
@@ -184,6 +206,9 @@ export function createDefaultSave(params: {
     settings: {
       sound: true,
       notify: true,
+      music: true,
+      sfx: true,
+      offlineLlm: true,
     },
     minigames: {
       bestScores: {},
@@ -194,6 +219,9 @@ export function createDefaultSave(params: {
       tsukimiDoneDay: "",
       omikujiLastDay: "",
       koiFeedAt: 0,
+    },
+    companion: {
+      chatQuota: { day: "", happinessToday: 0, messagesToday: 0 },
     },
   };
 }

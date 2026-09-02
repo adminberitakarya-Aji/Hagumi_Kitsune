@@ -21,4 +21,14 @@ export {
   minigamesConfigSchema,
 } from "./minigames";
 export type { MinigameCommon, MinigameDef, MinigameStageKey, MinigameStageRule, MinigamesConfig } from "./minigames";
+export {
+  DIALOG_SEASON_KEYS,
+  chatSchema,
+  dialogueConfigSchema,
+  dialogueLinesSchema,
+  getAllDialogConfigs,
+  getDialogConfig,
+} from "./dialogue";
+export type { ChatLines, DialogElementKey, DialogueConfig, DialogueLines } from "./dialogue";
+
 

@@ -1,6 +1,7 @@
 /** S10 Lobi Matsuri (Doc 12 §7.1): 3 kartu mini-game → ui/minigame-start (gate di system). */
 import Phaser from "phaser";
 import { minigamesConfig } from "@hagumi/data";
+import { getSeason } from "@hagumi/core";
 import { eventBus } from "../lib/eventBus";
 import { bindSceneNav } from "./sceneNav";
 
@@ -14,9 +15,14 @@ export class MatsuriScene extends Phaser.Scene {
   }
 
   create(): void {
-    // Latar malam festival + lampion
-    this.add.rectangle(180, 320, 360, 640, 0x2b2b51);
-    this.add.rectangle(180, 100, 360, 120, 0x3d3d6b);
+    // Latar malam festival final (M5) + lampion
+    const seasonKey = `bg_festival_${getSeason(Date.now())}`;
+    if (this.textures.exists(seasonKey)) {
+      this.add.image(180, 320, seasonKey).setDepth(0);
+    } else {
+      this.add.rectangle(180, 320, 360, 640, 0x2b2b51);
+      this.add.rectangle(180, 100, 360, 120, 0x3d3d6b);
+    }
     for (let i = 0; i < 5; i++) {
       const x = 48 + i * 66;
       const lamp = this.add.text(x, 90 + (i % 2) * 18, "🏮", { fontSize: "26px" }).setOrigin(0.5);

@@ -1,0 +1,104 @@
+{
+  "element": "wind",
+  "lines": {
+    "health": [
+      "Kamu sakit?! Aku yang sakit! Sama-sama? Sama-sama!",
+      "*bersin* Aduh! Ini serius nggak, ya? Serius kan?",
+      "Panas... tapi aku tetap keren! Maksudnya suhu! Suhu!"
+    ],
+    "hunger": [
+      "Perutku koroong! Dengar? Dengar lagi? KOROONG!",
+      "Laper! Laper! Ada makanan? Sekarang? Ya?",
+      "Perutku main drum. Bagus nggak? Tapi serius, laper!"
+    ],
+    "hygiene": [
+      "Bau? Aroma itu... aku? Sungguh?! Wah!",
+      "Kotor! Ayo dibersihkan! Aku pegang napas dulu— fuh!",
+      "Kenapa nggak bilang dari tadi? ...Kamu bilang? Oh."
+    ],
+    "energy": [
+      "Mataku berat... tapi seru kan hari ini? Seru kan?!",
+      "Aku ngantuk... tapi nggak mau tidur... eh, jangan diganggu— eh?",
+      "Menguap itu menular ya? Kamu buat aku menguap! Bertanggung jawab!"
+    ],
+    "night": [
+      "Malam! Malam! Kita lindungi dari monster imajiner, yuk!",
+      "Kamu ngantuk? Aku nggak! ...oke sedikit. Banyak. Banyaaak.",
+      "Suara jangkrik itu musik kan? Bukan? Ya sudahlah!"
+    ],
+    "happiness": [
+      "Kamu sibuk ya hari ini... Main nanti? Nanti kapan? KAPAN?",
+      "Aku bosaaan... Ada ide? Ada? Ada nggak?",
+      "Aku ngitung awan tadi. 47. Terus kamu datang! 48!"
+    ],
+    "memory_neglect": [
+      "Kamu lupa memberiku makan kemarin... tapi kamu balik! Yay! ...tapi jangan lupa lagi, ya?",
+      "Kemarin laper lama banget... tapi cerita aja yuk sekarang!",
+      "Aku nggak marah! Sedikit. Sedikit marah. Tapi lebih mau main!"
+    ],
+    "memory_event": [
+      "Tadi itu seru banget ya?! Ceritain lagi dong! Eh kita lagi ngomongin itu ya?",
+      "Inget kejadian barusan? Aku inget! Kamu inget? Inget kan?",
+      "Momen tadi masuk daftar favoritku! Daftarnya panjang lho!"
+    ],
+    "forgive": [
+      "Dimaafkan! Sekarang jangan bersedih! Ayo main!",
+      "Maaf diterima! Deal? Deal! Peluk dulu, boleh?",
+      "Lupakan semuanya! Yuk mulai hari baru! Sekarang! Sekarang!"
+    ],
+    "phase_morning": [
+      "Selamat pagi! Langitnya merah cantik! Lihat! Lihat!",
+      "Pagi! Udara segar! Ayo jalan-jalan! Sekarang? Ya?"
+    ],
+    "phase_day": [
+      "Siang! Hari ini kita ke mana? Ke mana? Ke mana?",
+      "Angin hari ini kenceng! Aku suruh bawa kabar buat kamu!"
+    ],
+    "phase_evening": [
+      "Senja! Warna langit berubah! Kamu lihat? Indah kan? Kan?",
+      "Sore! Aku latihan melompat tadi. Tinggi! Kata aku sendiri."
+    ],
+    "season_spring": [
+      "Sakura bertebaran! Tangkap! Tangkap! Seru kan?!",
+      "Musim semi! Bau bunga di mana-mana! Cecerewet banget kan aku!"
+    ],
+    "season_summer": [
+      "Festival! Matsuri! Ayo! Aku mau masker rubah! Beli ya? YA?",
+      "Panas tapi seru! Es krim dulu, baru main, baru es krim lagi!"
+    ],
+    "season_autumn": [
+      "Daun momiji gugur! Terbang sama angin! Seperti aku! Keren!",
+      "Musim gugur! Aku bikin tumpukan daun buat lompat! Ikut? IKUT?"
+    ],
+    "season_winter": [
+      "Salju! Salju! Aku mau bikin yukigitsune! Salju-rubah! Ikut ya?",
+      "Dingin! Tapi jangan galau, aku hangatin pakai semangat!"
+    ],
+    "idle": [
+      "Hari ini kita ke mana? Ke mana? Ke mana?",
+      "Aku ngejar ekorku tadi! Nggak ketangkep! Seru!",
+      "Ada angin... ada kabar... dari kamu, kan? Ya?",
+      "Kyaa! Eh nggak ada apa-apa. Cuma mau lihat kamu reaksi!",
+      "Tahukah kamu? Aku lupa. Tapi semangat tetap on!"
+    ]
+  },
+  "chat": {
+    "makan": {
+      "hungerLow": ["LAPER! Kirim makanan! Cepat! Tapi antre dengan sopan!", "Perutku konsert! Makanan di mana? Di mana?"],
+      "hungerMid": ["Laper dikit! Makan, yuk! Sekarang? Ya ya ya?", "Mau makan! Eh, kamu udah makan belum? Sama-sama makan!"],
+      "hungerFull": ["Kenyang! Sekarang main! Ayo-ayo-ayo!", "Penuh! Sekarang aku siap petualangan! Ke mana?"]
+    },
+    "sayang": ["Kyyyaa! Aku juga sayang! Sangat! Banget!", "Ehehe~ aku sayang kamu lebih dulu! Kalah!"],
+    "maaf": ["Maaf diterima! Sekarang senyum! Ayooo senyum!", "Sudah dimaafkan! Jangan sedih lagi, ya? Ya!"],
+    "siapa": ["Aku {name}, rubah angin! Cerewet? Iya! Iya dong!", "{name}! Namaku! Panggil terus, aku suka!"],
+    "fallback": ["Hmm, nggak paham! Tapi seru! Lanjut cerita!", "Wah! Kata-katamu angin ajaib! Maksudnya apa ya?", "Pertanyaan bagus! ...jawabnya apa ya? Kamu tahu?"]
+  },
+  "senior": {
+    "idle": ["Dulu aku bicara lebih cepat... sekarang makna yang lebih penting.", "Angin tua tetap berembus, hanya lebih tahu ke mana."],
+    "nostalgia": ["Dulu, waktu aku masih bayi, aku mengejar daun gugur... kalah cepat dari angin.", "Tahukah kau? Festival pertamaku... kulihat kau yang datang kemarin sama indahnya."]
+  },
+  "dark": {
+    "idle": ["...hmpf. Banyak tanya. Itu dulu.", "Angin dingin... pas buatku sekarang."],
+    "neglect": ["Kamu pergi lama... anginnya jadi dingin.", "Aku nunggu... terus nunggu... ke mana aja kamu?"]
+  }
+}

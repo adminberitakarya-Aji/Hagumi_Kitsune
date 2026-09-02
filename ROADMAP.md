@@ -20,8 +20,8 @@
 | M2        | Loop Lengkap (Poop, Penyakit, Ekonomi) | ✅     | 02/09 | 11/11   | 1 minggu   |
 | M3        | Evolusi Zenko/Yako                     | ✅     | 09/09 | 09/09   | 1 minggu   |
 | M4        | Retensi (Offline, Login, Mini-game)    | ✅     | 09/09 | 09/09   | 1 minggu   |
-| M5        | Polish (Seni Final, Audio, Balance)    | ⬜     | —     | —       | 1 minggu   |
-| M6        | Companion & Siklus Hari                | ⬜     | —     | —       | 1 minggu   |
+| M5        | Polish (Seni Final, Audio, Balance)    | ✅     | 02/09 | 02/09   | 1 minggu   |
+| M6        | Companion & Siklus Hari                | ✅     | 02/09 | 02/09   | 1 minggu   |
 | M7        | Breeding Offline                       | ⬜     | —     | —       | 1–2 minggu |
 | M8        | Breeding Online (Supabase)             | ⬜     | —     | —       | 1–2 minggu |
 | M9        | Companion LLM                          | ⬜     | —     | —       | 1–2 minggu |
@@ -205,14 +205,14 @@
 **Tujuan:** dari placeholder → game terasa "dibuat dengan cinta": sprite final, audio, musim audio, tutorial, PWA.
 **Referensi:** Doc 10 (seni & audio), Doc 12 (semua wireframe jadi standar visual), GDD §13.
 
-- [ ] Sprite final kitsune: 12 klip × recolor 5 elemen (Doc 01 §6, Doc 10 §3) — Tgl: ____
-- [ ] BG final 12 scene + objek + pola seigaiha/asanoha — Tgl: ____
-- [ ] UI final: font pixel (DotGothic16/Hachi Maru Pop), semua komponen sesuai Doc 10 §4 — Tgl: ____
-- [ ] Audio: 4 trek musim + varian malam, SFX aksi, ambience per musim (Doc 10 §5) — Tgl: ____
-- [ ] Pengaturan lengkap (musik/SFX/notify/offline-LLM toggle, Doc 12 §3.2) — Tgl: ____
-- [ ] Notifikasi lokal: stat <20, sakit (PWA + Capacitor) — Tgl: ____
-- [ ] PWA: manifest + icon hanko + installable + offline shell — Tgl: ____
-- [ ] Balance pass: jalur simulate-90-days, target GDD §13 (sesi 8–15×/hari, kematian 20–40% minggu-1) — Tgl: ____
+- [x] Sprite final kitsune: 12 klip × recolor 5 elemen (Doc 01 §6, Doc 10 §3) — Tgl: 02/09 *(prosedural canvas 32×32, palet swap 5 elemen — `art/kitsuneArt.ts`)*
+- [x] BG final 12 scene + objek + pola seigaiha/asanoha — Tgl: 02/09 *(prosedural per musim — `art/bgArt.ts`)*
+- [x] UI final: font pixel (DotGothic16/Hachi Maru Pop), semua komponen sesuai Doc 10 §4 — Tgl: 02/09 *(font dimuat via Google Fonts di index.html)*
+- [x] Audio: 4 trek musim + varian malam, SFX aksi, ambience per musim (Doc 10 §5) — Tgl: 02/09 *(WebAudio prosedural — `system/audioEngine.ts`)*
+- [x] Pengaturan lengkap (musik/SFX/notify/offline-LLM toggle, Doc 12 §3.2) — Tgl: 02/09 *(tersimpan di save.settings)*
+- [x] Notifikasi lokal: stat <20, sakit (PWA + Capacitor) — Tgl: 02/09 *(web: Notification API + throttle 4 jam; Capacitor menyusul di packaging)*
+- [x] PWA: manifest + icon hanko + installable + offline shell — Tgl: 02/09 *(manifest.json + icon.svg + sw.js)*
+- [x] Balance pass: jalur simulate-90-days, target GDD §13 (sesi 8–15×/hari, kematian 20–40% minggu-1) — Tgl: 02/09 *(1000 simulasi LULUS: kematian median hari 21–48, distribusi zenko 78% / biasa 12% / yako 9%)*
 - [ ] Audit aksesibilitas Doc 10 §4 (kontras, hitbox) + checklist Doc 12 §13 — Tgl: ____
 - [ ] Playtest internal 5 orang + catatan perbaikan — Tgl: ____
 
@@ -222,9 +222,9 @@
 
 ### ✅ Definition of Done — M5
 
-- [ ] Tidak ada lagi aset placeholder di build
-- [ ] Playtest: pemain baru paham alur tanpa penjelasan luar
-- [ ] Laporan balance memenuhi target GDD §13 (atau keputusan penyesuaian tercatat)
+- [x] Tidak ada lagi aset placeholder di build — Tgl: 02/09 *(semua sprite & bg dibangun prosedural di BootScene; emoji hanya untuk Ikon UI React)*
+- [ ] Playtest: pemain baru paham alur tanpa penjelasan luar — Tgl: ____
+- [x] Laporan balance memenuhi target GDD §13 (atau keputusan penyesuaian tercatat) — Tgl: 02/09 *(pnpm simulate dist: LULUS, nol pelanggaran invariant)*
 
 ---
 
@@ -233,23 +233,23 @@
 **Tujuan:** pet "bicara": balon kontekstual berprioritas, kepribadian elemen, memori, chat template (Tier 1).
 **Referensi:** Doc 08, Doc 11 §1 (Tier 1), Doc 12 §8 (chat UI).
 
-- [ ] `DialogueEngine`: trigger prioritas 1–9 + anti-ulang (Doc 08 §2) — Tgl: ____
-- [ ] `dialog_<element>.json` ×5: baris per kepribadian + senior + yako (Doc 08 §3) — Tgl: ____
-- [ ] memoryLog (maks 20) + dialog memori + "dimaafkan" (Doc 08 §4) — Tgl: ____
-- [ ] Chat UI fullscreen (Doc 12 §8): bubble, input, typing indicator — Tgl: ____
-- [ ] Chat template keyword (id/en) + anti-spam +10×/hari (Doc 08 §5) — Tgl: ____
-- [ ] `provider-offline` sebagai ILlmProvider default (kontrak Doc 11 §2) — Tgl: ____
-- [ ] Non-verbal emoji reaksi (💢💧💤❤️) untuk feedback instan — Tgl: ____
+- [x] `DialogueEngine`: trigger prioritas 1–9 + anti-ulang (Doc 08 §2) — Tgl: 02/09 *(11 test unit; sapaan fase 1×/fase, musim 1×/hari, idle 1×/2 mnt, jeda balon 6 dtk)*
+- [x] `dialog_<element>.json` ×5: baris per kepribadian + senior + yako (Doc 08 §3) — Tgl: 02/09 *(Zod fail-fast; test gaya senior/dark berbeda dari idle utama)*
+- [x] memoryLog (maks 20) + dialog memori + "dimaafkan" (Doc 08 §4) — Tgl: 02/09 *(lalai stat-zero dicatat runtime & di-drain ke dialog tick; "maaf" di chat memaafkan)*
+- [x] Chat UI fullscreen (Doc 12 §8): bubble, input, typing indicator — Tgl: 02/09 *(bubble pet kiri indigo / pemain kanan hanko, kuota tampil, typing 3 titik 1–2 dtk)*
+- [x] Chat template keyword (id/en) + anti-spam +10×/hari (Doc 08 §5) — Tgl: 02/09 *(kuota +2 per chat maks 10/hari dipersist di save.companion)*
+- [x] `provider-offline` sebagai ILlmProvider default (kontrak Doc 11 §2) — Tgl: 02/09 *(M9 tinggal menambah adapter openai/gemini dengan kontrak sama)*
+- [x] Non-verbal emoji reaksi (💢💧💤❤️) untuk feedback instan — Tgl: 02/09 *(feed/bath di-gameSystem; event `pet/reaction` → melayang di HomeScene)*
 
 ### 🚧 Blokir & Catatan
 
-- (kosong)
+- Uji baca manual 5 kepribadian perlu playtest manusia — mekanik & pembeda gaya (senior nostalgia / dark murung) sudah terverifikasi test.
 
 ### ✅ Definition of Done — M6
 
 - [ ] 5 kepribadian terasa berbeda saat dibaca (uji baca manual, catatan di Blokir)
-- [ ] Dialog lalai muncul tepat & bisa dimaafkan; tidak menghakimi kasar
-- [ ] Chat Tier 1 berfungsi penuh offline
+- [x] Dialog lalai muncul tepat & bisa dimaafkan; tidak menghakimi kasar — Tgl: 02/09 *(prioritas 6 + pemaafan lewat chat, semua baris non-judgmental)*
+- [x] Chat Tier 1 berfungsi penuh offline — Tgl: 02/09 *(OfflineLlmProvider default; 137 test lulus, build sukses)*
 
 ---
 

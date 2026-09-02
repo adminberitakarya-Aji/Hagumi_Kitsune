@@ -43,6 +43,23 @@ export interface MinigameResultUi {
   newRecord: boolean;
 }
 
+/** Layar Chat companion (M6 — Doc 12 §8). */
+export interface ChatMessageUi {
+  /** "player" = pesan pemain, "pet" = balasan companion. */
+  from: "player" | "pet";
+  text: string;
+}
+
+export interface ChatUi {
+  messages: ChatMessageUi[];
+  /** Sisa kuota happiness hari ini (Doc 08 §5: maks +10/hari). */
+  quotaLeft: number;
+  /** true = ada memori lalai yang bisa dimaafkan lewat kata "maaf". */
+  canForgive: boolean;
+  /** true = companion "sedang mengetik" (3 titik — Doc 12 §8). */
+  typing?: boolean;
+}
+
 export interface GameUiState {
   /** Layar aktif: splash (dengan onboarding di dalamnya) atau home. */
   screen: "splash" | "home";
@@ -82,6 +99,8 @@ export interface GameUiState {
   careScore: number;
   /** Layar hasil mini-game (Doc 05 §6); null = tidak tampil. */
   minigameResult: MinigameResultUi | null;
+  /** Layar Chat companion (M6 — Doc 12 §8); null = tertutup. */
+  chat: ChatUi | null;
   /** Kode backup base64 hasil ekspor (Doc 09 §4). */
   backupCode: string;
 }
@@ -109,6 +128,7 @@ const initialState: GameUiState = {
   tails: 1,
   careScore: 50,
   minigameResult: null,
+  chat: null,
   backupCode: "",
 };
 

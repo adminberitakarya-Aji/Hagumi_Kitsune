@@ -12,6 +12,7 @@ const ACTIONS = [
   { id: "chat", icon: "💬", title: "Chat" },
 ] as const;
 
+/** "chat" punya jalur sendiri (M6 — ui/chat-open), sisanya lewat ui/action. */
 export function ActionBar({ onAction }: ActionBarProps) {
   return (
     <nav className="action-bar" aria-label="menu utama">

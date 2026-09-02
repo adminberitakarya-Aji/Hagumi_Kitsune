@@ -1,4 +1,5 @@
-/** Pengaturan + backup ekspor/impor base64 (Doc 09 §4) — dibuka dari tombol gear HUD. */
+/** Pengaturan + backup ekspor/impor base64 (Doc 09 §4) — dibuka dari tombol gear HUD.
+ * M5: toggle musik/SFX/notify/companion offline (Doc 12 §3.2) — persist via ui/settings. */
 import { useState } from "react";
 import { eventBus } from "../lib/eventBus";
 import { useGameState } from "../store/gameState";
@@ -7,9 +8,64 @@ import { HankoButton } from "./HankoButton";
 export function SettingsSheet() {
   const backupCode = useGameState().backupCode;
   const [importText, setImportText] = useState("");
+  const [music, setMusic] = useState(true);
+  const [sfx, setSfx] = useState(true);
+  const [notify, setNotify] = useState(true);
+  const [offlineLlm, setOfflineLlm] = useState(true);
+
+  const update = (patch: { music?: boolean; sfx?: boolean; notify?: boolean; offlineLlm?: boolean }): void => {
+    eventBus.emit("ui/settings", patch);
+  };
 
   return (
     <div className="sheet__body">
+      <section className="backup-section">
+        <h4 className="backup-title">🎵 Suara</h4>
+        <label className="settings-row">
+          <span>Musik</span>
+          <input
+            type="checkbox"
+            checked={music}
+            onChange={(e) => {
+              setMusic(e.target.checked);
+              update({ music: e.target.checked });
+            }}
+          />
+        </label>
+        <label className="settings-row">
+          <span>Efek suara</span>
+          <input
+            type="checkbox"
+            checked={sfx}
+            onChange={(e) => {
+              setSfx(e.target.checked);
+              update({ sfx: e.target.checked });
+            }}
+          />
+        </label>
+        <label className="settings-row">
+          <span>Notifikasi</span>
+          <input
+            type="checkbox"
+            checked={notify}
+            onChange={(e) => {
+              setNotify(e.target.checked);
+              update({ notify: e.target.checked });
+            }}
+          />
+        </label>
+        <label className="settings-row">
+          <span>Companion offline (LLM lokal)</span>
+          <input
+            type="checkbox"
+            checked={offlineLlm}
+            onChange={(e) => {
+              setOfflineLlm(e.target.checked);
+              update({ offlineLlm: e.target.checked });
+            }}
+          />
+        </label>
+      </section>
       <section className="backup-section">
         <h4 className="backup-title">📦 Backup Progress</h4>
         <HankoButton

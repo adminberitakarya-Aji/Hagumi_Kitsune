@@ -24,7 +24,10 @@ import {
 import { decayConfig } from "@hagumi/data";
 import type { PetData } from "../src";
 
-const START = 1_735_000_000_000; // FakeClock default
+// 2024-12-24 09:26:40 UTC — sengaja dipilih agar jam-UTC siklus 48 jam berakhir
+// di jendela bangun (test menuntut pet bangun & poop bersih di tick terakhir).
+// Dipasangkan dengan TZ=UTC dari vitest.config.ts → deterministik di semua mesin/CI.
+const START = 1_735_032_400_000;
 const FEED_RESTORE = 40;
 
 function expectFiniteStats(pet: PetData): void {
@@ -56,14 +59,21 @@ describe("DoD M2 #1 — siklus penuh 1+ hari tanpa jebakan", () => {
 
       // Poop live (jalur runtime: shouldSpawnPoop → spawnPoop)
       if (
-        shouldSpawnPoop(pet, now, { baseMs: 4 * MS_PER_HOUR, minMs: 90 * 60_000, maxPoops: 3, feedsSincePoop })
+        shouldSpawnPoop(pet, now, {
+          baseMs: 4 * MS_PER_HOUR,
+          minMs: 90 * 60_000,
+          maxPoops: 3,
+          feedsSincePoop,
+        })
       ) {
         pet = spawnPoop(pet, now);
         feedsSincePoop = 0;
         totalPoops++;
       }
 
-      const hour = new Date(now).getHours();
+      // Eksplisit UTC — konsisten dengan TZ=UTC yang dipin vitest.config.ts
+      // (getHours() membaca jam ambient OS runner → hasil nondeterministik di CI).
+      const hour = new Date(now).getUTCHours();
 
       // Caretaker: bangun pagi, tidur malam (22:00–05:00)
       if (pet.state === "sleeping" && hour >= 5 && hour < 22) {
@@ -160,7 +170,11 @@ describe("DoD M2 #2 — kematian & memorial; mulai baru tidak merusak data lama"
 
     // Mulai baru: hapus save lama, buat pet baru, simpan di storage yang sama
     saveSystem.deleteSave();
-    const newSave = createDefaultSave({ petName: "Hinata", element: "wind", nowMs: START + 5 * MS_PER_DAY });
+    const newSave = createDefaultSave({
+      petName: "Hinata",
+      element: "wind",
+      nowMs: START + 5 * MS_PER_DAY,
+    });
     expect(saveSystem.save(newSave).success).toBe(true);
 
     // DoD: data memorial LAMA tidak berubah + save baru valid & terpisah
@@ -185,8 +199,12 @@ describe("DoD M2 #3 — angka dari JSON, bukan hard-code", () => {
   it("baby stage: hunger decay ×1,5 (cepat lapar) & happiness ×0,5 (mudah senang)", () => {
     const adultHunger = getEffectiveDecayRate("hunger", "day");
     const adultHappy = getEffectiveDecayRate("happiness", "day");
-    expect(getEffectiveDecayRate("hunger", "day", undefined, "baby")).toBeCloseTo(adultHunger * 1.5);
-    expect(getEffectiveDecayRate("happiness", "day", undefined, "baby")).toBeCloseTo(adultHappy * 0.5);
+    expect(getEffectiveDecayRate("hunger", "day", undefined, "baby")).toBeCloseTo(
+      adultHunger * 1.5,
+    );
+    expect(getEffectiveDecayRate("happiness", "day", undefined, "baby")).toBeCloseTo(
+      adultHappy * 0.5,
+    );
     // Stat lain baby = adult
     expect(getEffectiveDecayRate("energy", "day", undefined, "baby")).toBe(
       getEffectiveDecayRate("energy", "day"),
@@ -199,7 +217,8 @@ describe("DoD M2 #3 — angka dari JSON, bukan hard-code", () => {
   });
 
   it("streak login: siklus 7 hari, hari sama tanpa hadiah ulang", () => {
-    const day = (n: number): string => new Date(START + n * MS_PER_DAY).toISOString().split("T")[0]!;
+    const day = (n: number): string =>
+      new Date(START + n * MS_PER_DAY).toISOString().split("T")[0]!;
     let streak = { count: 0, lastDay: day(0) };
     const rewardDays: number[] = [];
     for (let n = 1; n <= 8; n++) {

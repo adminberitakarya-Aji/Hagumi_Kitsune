@@ -7,7 +7,7 @@
 | **Pet Utama**       | Kitsune 🦊 (rubah putih folklore Jepang)                                                                                        |
 | **Target Platform** | **Mobile-first** (Web/PWA portrait → dibungkus Capacitor jadi APK/iOS)                                                          |
 | **Target Audience** | Semua umur (casual), penyayang hewan, nostalgia 90-an                                                                           |
-| **Versi Dokumen**   | v0.5 — Draft (revisi: UI layer ganti ke React + TSX di atas Phaser; stack: TS monorepo + Phaser + React + Capacitor + Supabase) |
+| **Versi Dokumen**   | v0.6 — Draft (revisi: sinkronisasi balance decay/poop/ekonomi dengan kode hasil simulasi 90 hari) |
 | **Tanggal**         | 2026-09-01                                                                                                                      |
 
 ---
@@ -55,22 +55,22 @@
 
 ## 3. Sistem Stat Pet
 
-Setiap pet memiliki 6 stat inti (skala 0–100):
+Setiap pet memiliki 6 stat inti (skala 0–100). Angka decay di bawah ini **hasil rebalance hasil playtest/simulasi 90 hari (sinkron dengan `packages/data/data/decay.json`)**:
 
-| Stat                        | Arti                  | Decay (turun per jam)      | Efek jika 0                      |
-| --------------------------- | --------------------- | -------------------------- | -------------------------------- |
-| **🍽️ Hunger (Kenyang)**     | Keperluan makan       | −8/jam                     | HP mulai turun                   |
-| **😊 Happiness (Senang)**   | Mood/kebahagiaan      | −6/jam                     | Pet murung, evolusi jelek        |
-| **⚡ Energy (Energi)**      | Siaga untuk aktivitas | −5/jam (−12 saat main)     | Pet tidur paksa, tolak aktivitas |
-| **🧼 Hygiene (Kebersihan)** | Kebersihan badan      | −4/jam                     | Muncul lalat, sakit perlahan     |
-| **❤️ Health (Kesehatan)**   | Nyawa pet             | Turun jika stat lain parah | **PET MATI**                     |
-| **⭐ XP / Bonding**         | Ikatan dengan pemain  | Naik via interaksi         | Naik level → buka fitur/evolusi  |
+| Stat                        | Arti                  | Decay siang (aktif)   | Malam (terjaga)       | Saat tidur           | Efek jika 0                      |
+| --------------------------- | --------------------- | --------------------- | --------------------- | -------------------- | -------------------------------- |
+| **🍽️ Hunger (Kenyang)**     | Keperluan makan       | −5/jam                | −4/jam                | −2/jam               | HP mulai turun                   |
+| **😊 Happiness (Senang)**   | Mood/kebahagiaan      | −3/jam                | −2/jam                | −1/jam               | Pet murung, evolusi jelek        |
+| **⚡ Energy (Energi)**      | Siaga untuk aktivitas | −5/jam                | −8/jam                | **+30/jam (pulih)**  | Pet tidur paksa, tolak aktivitas |
+| **🧼 Hygiene (Kebersihan)** | Kebersihan badan      | −3/jam                | −2/jam                | −1/jam               | Muncul lalat, sakit perlahan     |
+| **❤️ Health (Kesehatan)**   | Nyawa pet             | Turun jika stat lain parah |                 |                      | **PET MATI**                     |
+| **⭐ XP / Bonding**         | Ikatan dengan pemain  | Naik via interaksi    |                       |                      | Naik level → buka fitur/evolusi  |
 
-**Aturan komposit:**
+**Aturan komposit (sinkron `stats.ts`):**
 
 - Jika 2+ stat di bawah 25 → Health turun −10/jam.
 - Pet **menolak makan** jika Hunger > 90, **menolak main** jika Energy < 15.
-- Tidur memulihkan Energy +30/jam, memperlambat decay stat lain 50%.
+- Tidur memulihkan Energy +30/jam; decay stat lain turun ke ±⅓–⅔ nilai aktif (lihat tabel).
 
 ### 3.1 Umur & Tahap Hidup (Skala 90 Hari)
 
@@ -156,11 +156,11 @@ Care Score = rata-rata statistik (rolling 24 jam terakhir)
 
 ### 5.1 Sistem "Poop" (Klasik Tamagotchi)
 
-Pet membuang kotoran secara berkala (probabilitas naik setelah makan). Poop yang dibiarkan >2 jam: Hygiene −10, risiko penyakit +15%. Ini memberi rasa "hidup" dan alasan kembali ke game.
+Pet membuang kotoran secara berkala — **interval dasar 4 jam, dipotong 40 menit per kali makan** (minimum 1,5 jam; maksimum 3 poop di lantai). Setiap poop menguras **Hygiene lingkungan −2/jam**. Jika dibiarkan menumpuk (3 poop) atau Hygiene ≤ 10 → pet jatuh sakit. Sapu poop dengan **tekan-tahan 0,4 dtk**; 35% peluang menemukan 2–8 koin di baliknya. Semua angka di `packages/data/data/rules.json`.
 
 ### 5.2 Penyakit
 
-- Pemicu: Hygiene rendah lama, overfeed, poop menumpuk, stat nol.
+- Pemicu: Hygiene ≤ 10, poop menumpuk (≥ 3), overfeed (>3 makan/6 jam → Health −5), stat nol.
 - Gejala visual: pet berkedip murung, awan mendung di atas kepala, termometer ikon.
 - Jika tidak diobati dalam 12 jam → Health terus turun → kematian.
 
@@ -180,14 +180,14 @@ Semua mini-game menggunakan **koin sebagai satu-satunya mata uang** (kesederhana
 
 ## 7. Ekonomi & Toko
 
-| Kategori                   | Contoh Item            | Harga (koin) | Efek                                       |
-| -------------------------- | ---------------------- | ------------ | ------------------------------------------ |
-| Makanan murah              | Roti, Biskuit          | 5–10         | Hunger +20–30                              |
-| Makanan enak               | Steak, Kue             | 25–50        | Hunger +50, Happiness +10, risiko overfeed |
-| Obat                       | Sirup, Vitamin         | 30           | Health +30                                 |
-| Mainan                     | Bola, Boneka           | 50–150       | Happiness decay −50% saat dipasang         |
-| Dekorasi kandang           | Karpet, Lampu, Tanaman | 100–300      | Kosmetik + Happiness pasif kecil           |
-| Inkubator / Inkubasi cepat | Telur baru             | 500          | Mulai pet baru setelah kematian            |
+| Kategori                   | Contoh Item (katalog `items.json`) | Harga (koin) | Efek                                       |
+| -------------------------- | ---------------------------------- | ------------ | ------------------------------------------ |
+| Makanan harian             | Onigiri 5, Roti Dagashi 8, Ikan Bakar 15 | 5–15   | Hunger +20–35                              |
+| Makanan enak / musiman     | Steak Premium 40, Sakura Mochi 12, Kakigori 10, Oden 18 | 10–40 | Hunger +10–55, Happiness +5–12 |
+| Obat                       | Sirup 30 (Health +30), Vitamin 20 (+15 Health +10 Energy), Sabun Onsen 15 (Hygiene +40) | 15–30 | Sesuai efek; cooldown 4 jam |
+| Mainan (pasif)             | Bola Daruma 80 (−25%), Boneka Kitsune 150 (−50%) | 80–150 | Happiness decay melambat |
+| Dekorasi kandang           | Lampion 100, Bonsai 120, Kakejiku 140, Maneki-neko 180, Ikebana 200, Koinobori 300 | 100–300 | Kosmetik + Happiness pasif kecil           |
+| Inkubator / Inkubasi cepat | Telur baru                         | 500          | Mulai pet baru setelah kematian *(M7 — breeding)* |
 
 **Sink koin:** item dekorasi mahal + obat + makanan premium.
 **Sumber koin:** mini-game + hadiah harian login (streak: hari ke-1 = 20, ... hari ke-7 = 200).
@@ -279,8 +279,8 @@ Ini **fitur paling krusial** — pet tetap "hidup" saat game ditutup:
 **Pembatasan anti-frustrasi (penting!):**
 
 - Decay offline dibatasi maksimum: stat tidak akan turun di bawah 5 hanya karena pemain tidur 8 jam (dilunakkan vs decay realtime).
-- Pet tidak bisa mati dalam 24 jam pertama (grace period pemain baru).
-- Mode "Tidur" saat pemain offline malam = decay sangat lambat.
+- **Pet baru (< 24 jam usia) memakai floor 50** — grace period ganda: tidak bisa mati di hari pertama.
+- Mode "Tidur" saat pemain offline malam = decay sangat lambat (tabel tidur di §3).
 
 ### 9.1 Siklus Pagi–Siang–Sore–Malam (Real-Time)
 
@@ -291,7 +291,7 @@ Game mengikuti **jam lokal pemain** sehingga dunia terasa hidup dan sinkron deng
 | 🌅 Pagi  | 05:00–10:00 | Langit jingga, kabut tipis, burung berkicau | Bonus "sarapan": makan pagi memberi +5 Happiness ekstra                                          |
 | ☀️ Siang | 10:00–15:00 | Terang penuh, tanaman hijau cerah           | Waktu terbaik untuk main & mini-game (koin +10%)                                                 |
 | 🌆 Sore  | 15:00–19:00 | Cahaya hangat, bayangan panjang             | Pet cenderung nostalgia (dialog spesial sore)                                                    |
-| 🌙 Malam | 19:00–05:00 | Gelap, lampu kandang, kunang-kunang         | Pet mengantuk (Energy decay ×1.5 jika dipaksa bangun); tidur malam memulihkan +50% lebih efisien |
+| 🌙 Malam | 19:00–05:00 | Gelap, lampu kandang, kunang-kunang         | Pet mengantuk (Energy decay −8/jam jika dipaksa bangun); tidur malam memulihkan Energy +30/jam |
 
 **Aturan desain:**
 
@@ -450,10 +450,10 @@ Agar pemain "benar-benar merasa memiliki", pet tidak pasif:
 
 ## 17. Langkah Selanjutnya
 
-1. ✅ GDD v0.5 — stack terkunci (TS monorepo + React+TSX UI + Phaser + Capacitor + Supabase), companion LLM 2 tingkat
+1. ✅ GDD v0.6 — sinkronisasi balance: tabel decay 3-fase, poop, penyakit, katalog harga, offline floor 50 newborn — semua kini mencerminkan `decay.json`/`rules.json`/`items.json` hasil kalibrasi simulasi 90 hari
 2. ✅ Doc 12 — wireframe UI lengkap; implementasi = komponen React+TSX (`apps/web/src/components`, `screens`)
 3. ⬜ Buat **M1 Playable Core**: monorepo + `packages/core` (PetStats, TimeService, SaveSystem) + scene Rumah Tatami
-4. ⬜ Playtest internal, iterasi balance decay (kalibrasi siklus 90 hari)
+4. ✅ Playtest internal, iterasi balance decay (kalibrasi siklus 90 hari) — dilakukan via simulasi headless 4 seed (semuanya hidup sampai hari 90); hasilnya dibalikkan ke GDD §3/§5/§7/§9
 5. ⬜ Lanjut M2–M9 sesuai roadmap; monetisasi ditunda (Doc 11 §6)
 
 ---

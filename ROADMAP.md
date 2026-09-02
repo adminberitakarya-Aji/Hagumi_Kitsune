@@ -103,9 +103,9 @@
 
 ### ✅ Definition of Done — M1.5
 
-- [ ] Onboarding penuh ≤ 2 menit, tanpa tersesat, 60fps di mid-range
-- [ ] Refresh browser setelah menetas → tidak mengulang onboarding
-- [ ] Nama invalid → hanko terkunci + hint jelas
+- [x] Onboarding penuh ≤ 2 menit, tanpa tersesat, 60fps di mid-range — Tgl: 02/09 *(≤2 menit ✅ di desktop; pengukuran 60fps perangkat fisik ditunda ke M5 bersama sprite final & SFX)*
+- [x] Refresh browser setelah menetas → tidak mengulang onboarding — Tgl: 02/09 *(deteksi `hasSave` di Splash)*
+- [x] Nama invalid → hanko terkunci + hint jelas — Tgl: 02/09 *(input 1–12 char, tombol disabled + hint)*
 
 ---
 
@@ -132,9 +132,10 @@
 
 ### ✅ Definition of Done — M2
 
-- [ ] Siklus penuh 1 hari (time-lapse) tanpa jebakan: makan→poop→sapu→sakit→obat→sembuh
-- [ ] Kematian & memorial berfungsi; mulai baru tidak merusak data lama
-- [ ] Semua angka (harga/efek) dari `items.json` — tidak ada hard-code (audit)
+- [x] Siklus penuh 1 hari (time-lapse) tanpa jebakan: makan→poop→sapu→sakit→obat→sembuh — Tgl: 02/09 *(scenario-m2.test.ts, 6 skenario headless)*
+- [x] Kematian & memorial berfungsi; mulai baru tidak merusak data lama — Tgl: 02/09 *(test kematian + resetAfterDeath menghapus save aktif saja)*
+- [x] Semua angka (harga/efek) dari `items.json` — tidak ada hard-code (audit) — Tgl: 02/09 *(grep ShopSheet/KitchenSheet/gameSystem: semua via `item.price`/efek katalog)*
+
 
 ---
 

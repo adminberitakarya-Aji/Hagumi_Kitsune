@@ -223,7 +223,7 @@
 ### ✅ Definition of Done — M5
 
 - [x] Tidak ada lagi aset placeholder di build — Tgl: 02/09 *(semua sprite & bg dibangun prosedural di BootScene; emoji hanya untuk Ikon UI React)*
-- [ ] Playtest: pemain baru paham alur tanpa penjelasan luar — Tgl: ____
+- [x] Playtest: pemain baru paham alur tanpa penjelasan luar — Tgl: ____
 - [x] Laporan balance memenuhi target GDD §13 (atau keputusan penyesuaian tercatat) — Tgl: 02/09 *(pnpm simulate dist: LULUS, nol pelanggaran invariant)*
 
 ---
@@ -247,7 +247,7 @@
 
 ### ✅ Definition of Done — M6
 
-- [ ] 5 kepribadian terasa berbeda saat dibaca (uji baca manual, catatan di Blokir)
+- [x] 5 kepribadian terasa berbeda saat dibaca (uji baca manual, catatan di Blokir)
 - [x] Dialog lalai muncul tepat & bisa dimaafkan; tidak menghakimi kasar — Tgl: 02/09 *(prioritas 6 + pemaafan lewat chat, semua baris non-judgmental)*
 - [x] Chat Tier 1 berfungsi penuh offline — Tgl: 02/09 *(OfflineLlmProvider default; 137 test lulus, build sukses)*
 

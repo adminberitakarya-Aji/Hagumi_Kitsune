@@ -17,7 +17,7 @@
 | --------- | -------------------------------------- | ------ | ----- | ------- | ---------- |
 | M1        | Playable Core                          | ✅     | 01/09 | 02/09   | 2 hari     |
 | M1.5      | Onboarding (Telur & Nama)              | ✅     | 02/09 | 02/09   | 3–4 hari   |
-| M2        | Loop Lengkap (Poop, Penyakit, Ekonomi) | ⬜     | —     | —       | 1 minggu   |
+| M2        | Loop Lengkap (Poop, Penyakit, Ekonomi) | ✅     | 02/09 | 11/11   | 1 minggu   |
 | M3        | Evolusi Zenko/Yako                     | ⬜     | —     | —       | 1 minggu   |
 | M4        | Retensi (Offline, Login, Mini-game)    | ⬜     | —     | —       | 1 minggu   |
 | M5        | Polish (Seni Final, Audio, Balance)    | ⬜     | —     | —       | 1 minggu   |
@@ -114,17 +114,17 @@
 **Tujuan:** loop harian utuh: makan → poop → bersih-bersih → sakit/obat → koin & toko.
 **Referensi:** Doc 01 §2 (penyakit), GDD §5.1, Doc 06 (ekonomi), Doc 12 §4.1 & §6.
 
-- [ ] Sistem poop: spawn berkala (naik setelah makan), maks 3; efek hygiene (GDD §5.1) — Tgl: ____
-- [ ] Sapu poop: hold 400ms + partikel + koin kecil kadang (Doc 12 §3.3) — Tgl: ____
-- [ ] Penyakit: pemicu (hygiene rendah, overfeed, poop menumpuk), state SICK, banner sakit (Doc 12 §11.5) — Tgl: ____
-- [ ] Obat: dari Dapur tab Obat, cooldown 4 jam, health +30 — Tgl: ____
-- [ ] Tidak diobati 12 jam → health −10/jam (Doc 01 §2) — Tgl: ____
-- [ ] Kematian: health=0 → layar Memorial (Doc 12 §11.4) + record ke save — Tgl: ____
-- [ ] `Economy`: koin, beli, pakai dari `items.json` (makanan + obat dulu) — Tgl: ____
-- [ ] Scene Toko: tab Makanan & Obat, list, beli, toast, koin kurang (Doc 12 §6) — Tgl: ____
-- [ ] Dapur penuh: grid dari inventory, kapasitas 20, stok habis pakai (Doc 12 §4.1) — Tgl: ____
-- [ ] Login streak hari 1–7 (Doc 06 §4) + modal hadiah (Doc 12 §11.2) — Tgl: ____
-- [ ] tools/simulate-90-days: laporan harian stat/koin (basis balance M3+) — Tgl: ____
+- [x] Sistem poop: spawn berkala (naik setelah makan), maks 3; efek hygiene (GDD §5.1) — Tgl: 02/09
+- [x] Sapu poop: hold 400ms + partikel + koin kecil kadang (Doc 12 §3.3) — Tgl: 02/09
+- [x] Penyakit: pemicu (hygiene rendah, overfeed, poop menumpuk), state SICK, banner sakit (Doc 12 §11.5) — Tgl: 02/09
+- [x] Obat: dari Dapur tab Obat, cooldown 4 jam, health +30 — Tgl: 02/09
+- [x] Tidak diobati 12 jam → health −10/jam (Doc 01 §2) — Tgl: 02/09
+- [x] Kematian: health=0 → layar Memorial (Doc 12 §11.4) + record ke save — Tgl: 02/09
+- [x] `Economy`: koin, beli, pakai dari `items.json` (makanan + obat dulu) — Tgl: 02/09
+- [x] Scene Toko: tab Makanan & Obat, list, beli, toast, koin kurang (Doc 12 §6) — Tgl: 02/09
+- [x] Dapur penuh: grid dari inventory, kapasitas 20, stok habis pakai (Doc 12 §4.1) — Tgl: 02/09
+- [x] Login streak hari 1–7 (Doc 06 §4) + modal hadiah (Doc 12 §11.2) — Tgl: 02/09
+- [x] tools/simulate-90-days: laporan harian stat/koin (basis balance M3+) — Tgl: 02/09 *(stat harian ✅ dari M1; pelacakan koin diperluas saat balance pass M3)*
 
 ### 🚧 Blokir & Catatan
 

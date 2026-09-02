@@ -51,6 +51,8 @@ export interface PetData {
   path: PetEvolutionPath;
   sickSince: number | null;
   lastPoopAt: number | null;
+  poopCount: number;
+  lastCuredAt: number;
   memoryLog: MemoryLogEntry[];
 }
 
@@ -66,6 +68,7 @@ export type ActionRejectReason =
   | "BABY_LOCKED"
   | "NOT_SICK"
   | "ALREADY_CLEAN"
+  | "ON_COOLDOWN"
   | "INVALID_STATE";
 
 export interface ActionResult<T = PetData> {

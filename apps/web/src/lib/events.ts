@@ -6,14 +6,20 @@ export interface GameEventMap {
   "ui/feed": { foodId: string };
   "ui/bath": undefined;
   "ui/sleep": { on: boolean };
+  "ui/buy": { itemId: string }; // Toko Dagashiya (Doc 12 §6)
+  "ui/use-medicine": undefined; // banner sakit / Dapur tab Obat
+  "ui/memorial-continue": undefined; // memorial → hapus save → Splash (Doc 12 §11.4)
   /* Phaser → system (input di kanvas) */
   "game/pet-tap": undefined; // patok
   "game/pet-stroke": undefined; // belai (usap ≥120px)
+  "game/poop-scoop": { index: number }; // sapu poop (hold 400ms, Doc 12 §3.3)
   /* system → Phaser (perintah render — Phaser tidak pernah mengubah stat) */
   "pet/eat": { label: string };
   "pet/say": { text: string };
   "pet/sleep": { on: boolean };
+  "poop/count": { count: number }; // sinkron visual poop di tatami
   "fx/hearts": undefined;
+  "fx/scoop": { index: number }; // partikel sapu berhasil
   /* Backup (Doc 09 §4) — SettingsSheet → system */
   "ui/backup-export": undefined;
   "ui/backup-import": { code: string };

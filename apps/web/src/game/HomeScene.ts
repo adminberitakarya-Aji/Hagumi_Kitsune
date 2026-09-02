@@ -7,6 +7,12 @@ const FOX_HOME = { x: 180, y: 470 };
 const WALK_AREA = { minX: 60, maxX: 300, minY: 430, maxY: 540 };
 const STROKE_DIST = 120; // Doc 12 §3: belai = usap ≥120px
 const BUBBLE_MS = 4000; // Doc 12 §2.4: durasi balon
+const POOP_SPOTS = [
+  { x: 92, y: 505 },
+  { x: 268, y: 528 },
+  { x: 150, y: 566 },
+]; // 3 titik tatami (maks poop = 3, Doc 12 §3.3)
+const SCOOP_HOLD_MS = 400; // Doc 12 §3.3: sapu = tahan 400ms
 
 export class HomeScene extends Phaser.Scene {
   private fox!: Phaser.GameObjects.Container;
@@ -19,6 +25,9 @@ export class HomeScene extends Phaser.Scene {
   private bubbleTween?: Phaser.Tweens.Tween;
   private zzz?: Phaser.GameObjects.Text;
   private walkTimer?: Phaser.Time.TimerEvent;
+  private poops: Phaser.GameObjects.Container[] = [];
+  private scoopTimer?: Phaser.Time.TimerEvent;
+  private scoopHint?: Phaser.GameObjects.Text;
   private offs: Array<() => void> = [];
   private sleeping = false;
   private eating = false;
@@ -48,12 +57,15 @@ export class HomeScene extends Phaser.Scene {
       eventBus.on("pet/say", ({ text }) => this.say(text)),
       eventBus.on("pet/sleep", ({ on }) => this.setSleeping(on)),
       eventBus.on("fx/hearts", () => this.hearts()),
+      eventBus.on("poop/count", ({ count }) => this.setPoopCount(count)),
+      eventBus.on("fx/scoop", ({ index }) => this.scoopFx(index)),
     ];
     // Shutdown scene → lepas listener & timer (hindari leak saat destroy)
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.offs.forEach((off) => off());
       this.walkTimer?.remove();
       this.bubbleTimer?.remove();
+      this.scoopTimer?.remove();
     });
   }
 
@@ -200,6 +212,62 @@ export class HomeScene extends Phaser.Scene {
       this.startBob();
       this.scheduleWalk();
     }
+  }
+
+  // ===== Poop di tatami (Doc 12 §3.3 — tahan 400ms untuk menyapu) =====
+
+  private setPoopCount(count: number): void {
+    while (this.poops.length < count) {
+      const spot = POOP_SPOTS[this.poops.length] ?? POOP_SPOTS[0]!;
+      const poop = this.add
+        .container(spot.x, spot.y, [this.add.text(0, 0, "💩", { fontSize: "20px" }).setOrigin(0.5)])
+        .setDepth(1);
+      poop.setSize(48, 48).setInteractive({ useHandCursor: true });
+      this.attachScoopHold(poop, this.poops.length);
+      this.poops.push(poop);
+    }
+    while (this.poops.length > count) this.poops.pop()?.destroy();
+  }
+
+  /** Sapu = tahan 400ms di atas poop (Doc 12 §3.3). Lepas lebih awal = batal. */
+  private attachScoopHold(poop: Phaser.GameObjects.Container, index: number): void {
+    const cancel = (): void => {
+      this.scoopTimer?.remove();
+      this.scoopTimer = undefined;
+      this.scoopHint?.destroy();
+      this.scoopHint = undefined;
+    };
+    poop.on("pointerdown", () => {
+      cancel();
+      this.scoopHint = this.add
+        .text(poop.x, poop.y - 28, "tahan...", { fontSize: "10px", color: "#3d4a6b" })
+        .setOrigin(0.5)
+        .setDepth(5);
+      this.scoopTimer = this.time.delayedCall(SCOOP_HOLD_MS, () => {
+        cancel();
+        eventBus.emit("game/poop-scoop", { index });
+      });
+    });
+    poop.on("pointerup", cancel);
+    poop.on("pointerout", cancel);
+  }
+
+  private scoopFx(index: number): void {
+    const i = Math.min(Math.max(index, 0), this.poops.length - 1);
+    const poop = this.poops.splice(i, 1)[0];
+    const pos = poop ? { x: poop.x, y: poop.y } : { x: 180, y: 500 };
+    poop?.destroy();
+    const sparkle = this.add
+      .text(pos.x, pos.y, "✨", { fontSize: "16px" })
+      .setOrigin(0.5)
+      .setDepth(5);
+    this.tweens.add({
+      targets: sparkle,
+      y: "-=24",
+      alpha: 0,
+      duration: 500,
+      onComplete: () => sparkle.destroy(),
+    });
   }
 
   private hearts(): void {

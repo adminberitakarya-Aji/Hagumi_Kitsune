@@ -15,6 +15,17 @@ export interface OfflineSummaryUi {
   died: boolean;
 }
 
+export interface InventoryUi {
+  food: Record<string, number>;
+  medicine: Record<string, number>;
+  owned: string[];
+}
+
+export interface LoginRewardUi {
+  day: number;
+  coins: number;
+}
+
 export interface GameUiState {
   /** Layar aktif: splash (dengan onboarding di dalamnya) atau home. */
   screen: "splash" | "home";
@@ -30,6 +41,16 @@ export interface GameUiState {
   /** Jam simulasi saat ini (ms epoch) — mengikuti time-lapse debug. */
   nowMs: number;
   stats: Record<StatKey, number>;
+  /** Poop aktif di tatami (maks 3, Doc 12 §3.3). */
+  poopCount: number;
+  /** State SICK — menampilkan banner obat (Doc 12 §11.5). */
+  sick: boolean;
+  /** Pet meninggal — Memorial (Doc 12 §11.4). */
+  dead: boolean;
+  /** Inventaris (Doc 09 §3) untuk Dapur & Toko. */
+  inventory: InventoryUi;
+  /** Hadiah login hari ini (Doc 12 §11.2); null = tidak tampil. */
+  loginReward: LoginRewardUi | null;
   /** Hasil offline catch-up saat buka game (Doc 12 §11.1); null = tidak tampil. */
   offline: OfflineSummaryUi | null;
   /** Kode backup base64 hasil ekspor (Doc 09 §4). */
@@ -47,6 +68,11 @@ const initialState: GameUiState = {
   sleeping: false,
   nowMs: Date.now(),
   stats: { hunger: 80, happiness: 80, energy: 80, hygiene: 80 },
+  poopCount: 0,
+  sick: false,
+  dead: false,
+  inventory: { food: {}, medicine: {}, owned: [] },
+  loginReward: null,
   offline: null,
   backupCode: "",
 };

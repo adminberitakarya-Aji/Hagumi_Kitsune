@@ -262,13 +262,24 @@ export class PetStateMachine {
     };
   }
 
-  /** Aksi Obati (Dapur/Toko Obat) -> Health +30, pulih dari SICK */
-  static cure(pet: PetData): ActionResult {
+  /** Aksi Obati (Dapur/Toko Obat) -> Health +30, pulih dari SICK. Cooldown via opts (Doc 06: 4 jam). */
+  static cure(
+    pet: PetData,
+    opts?: { nowMs?: number; cooldownMs?: number },
+  ): ActionResult {
     if (pet.state === "dead" || pet.stage === "dead") {
       return { success: false, pet, reason: "IS_DEAD" };
     }
     if (pet.state !== "sick" && pet.stats.health >= 100) {
       return { success: false, pet, reason: "NOT_SICK" };
+    }
+    if (
+      opts?.nowMs !== undefined &&
+      opts?.cooldownMs !== undefined &&
+      pet.lastCuredAt > 0 &&
+      opts.nowMs - pet.lastCuredAt < opts.cooldownMs
+    ) {
+      return { success: false, pet, reason: "ON_COOLDOWN" };
     }
 
     const newStats = clampStats({
@@ -282,6 +293,7 @@ export class PetStateMachine {
         ...pet,
         state: "idle",
         sickSince: null,
+        lastCuredAt: opts?.nowMs ?? pet.lastCuredAt,
         stats: newStats,
       },
     };

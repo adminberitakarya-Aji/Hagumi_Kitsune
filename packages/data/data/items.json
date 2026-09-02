@@ -1,0 +1,27 @@
+{
+  "foods": [
+    { "id": "rice_ball", "name": "Onigiri", "icon": "🍙", "price": 5, "hunger": 20, "happiness": 0 },
+    { "id": "bread", "name": "Roti Dagashi", "icon": "🍞", "price": 8, "hunger": 25, "happiness": 2 },
+    { "id": "grilled_fish", "name": "Ikan Bakar", "icon": "🐟", "price": 15, "hunger": 35, "happiness": 3 },
+    { "id": "steak", "name": "Steak Premium", "icon": "🥩", "price": 40, "hunger": 55, "happiness": 8 },
+    { "id": "sakura_mochi", "name": "Sakura Mochi", "icon": "🌸", "price": 12, "hunger": 20, "happiness": 8, "season": "spring" },
+    { "id": "kakigori", "name": "Kakigori", "icon": "🍧", "price": 10, "hunger": 10, "happiness": 12, "season": "summer" },
+    { "id": "roasted_potato", "name": "Ubi Panggang", "icon": "🍠", "price": 12, "hunger": 30, "happiness": 5, "season": "autumn" },
+    { "id": "oden", "name": "Oden", "icon": "🍢", "price": 18, "hunger": 40, "happiness": 6, "season": "winter" }
+  ],
+  "medicines": [
+    { "id": "syrup", "name": "Sirup Obat", "icon": "💊", "price": 30, "effects": { "health": 30 }, "cooldownHours": 4 },
+    { "id": "vitamin", "name": "Vitamin", "icon": "🧪", "price": 20, "effects": { "health": 15, "energy": 10 }, "cooldownHours": 4 },
+    { "id": "soap", "name": "Sabun Onsen", "icon": "🧼", "price": 15, "effects": { "hygiene": 40 } }
+  ],
+  "misc": [
+    { "id": "toy_ball", "name": "Bola Daruma", "icon": "🪆", "price": 80, "kind": "toy", "passive": { "happinessDecayPct": -25 } },
+    { "id": "toy_doll", "name": "Boneka Kitsune", "icon": "🦊", "price": 150, "kind": "toy", "passive": { "happinessDecayPct": -50 } },
+    { "id": "decor_lantern", "name": "Lampion Chōchin", "icon": "🏮", "price": 100, "kind": "decor" },
+    { "id": "decor_bonsai", "name": "Bonsai", "icon": "🪴", "price": 120, "kind": "decor" },
+    { "id": "decor_kakejiku", "name": "Kakejiku", "icon": "🖼️", "price": 140, "kind": "decor" },
+    { "id": "decor_maneki", "name": "Maneki-neko", "icon": "🐱", "price": 180, "kind": "decor" },
+    { "id": "decor_ikebana", "name": "Ikebana", "icon": "💐", "price": 200, "kind": "decor" },
+    { "id": "decor_koinobori", "name": "Koinobori", "icon": "🎏", "price": 300, "kind": "decor" }
+  ]
+}

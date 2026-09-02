@@ -1,0 +1,26 @@
+{
+  "poop": {
+    "baseIntervalHours": 4,
+    "minIntervalHours": 1.5,
+    "cutMinutesPerFeed": 40,
+    "maxPoops": 3,
+    "hygieneDrainPerPoopPerHour": 2
+  },
+  "scoop": {
+    "holdMs": 400,
+    "coinChance": 0.35,
+    "coinMin": 2,
+    "coinMax": 8
+  },
+  "sick": {
+    "triggerHygiene": 10,
+    "triggerPoops": 3
+  },
+  "cure": {
+    "cooldownHours": 4
+  },
+  "inventory": {
+    "foodCapacity": 20
+  },
+  "loginRewards": [20, 30, 40, 60, 80, 120, 200]
+}

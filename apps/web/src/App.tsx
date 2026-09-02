@@ -14,28 +14,35 @@ import { OfflineSummarySheet } from "./components/OfflineSummarySheet";
 import { DebugPanel } from "./components/DebugPanel";
 import { Splash } from "./components/Splash";
 import { TutorialHint } from "./components/TutorialHint";
+import { ShopSheet } from "./components/ShopSheet";
+import { SickBanner } from "./components/SickBanner";
+import { MemorialScreen } from "./components/MemorialScreen";
+import { LoginRewardSheet } from "./components/LoginRewardSheet";
 import { PhaserHost } from "./game/PhaserHost";
 import { eventBus } from "./lib/eventBus";
 import { initGameSystem } from "./system/gameSystem";
 import { useGameState } from "./store/gameState";
 
-type SheetId = "dapur" | "onsen" | "futon" | "gear" | null;
+type SheetId = "dapur" | "onsen" | "futon" | "toko" | "gear" | null;
 
-const SHEET_TITLES: Record<"dapur" | "onsen" | "futon" | "gear", string> = {
+const SHEET_TITLES: Record<"dapur" | "onsen" | "futon" | "toko" | "gear", string> = {
   dapur: "Dapur",
   onsen: "Onsen",
   futon: "Kamar Futon",
+  toko: "Toko Dagashiya",
   gear: "Pengaturan",
 };
 
 export default function App() {
   const [sheet, setSheet] = useState<SheetId>(null);
-  const { screen, sleeping } = useGameState();
+  const { screen, sleeping, dead } = useGameState();
 
   useEffect(() => initGameSystem(), []);
   useEffect(() => {
     const off = eventBus.on("ui/action", ({ id }) => {
-      if (id === "dapur" || id === "onsen" || id === "futon" || id === "gear") setSheet(id);
+      if (id === "dapur" || id === "onsen" || id === "futon" || id === "toko" || id === "gear") {
+        setSheet(id);
+      }
     });
     return off;
   }, []);
@@ -53,20 +60,29 @@ export default function App() {
     <div className="stage">
       <PhaserHost />
       {sleeping && <div className="sleep-overlay" aria-hidden="true" />}
-      <TimeSeasonBadge />
-      <Hud />
-      <TutorialHint />
-      <ActionBar onAction={(id) => eventBus.emit("ui/action", { id })} />
-      <Toast />
-      <DebugPanel />
-      <OfflineSummarySheet />
-      {sheet && (
-        <WashiPanel open title={SHEET_TITLES[sheet]} onClose={() => setSheet(null)}>
-          {sheet === "dapur" && <KitchenSheet onFed={() => setSheet(null)} />}
-          {sheet === "onsen" && <OnsenSheet onDone={() => setSheet(null)} />}
-          {sheet === "futon" && <FutonSheet onDone={() => setSheet(null)} />}
-          {sheet === "gear" && <SettingsSheet />}
-        </WashiPanel>
+      {dead ? (
+        <MemorialScreen />
+      ) : (
+        <>
+          <TimeSeasonBadge />
+          <Hud />
+          <SickBanner />
+          <TutorialHint />
+          <ActionBar onAction={(id) => eventBus.emit("ui/action", { id })} />
+          <Toast />
+          <DebugPanel />
+          <OfflineSummarySheet />
+          <LoginRewardSheet />
+          {sheet && (
+            <WashiPanel open title={SHEET_TITLES[sheet]} onClose={() => setSheet(null)}>
+              {sheet === "dapur" && <KitchenSheet onFed={() => setSheet(null)} />}
+              {sheet === "onsen" && <OnsenSheet onDone={() => setSheet(null)} />}
+              {sheet === "futon" && <FutonSheet onDone={() => setSheet(null)} />}
+              {sheet === "toko" && <ShopSheet />}
+              {sheet === "gear" && <SettingsSheet />}
+            </WashiPanel>
+          )}
+        </>
       )}
     </div>
   );

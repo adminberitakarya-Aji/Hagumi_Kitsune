@@ -42,6 +42,17 @@ export {
   type HealthDrainBreakdown,
 } from "./pet/stats";
 export { PetStateMachine, type FeedPayload, type PlayPayload } from "./pet/state-machine";
+export {
+  poopHygieneDrainPerHour,
+  poopIntervalMs,
+  scoopPoop,
+  shouldSpawnPoop,
+  spawnPoop,
+} from "./pet/poops";
+
+// Player Domain
+export type { LoginStreak, StreakUpdateResult } from "./player/streak";
+export { daysBetween, updateLoginStreak } from "./player/streak";
 
 // Time System
 export type {

@@ -6,19 +6,24 @@
 import {
   MemoryStorage,
   MS_PER_DAY,
+  MS_PER_HOUR,
   PetStateMachine,
   SaveSystem,
   SystemClock,
   createDefaultSave,
   processOfflineCatchUp,
+  shouldSpawnPoop,
+  spawnPoop,
+  scoopPoop,
+  updateLoginStreak,
   type ActionRejectReason,
   type DayPhase,
   type PetData,
   type PetElement,
   type SaveData,
 } from "@hagumi/core";
+import { getItemById, rulesConfig } from "@hagumi/data"; // katalog asli M2 (Doc 06 — fail-fast JSON)
 import { eventBus } from "../lib/eventBus";
-import { FOODS } from "../data/foods";
 import { setUiState } from "../store/gameState";
 import { pushToast } from "../store/toastStore";
 import { WebStorage } from "./webStorage";
@@ -35,14 +40,13 @@ const REJECT_TEXT: Record<ActionRejectReason, string> = {
   BABY_LOCKED: "Terlalu kecil untuk itu",
   NOT_SICK: "Aku sehat kok",
   ALREADY_CLEAN: "Aku sudah wangi!",
+  ON_COOLDOWN: "Obat belum boleh diminum lagi...",
   INVALID_STATE: "...",
 };
 
 const PAT_LINES = ["Kyuu~!", "Laper...", "Main yuk!", "Ehehe~", "Hari ini cerah, ya!"];
 
 const UNSCRIPTED: Record<string, string> = {
-  koin: "🪙 Toko",
-  toko: "🏪 Toko",
   album: "📖 Album",
   chat: "💬 Chat",
   "door-garden": "⛩️ Taman",
@@ -70,6 +74,8 @@ class GameRuntime {
   private speed: 1 | 10 | 60 | 3600 = 1;
   private ticker: number | null = null;
   private tickCount = 0;
+  /** Makan sejak poop terakhir — mempercepat interval poop berikutnya (Doc 12 §3.3). */
+  private feedsSincePoop = 0;
 
   constructor() {
     const primary = new SaveSystem(new WebStorage(), new SystemClock());
@@ -99,6 +105,7 @@ class GameRuntime {
     pushToast(`Selamat datang, ${petName}! 🦊`);
     // Balon sapaan pertama sesuai kepribadian elemen (Doc 04 §4.4)
     eventBus.emit("pet/say", { text: FIRST_GREETING[element] });
+    this.checkLoginStreak();
   }
 
   /** Offline catch-up saat buka game + layar ringkasan (Doc 03 §2, Doc 12 §11.1). */
@@ -142,8 +149,21 @@ class GameRuntime {
       this.sync();
       return;
     }
-    const result = processOfflineCatchUp(save.pet, from, this.simNow);
-    this.saveData = { ...save, pet: result.pet };
+    let pet = processOfflineCatchUp(save.pet, from, this.simNow).pet;
+    // Poop live (interval dipersingkat oleh makan — Doc 12 §3.3; rules.json = sumber angka)
+    if (
+      shouldSpawnPoop(pet, this.simNow, {
+        baseMs: rulesConfig.poop.baseIntervalHours * MS_PER_HOUR,
+        minMs: rulesConfig.poop.minIntervalHours * MS_PER_HOUR,
+        maxPoops: rulesConfig.poop.maxPoops,
+        feedsSincePoop: this.feedsSincePoop,
+      })
+    ) {
+      pet = spawnPoop(pet, this.simNow);
+      this.feedsSincePoop = 0;
+      pushToast("💩 Kitsune meninggalkan sesuatu di tatami...");
+    }
+    this.saveData = { ...save, pet };
     this.sync();
   }
 
@@ -165,6 +185,14 @@ class GameRuntime {
       health: pet.stats.health,
       sleeping: pet.state === "sleeping",
       nowMs: this.simNow,
+      poopCount: pet.poopCount,
+      sick: pet.state === "sick",
+      dead: pet.state === "dead" || pet.stage === "dead",
+      inventory: {
+        food: { ...save.inventory.food },
+        medicine: { ...save.inventory.medicine },
+        owned: [...save.inventory.owned],
+      },
       stats: {
         hunger: pet.stats.hunger,
         happiness: pet.stats.happiness,
@@ -172,6 +200,7 @@ class GameRuntime {
         hygiene: pet.stats.hygiene,
       },
     });
+    eventBus.emit("poop/count", { count: pet.poopCount });
   }
 
   private persist(): void {
@@ -199,16 +228,17 @@ class GameRuntime {
   feed(foodId: string): void {
     const save = this.saveData;
     if (!save) return;
-    const food = FOODS.find((f) => f.id === foodId);
-    if (!food) return;
-    if (save.player.coins < food.price) {
-      pushToast("🪙 Koin tidak cukup");
+    const item = getItemById(foodId);
+    if (!item || !("hunger" in item)) return;
+    const owned = save.inventory.food[foodId] ?? 0;
+    if (owned <= 0) {
+      pushToast("📦 Stok habis — beli di Toko Dagashiya");
       return;
     }
     const result = PetStateMachine.feed(save.pet, {
-      hungerRestore: food.hunger,
-      happinessBonus: food.happiness,
-      isSnack: food.happiness !== undefined, // camilan boleh saat kenyang
+      hungerRestore: item.hunger,
+      happinessBonus: item.happiness,
+      isSnack: item.happiness > 0, // camilan boleh saat kenyang
       nowMs: Date.now(),
       recentFeeds: this.recentFeeds,
     });
@@ -216,16 +246,21 @@ class GameRuntime {
       if (result.reason) this.reject(result.reason);
       return;
     }
+    this.feedsSincePoop++;
     this.saveData = {
       ...save,
       pet: result.pet,
-      player: { ...save.player, coins: save.player.coins - food.price },
+      inventory: {
+        ...save.inventory,
+        food: { ...save.inventory.food, [foodId]: owned - 1 },
+      },
     };
     this.recentFeeds.push(Date.now());
     this.sync();
     this.persist();
-    pushToast(`${food.icon} Kenyang! 🍖+${food.hunger}`);
-    eventBus.emit("pet/eat", { label: food.icon });
+    pushToast(`${item.icon} ${item.name} — kenyang! 🍖+${item.hunger}`);
+    if (result.overfeedWarning) pushToast("⚠️ Kegemukan! Jangan terlalu sering (health −5)");
+    eventBus.emit("pet/eat", { label: item.icon });
     this.finishTransientAfter(1800);
   }
 
@@ -285,7 +320,155 @@ class GameRuntime {
     eventBus.emit("fx/hearts", undefined);
   }
 
-  // ===== Autosave & backup (Doc 09 §4) =====
+  // ===== Ekonomi M2: toko, obat, poop, streak (Doc 06) =====
+
+  /** Beli item dari Toko Dagashiya → inventaris (Doc 12 §6). */
+  buy(itemId: string): void {
+    const save = this.saveData;
+    if (!save) return;
+    const item = getItemById(itemId);
+    if (!item) return;
+    if (save.player.coins < item.price) {
+      pushToast("🪙 Koin tidak cukup");
+      return;
+    }
+    let inventory = save.inventory;
+    if ("hunger" in item) {
+      const totalFood = Object.values(inventory.food).reduce((a, b) => a + b, 0);
+      if (totalFood >= rulesConfig.inventory.foodCapacity) {
+        pushToast(`📦 Pantry penuh (maks ${rulesConfig.inventory.foodCapacity})`);
+        return;
+      }
+      inventory = {
+        ...inventory,
+        food: { ...inventory.food, [itemId]: (inventory.food[itemId] ?? 0) + 1 },
+      };
+    } else if ("effects" in item) {
+      inventory = {
+        ...inventory,
+        medicine: { ...inventory.medicine, [itemId]: (inventory.medicine[itemId] ?? 0) + 1 },
+      };
+    } else {
+      if (inventory.owned.includes(itemId)) {
+        pushToast("Kamu sudah punya ini");
+        return;
+      }
+      inventory = { ...inventory, owned: [...inventory.owned, itemId] };
+    }
+    this.saveData = {
+      ...save,
+      player: { ...save.player, coins: save.player.coins - item.price },
+      inventory,
+    };
+    this.sync();
+    this.persist();
+    pushToast(`${item.icon} ${item.name} dibeli! (−🪙${item.price})`);
+  }
+
+  /** Pakai obat dari inventaris (banner sakit / toko) — cooldown dari rules.json (Doc 06 §4). */
+  useMedicine(medId: string): void {
+    const save = this.saveData;
+    if (!save) return;
+    const item = getItemById(medId);
+    if (!item || !("effects" in item)) return;
+    const owned = save.inventory.medicine[medId] ?? 0;
+    if (owned <= 0) {
+      pushToast("📦 Tidak punya obat — beli di Toko");
+      return;
+    }
+    const cooldownMs = (item.cooldownHours ?? rulesConfig.cure.cooldownHours) * MS_PER_HOUR;
+    if (save.pet.lastCuredAt > 0 && this.simNow - save.pet.lastCuredAt < cooldownMs) {
+      const left = Math.ceil((cooldownMs - (this.simNow - save.pet.lastCuredAt)) / 60000);
+      pushToast(`⏳ Obat belum boleh dipakai lagi (${left} mnt)`);
+      return;
+    }
+    const result = PetStateMachine.cure(save.pet);
+    if (!result.success) {
+      if (result.reason) this.reject(result.reason);
+      return;
+    }
+    this.saveData = {
+      ...save,
+      pet: {
+        ...result.pet,
+        lastCuredAt: this.simNow,
+        stats: {
+          ...result.pet.stats,
+          health: Math.min(100, result.pet.stats.health + (item.effects.health ?? 0)),
+          energy: Math.min(100, result.pet.stats.energy + (item.effects.energy ?? 0)),
+          hygiene: Math.min(100, result.pet.stats.hygiene + (item.effects.hygiene ?? 0)),
+        },
+      },
+      inventory: {
+        ...save.inventory,
+        medicine: { ...save.inventory.medicine, [medId]: owned - 1 },
+      },
+    };
+    this.sync();
+    this.persist();
+    pushToast(`${item.icon} ${item.name} diminum — cepat pulih!`);
+    eventBus.emit("pet/say", { text: "Kyuu~ terima kasih..." });
+  }
+
+  /** Sapu poop (hold 400ms di scene, Doc 12 §3.3) + peluang koin (rules.json). */
+  scoop(): void {
+    const save = this.saveData;
+    if (!save) return;
+    if (save.pet.poopCount <= 0) return;
+    this.saveData = { ...save, pet: scoopPoop(save.pet) };
+    if (Math.random() < rulesConfig.scoop.coinChance) {
+      const amount =
+        rulesConfig.scoop.coinMin +
+        Math.floor(Math.random() * (rulesConfig.scoop.coinMax - rulesConfig.scoop.coinMin + 1));
+      this.saveData = {
+        ...this.saveData,
+        player: { ...this.saveData.player, coins: this.saveData.player.coins + amount },
+      };
+      pushToast(`🪙 +${amount} dari poop! (untung-untungan)`);
+    }
+    this.sync();
+    this.persist();
+    eventBus.emit("fx/scoop", { index: save.pet.poopCount - 1 });
+  }
+
+  /** Cek streak login saat masuk Home — hadiah sesuai tabel rules.json (Doc 06 §4). */
+  checkLoginStreak(): void {
+    const save = this.saveData;
+    if (!save) return;
+    const today = new Date(this.simNow).toISOString().split("T")[0] ?? "1970-01-01";
+    const result = updateLoginStreak(save.player.loginStreak, today);
+    if (!result.isNewDay) return;
+    const reward = rulesConfig.loginRewards[result.rewardDay - 1] ?? 20;
+    this.saveData = {
+      ...save,
+      player: { ...save.player, loginStreak: result.streak, coins: save.player.coins + reward },
+    };
+    this.sync();
+    this.persist();
+    setUiState({ loginReward: { day: result.rewardDay, coins: reward } });
+  }
+
+  /** Obat pertama yang tersedia di inventaris (banner sakit — 1 tombol, Doc 12 §11.5). */
+  useFirstMedicine(): void {
+    const save = this.saveData;
+    if (!save) return;
+    const medId = Object.entries(save.inventory.medicine).find(([, n]) => n > 0)?.[0];
+    if (!medId) {
+      pushToast("📦 Tidak punya obat — beli di Toko");
+      return;
+    }
+    this.useMedicine(medId);
+  }
+
+  /** Setelah memorial: hapus save → kembali ke Splash/Altar (Doc 12 §11.4). */
+  resetAfterDeath(): void {
+    this.saveSystem.deleteSave();
+    this.saveData = null;
+    this.hasSave = false;
+    this.recentFeeds = [];
+    this.feedsSincePoop = 0;
+    setUiState({ screen: "splash", hasSave: false, dead: false, offline: null });
+  }
 
   /** Persist segera (dipakai visibilitychange/pagehide). */
   flush(): void {
@@ -329,6 +512,7 @@ class GameRuntime {
     if (!this.hasSave) return;
     setUiState({ screen: "home" });
     this.sync();
+    this.checkLoginStreak();
   }
 
   /** Geser jam sim ke awal fase yang diminta (tanpa decay — dev tool). */
@@ -387,8 +571,12 @@ export function initGameSystem(): () => void {
     eventBus.on("ui/feed", ({ foodId }) => runtime?.feed(foodId)),
     eventBus.on("ui/bath", () => runtime?.bathe()),
     eventBus.on("ui/sleep", () => runtime?.toggleSleep()),
+    eventBus.on("ui/buy", ({ itemId }) => runtime?.buy(itemId)),
+    eventBus.on("ui/use-medicine", () => runtime?.useFirstMedicine()),
+    eventBus.on("ui/memorial-continue", () => runtime?.resetAfterDeath()),
     eventBus.on("game/pet-tap", () => runtime?.poke()),
     eventBus.on("game/pet-stroke", () => runtime?.stroke()),
+    eventBus.on("game/poop-scoop", () => runtime?.scoop()),
     eventBus.on("ui/backup-export", () => runtime?.exportBackup()),
     eventBus.on("ui/backup-import", ({ code }) => runtime?.importBackup(code)),
     eventBus.on("ui/continue", () => runtime?.continueGame()),

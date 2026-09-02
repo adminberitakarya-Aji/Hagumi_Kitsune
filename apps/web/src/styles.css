@@ -444,6 +444,207 @@ body {
   }
 }
 
+/* ===== Toko Dagashiya (Doc 12 §6) ===== */
+.shop-tabs {
+  display: flex;
+  gap: 4px;
+  width: 100%;
+}
+.shop-tab {
+  flex: 1;
+  padding: 8px 0;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--indigo);
+  background: #fffdf6;
+  border: 2px solid var(--indigo);
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+}
+.shop-tab--active {
+  background: var(--indigo);
+  color: var(--washi);
+}
+.shop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.shop-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  font-family: inherit;
+  text-align: left;
+  background: #fffdf6;
+  border: 2px solid var(--indigo);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.shop-item:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.shop-item:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.shop-item__icon {
+  font-size: 22px;
+}
+.shop-item__text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.shop-item__name {
+  font-size: 12px;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.shop-item__note {
+  font-size: 10px;
+  color: var(--indigo);
+}
+.shop-item__price {
+  font-size: 12px;
+  color: var(--hanko);
+  white-space: nowrap;
+}
+.shop-item__season {
+  font-size: 11px;
+  opacity: 0.4;
+}
+.shop-item__season--now {
+  opacity: 1;
+}
+.shop-item__owned {
+  font-size: 10px;
+  color: var(--indigo);
+}
+.food-card__count {
+  color: var(--hanko);
+}
+
+/* ===== Banner sakit (Doc 12 §11.5 — di bawah HUD, z antara HUD & sheet) ===== */
+.sick-banner {
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 3;
+  padding: 6px 10px;
+  background: rgba(168, 68, 56, 0.92);
+  border: 2px solid #7a2f28;
+  border-radius: 10px;
+  animation: toastIn 0.25s ease-out;
+}
+.sick-banner__text {
+  font-size: 12px;
+  color: var(--washi);
+  white-space: nowrap;
+}
+.sick-banner__btn {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 4px 10px;
+  background: var(--washi);
+  color: var(--hanko);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* ===== Memorial (Doc 12 §11.4 — fullscreen, tenang, interaktif setelah 4 dtk) ===== */
+.memorial {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1c1c22;
+  animation: fadeIn 1.2s ease-out;
+}
+.memorial__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 28px 24px;
+  max-width: 300px;
+  text-align: center;
+}
+.memorial__incense {
+  font-size: 44px;
+  animation: incense 3s ease-in-out infinite;
+}
+@keyframes incense {
+  0%,
+  100% {
+    transform: translateY(0);
+    filter: brightness(1);
+  }
+  50% {
+    transform: translateY(-4px);
+    filter: brightness(1.3);
+  }
+}
+.memorial__title {
+  margin: 0;
+  font-size: 18px;
+  color: var(--washi);
+  font-weight: 600;
+}
+.memorial__days {
+  margin: 0;
+  font-size: 13px;
+  color: #e0955a;
+}
+.memorial__text {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #8a8375;
+}
+.memorial__btn {
+  margin-top: 12px;
+  padding: 12px 24px;
+  font-family: inherit;
+  font-size: 14px;
+  background: var(--hanko);
+  color: var(--washi);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.memorial__btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* ===== Hadiah login (Doc 12 §11.2) ===== */
+.login-reward__coin {
+  font-size: 40px;
+  animation: incense 2s ease-in-out infinite;
+}
+.login-reward__amount {
+  margin: 0;
+  font-size: 20px;
+  color: var(--hanko);
+  font-weight: 700;
+}
+
 /* ===== M1.5 — Splash & Onboarding (Doc 04) ===== */
 .splash {
   position: absolute;

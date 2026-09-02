@@ -34,6 +34,8 @@ export const petDataSchema = z.object({
   path: z.enum(PET_EVOLUTION_PATHS),
   sickSince: z.number().nullable(),
   lastPoopAt: z.number().nullable(),
+  poopCount: z.number().min(0).max(3).default(0),
+  lastCuredAt: z.number().default(0),
   memoryLog: z.array(memoryLogEntrySchema).default([]),
 });
 
@@ -112,11 +114,13 @@ export function createDefaultSave(params: {
       path: "biasa",
       sickSince: null,
       lastPoopAt: null,
+      poopCount: 0,
+      lastCuredAt: 0,
       memoryLog: [],
     },
     inventory: {
-      food: { dango: 3, tofu: 2 },
-      medicine: { herb: 1 },
+      food: { rice_ball: 3, bread: 1, grilled_fish: 1 },
+      medicine: { syrup: 1 },
       owned: [],
       placedDecor: [],
     },

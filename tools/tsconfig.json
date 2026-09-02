@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    // Script dev dijalankan via tsx (lingkungan Node) — butuh tipe Node untuk process/argv
+    "types": ["node"],
+    "lib": ["ES2022"]
+  },
+  "include": ["."]
+}

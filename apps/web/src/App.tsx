@@ -1,4 +1,4 @@
-/** Shell layar Home (M1 Fase C): PhaserHost + overlay React (HUD, badge, sheet, toast).
+/** Shell app (M1.5): router Splash/Onboarding ↔ Home (Doc 04) + overlay React.
  * Satu arah: UI/kanvas → eventBus → gameSystem → gameState → React render. */
 import { useEffect, useState } from "react";
 import { Hud } from "./components/Hud";
@@ -12,6 +12,8 @@ import { FutonSheet } from "./components/FutonSheet";
 import { SettingsSheet } from "./components/SettingsSheet";
 import { OfflineSummarySheet } from "./components/OfflineSummarySheet";
 import { DebugPanel } from "./components/DebugPanel";
+import { Splash } from "./components/Splash";
+import { TutorialHint } from "./components/TutorialHint";
 import { PhaserHost } from "./game/PhaserHost";
 import { eventBus } from "./lib/eventBus";
 import { initGameSystem } from "./system/gameSystem";
@@ -28,7 +30,7 @@ const SHEET_TITLES: Record<"dapur" | "onsen" | "futon" | "gear", string> = {
 
 export default function App() {
   const [sheet, setSheet] = useState<SheetId>(null);
-  const sleeping = useGameState().sleeping;
+  const { screen, sleeping } = useGameState();
 
   useEffect(() => initGameSystem(), []);
   useEffect(() => {
@@ -38,12 +40,22 @@ export default function App() {
     return off;
   }, []);
 
+  if (screen === "splash") {
+    return (
+      <div className="stage">
+        <Splash />
+        <Toast />
+      </div>
+    );
+  }
+
   return (
     <div className="stage">
       <PhaserHost />
       {sleeping && <div className="sleep-overlay" aria-hidden="true" />}
       <TimeSeasonBadge />
       <Hud />
+      <TutorialHint />
       <ActionBar onAction={(id) => eventBus.emit("ui/action", { id })} />
       <Toast />
       <DebugPanel />

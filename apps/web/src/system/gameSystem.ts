@@ -14,6 +14,7 @@ import {
   type ActionRejectReason,
   type DayPhase,
   type PetData,
+  type PetElement,
   type SaveData,
 } from "@hagumi/core";
 import { eventBus } from "../lib/eventBus";
@@ -48,9 +49,21 @@ const UNSCRIPTED: Record<string, string> = {
   "door-kitchen": "🍵 Dapur (scene)",
 };
 
+/** Sapaan pertama sesuai kepribadian elemen (Doc 01 §4, Doc 04 §4.4). */
+const FIRST_GREETING: Record<PetElement, string> = {
+  fire: "Otta! Kamu master-ku? Menarik!",
+  water: "Kyuu~ senang bertemu mu...",
+  wind: "Kyaa! Yuk main sekarang!",
+  earth: "Kyuun~ aku merasa tenang di sini",
+  mystic: "...Kau dapat melihatku?",
+};
+
 class GameRuntime {
   private readonly saveSystem: SaveSystem;
-  private saveData: SaveData;
+  /** null = belum ada save (onboarding berjalan — Doc 04 §6: save dibuat tepat setelah menetas). */
+  private saveData: SaveData | null = null;
+  /** Ada save valid → Splash menampilkan [Lanjutkan] (Doc 04 §1). */
+  hasSave = false;
   private recentFeeds: number[] = [];
   /** Jam simulasi (ms) — menyusul waktu nyata; digeser oleh time-lapse debug (Doc 03 §6). */
   private simNow = Date.now();
@@ -64,25 +77,37 @@ class GameRuntime {
     if (loaded.success) {
       this.saveSystem = primary;
       this.saveData = loaded.data;
+      this.hasSave = true;
+      this.bootOfflineCatchUp();
     } else {
-      if (loaded.error === "CORRUPTED") pushToast("⚠️ Save lama rusak — pet baru dimulai");
-      // Storage gagal / belum ada save → starter kit (Doc 04) + fallback MemoryStorage
+      if (loaded.error === "CORRUPTED") pushToast("⚠️ Save lama rusak — mulai pet baru");
+      // Storage gagal / belum ada save → onboarding (Doc 04); fallback MemoryStorage
       this.saveSystem = new SaveSystem(new MemoryStorage(), new SystemClock());
-      this.saveData = createDefaultSave({
-        petName: "Kogitsune",
-        element: "fire",
-        nowMs: Date.now(),
-      });
-      this.persist();
     }
-    this.bootOfflineCatchUp();
+  }
+
+  /** Buat save pertama — dipanggil tepat setelah cutscene menetas (Doc 04 §6). */
+  startNewGame(petName: string, element: PetElement): void {
+    this.saveData = createDefaultSave({ petName, element, nowMs: Date.now() });
+    this.simNow = Date.now();
+    this.saveData.lastTick = this.simNow;
+    this.recentFeeds = [];
+    this.hasSave = true;
+    this.persist();
+    this.sync();
+    setUiState({ screen: "home" });
+    pushToast(`Selamat datang, ${petName}! 🦊`);
+    // Balon sapaan pertama sesuai kepribadian elemen (Doc 04 §4.4)
+    eventBus.emit("pet/say", { text: FIRST_GREETING[element] });
   }
 
   /** Offline catch-up saat buka game + layar ringkasan (Doc 03 §2, Doc 12 §11.1). */
   private bootOfflineCatchUp(): void {
+    const save = this.saveData;
+    if (!save) return;
     const now = Date.now();
-    const result = processOfflineCatchUp(this.pet, this.saveData.lastTick, now);
-    this.saveData = { ...this.saveData, pet: result.pet, lastTick: now };
+    const result = processOfflineCatchUp(save.pet, save.lastTick, now);
+    this.saveData = { ...save, pet: result.pet, lastTick: now };
     this.simNow = now;
     this.persist();
     if (result.elapsedHours >= 0.1) {
@@ -112,27 +137,31 @@ class GameRuntime {
   private advanceSim(dtMs: number): void {
     const from = this.simNow;
     this.simNow += dtMs;
-    if (dtMs <= 0) {
+    const save = this.saveData;
+    if (dtMs <= 0 || !save) {
       this.sync();
       return;
     }
-    const result = processOfflineCatchUp(this.pet, from, this.simNow);
-    this.saveData = { ...this.saveData, pet: result.pet };
+    const result = processOfflineCatchUp(save.pet, from, this.simNow);
+    this.saveData = { ...save, pet: result.pet };
     this.sync();
   }
 
   private get pet(): PetData {
+    if (!this.saveData) throw new Error("Save belum ada — onboarding belum selesai");
     return this.saveData.pet;
   }
 
   /** PetData → GameUiState (satu arah: core → store → React). */
   sync(): void {
-    const pet = this.saveData.pet;
+    const save = this.saveData;
+    if (!save) return;
+    const pet = save.pet;
     const day = Math.floor((this.simNow - pet.birthAt) / MS_PER_DAY) + 1;
     setUiState({
       petName: pet.name,
       day,
-      coins: this.saveData.player.coins,
+      coins: save.player.coins,
       health: pet.stats.health,
       sleeping: pet.state === "sleeping",
       nowMs: this.simNow,
@@ -146,6 +175,7 @@ class GameRuntime {
   }
 
   private persist(): void {
+    if (!this.saveData) return;
     const result = this.saveSystem.save(this.saveData);
     if (!result.success) pushToast("⚠️ Gagal menyimpan progress");
   }
@@ -157,6 +187,7 @@ class GameRuntime {
 
   private finishTransientAfter(ms: number): void {
     window.setTimeout(() => {
+      if (!this.saveData) return;
       this.saveData = {
         ...this.saveData,
         pet: PetStateMachine.finishTransientState(this.saveData.pet),
@@ -166,13 +197,15 @@ class GameRuntime {
   }
 
   feed(foodId: string): void {
+    const save = this.saveData;
+    if (!save) return;
     const food = FOODS.find((f) => f.id === foodId);
     if (!food) return;
-    if (this.saveData.player.coins < food.price) {
+    if (save.player.coins < food.price) {
       pushToast("🪙 Koin tidak cukup");
       return;
     }
-    const result = PetStateMachine.feed(this.pet, {
+    const result = PetStateMachine.feed(save.pet, {
       hungerRestore: food.hunger,
       happinessBonus: food.happiness,
       isSnack: food.happiness !== undefined, // camilan boleh saat kenyang
@@ -184,9 +217,9 @@ class GameRuntime {
       return;
     }
     this.saveData = {
-      ...this.saveData,
+      ...save,
       pet: result.pet,
-      player: { ...this.saveData.player, coins: this.saveData.player.coins - food.price },
+      player: { ...save.player, coins: save.player.coins - food.price },
     };
     this.recentFeeds.push(Date.now());
     this.sync();
@@ -197,12 +230,14 @@ class GameRuntime {
   }
 
   bathe(): void {
-    const result = PetStateMachine.bathe(this.pet);
+    const save = this.saveData;
+    if (!save) return;
+    const result = PetStateMachine.bathe(save.pet);
     if (!result.success) {
       if (result.reason) this.reject(result.reason);
       return;
     }
-    this.saveData = { ...this.saveData, pet: result.pet };
+    this.saveData = { ...save, pet: result.pet };
     this.sync();
     this.persist();
     pushToast("♨️ Wangi sedap! 😊+5");
@@ -211,13 +246,15 @@ class GameRuntime {
   }
 
   toggleSleep(): void {
-    const sleeping = this.pet.state === "sleeping";
-    const result = sleeping ? PetStateMachine.wake(this.pet) : PetStateMachine.sleep(this.pet);
+    const save = this.saveData;
+    if (!save) return;
+    const sleeping = save.pet.state === "sleeping";
+    const result = sleeping ? PetStateMachine.wake(save.pet) : PetStateMachine.sleep(save.pet);
     if (!result.success) {
       if (result.reason) this.reject(result.reason);
       return;
     }
-    this.saveData = { ...this.saveData, pet: result.pet };
+    this.saveData = { ...save, pet: result.pet };
     this.sync();
     this.persist();
     eventBus.emit("pet/sleep", { on: !sleeping });
@@ -225,21 +262,24 @@ class GameRuntime {
   }
 
   poke(): void {
+    const state = this.saveData?.pet.state;
     eventBus.emit("pet/say", {
       text:
-        this.pet.state === "sleeping"
+        state === "sleeping"
           ? "Zzz..."
           : (PAT_LINES[Math.floor(Math.random() * PAT_LINES.length)] ?? "Kyuu?"),
     });
   }
 
   stroke(): void {
-    const result = PetStateMachine.pet(this.pet); // Happiness +2 (Doc 02 S4)
+    const save = this.saveData;
+    if (!save) return;
+    const result = PetStateMachine.pet(save.pet); // Happiness +2 (Doc 02 S4)
     if (!result.success) {
       if (result.reason === "ALREADY_SLEEPING") eventBus.emit("pet/say", { text: "Zzz..." });
       return;
     }
-    this.saveData = { ...this.saveData, pet: result.pet };
+    this.saveData = { ...save, pet: result.pet };
     this.sync();
     this.persist();
     eventBus.emit("fx/hearts", undefined);
@@ -254,6 +294,7 @@ class GameRuntime {
 
   /** Ekspor save aktif → kode base64 (SaveSystem.exportBase64). */
   exportBackup(): void {
+    if (!this.saveData) return;
     const code = SaveSystem.exportBase64(this.saveData);
     setUiState({ backupCode: code });
     pushToast("📦 Kode backup dibuat — salin dan simpan!");
@@ -283,6 +324,13 @@ class GameRuntime {
     pushToast(`⏩ Time-lapse ×${multiplier}`);
   }
 
+  /** Masuk Home dari Splash [Lanjutkan] — save sudah dimuat di constructor. */
+  continueGame(): void {
+    if (!this.hasSave) return;
+    setUiState({ screen: "home" });
+    this.sync();
+  }
+
   /** Geser jam sim ke awal fase yang diminta (tanpa decay — dev tool). */
   setPhase(phase: DayPhase): void {
     const targetHour = { morning: 5, day: 10, evening: 15, night: 19 }[phase];
@@ -290,17 +338,19 @@ class GameRuntime {
     const deltaHours = targetHour - d.getHours();
     d.setHours(targetHour, 0, 0, 0);
     this.simNow = d.getTime();
-    this.saveData = { ...this.saveData, lastTick: this.simNow };
+    if (this.saveData) this.saveData = { ...this.saveData, lastTick: this.simNow };
     this.sync();
     pushToast(`🕐 Fase → ${phase} (${deltaHours >= 0 ? "+" : ""}${deltaHours} jam)`);
   }
 
   /** Skip +1 hari DENGAN decay penuh — untuk uji balance (Doc 03 §6). */
   skipDay(): void {
+    const save = this.saveData;
+    if (!save) return;
     const from = this.simNow;
     this.simNow += MS_PER_DAY;
-    const result = processOfflineCatchUp(this.pet, from, this.simNow);
-    this.saveData = { ...this.saveData, pet: result.pet };
+    const result = processOfflineCatchUp(save.pet, from, this.simNow);
+    this.saveData = { ...save, pet: result.pet };
     this.sync();
     this.persist();
     pushToast(`⏭️ +1 hari — ${result.summaryText}`);
@@ -309,10 +359,17 @@ class GameRuntime {
 
 let runtime: GameRuntime | null = null;
 
+/** Flag tutorial disimpan terpisah dari save (Doc 04 §5) — tetap ada walau save dihapus. */
+const TUTORIAL_KEY = "hagumi_tutorial_done";
+
 export function initGameSystem(): () => void {
   runtime = new GameRuntime();
   runtime.sync();
-  runtime.startTicker();
+  setUiState({
+    hasSave: runtime.hasSave,
+    tutorialDone: localStorage.getItem(TUTORIAL_KEY) === "1",
+  });
+  if (runtime.hasSave) runtime.startTicker();
 
   // Autosave: aksi (persist di tiap aksi) + visibilitychange + pagehide (Doc ROADMAP Fase D)
   const onVisibility = (): void => {
@@ -334,6 +391,15 @@ export function initGameSystem(): () => void {
     eventBus.on("game/pet-stroke", () => runtime?.stroke()),
     eventBus.on("ui/backup-export", () => runtime?.exportBackup()),
     eventBus.on("ui/backup-import", ({ code }) => runtime?.importBackup(code)),
+    eventBus.on("ui/continue", () => runtime?.continueGame()),
+    eventBus.on("ui/new-game", ({ name, element }) => {
+      runtime?.startNewGame(name, element);
+      runtime?.startTicker();
+    }),
+    eventBus.on("ui/tutorial-dismiss", () => {
+      localStorage.setItem(TUTORIAL_KEY, "1");
+      setUiState({ tutorialDone: true });
+    }),
     eventBus.on("debug/speed", ({ multiplier }) => runtime?.setSpeed(multiplier)),
     eventBus.on("debug/set-phase", ({ phase }) => runtime?.setPhase(phase)),
     eventBus.on("debug/skip-day", () => runtime?.skipDay()),

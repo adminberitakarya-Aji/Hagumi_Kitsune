@@ -443,3 +443,269 @@ body {
     transform: translateY(-6px);
   }
 }
+
+/* ===== M1.5 — Splash & Onboarding (Doc 04) ===== */
+.splash {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: linear-gradient(180deg, #2b2b33 0%, #3d4a6b 55%, #7a2f28 100%);
+  z-index: 10;
+  padding: 24px;
+}
+.splash__torii {
+  width: 220px;
+  height: 110px;
+  margin-bottom: 8px;
+  background:
+    linear-gradient(#a84438, #a84438) 50% 100% / 180px 14px no-repeat,
+    linear-gradient(#a84438, #a84438) 50% 78% / 200px 10px no-repeat,
+    linear-gradient(#8b3a30, #8b3a30) 22% 12% / 14px 80px no-repeat,
+    linear-gradient(#8b3a30, #8b3a30) 78% 12% / 14px 80px no-repeat,
+    linear-gradient(#b8514a, #b8514a) 50% 0 / 240px 18px no-repeat;
+  border-radius: 4px;
+}
+.splash__title {
+  font-size: 40px;
+  letter-spacing: 8px;
+  color: var(--washi);
+  animation: hankoStamp 0.7s cubic-bezier(0.2, 2.4, 0.4, 1) both;
+}
+.splash__kanji {
+  display: block;
+  font-size: 16px;
+  letter-spacing: 24px;
+  color: #e0955a;
+  margin-top: 4px;
+}
+@keyframes hankoStamp {
+  0% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(0.96);
+    opacity: 1;
+  }
+  80% {
+    transform: scale(1.04);
+  }
+}
+.splash__tag {
+  font-size: 12px;
+  color: #d6c084;
+}
+.splash__heading {
+  font-size: 18px;
+  color: var(--washi);
+}
+.splash__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+.splash__back {
+  background: none;
+  border: none;
+  color: #d6c084;
+  font-size: 11px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Altar telur */
+.egg-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  width: 100%;
+  max-width: 320px;
+  margin-top: 6px;
+}
+.egg-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 12px 6px;
+  background: rgba(245, 239, 224, 0.94);
+  border: 2px solid var(--indigo);
+  border-radius: 10px;
+  font-family: inherit;
+  cursor: pointer;
+}
+.egg-card--picked {
+  border-color: var(--hanko);
+  box-shadow: 0 0 0 2px var(--hanko);
+  transform: scale(1.04);
+}
+.egg-card__icon {
+  font-size: 30px;
+}
+.egg-card__name {
+  font-size: 12px;
+  color: var(--ink);
+}
+.egg-card__desc {
+  font-size: 9px;
+  color: var(--indigo);
+}
+
+/* Layar nama */
+.name-input {
+  width: 240px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 15px;
+  text-align: center;
+  color: var(--ink);
+  background: var(--washi);
+  border: 2px solid var(--indigo);
+  border-radius: 8px;
+  outline: none;
+}
+.name-input:focus {
+  border-color: var(--hanko);
+}
+
+/* Cutscene menetas (Doc 04 §4 — 5 tahap) */
+.splash--hatch {
+  background: radial-gradient(circle at 50% 42%, #4a4458 0%, #2b2b33 70%);
+}
+.hatch-egg {
+  font-size: 72px;
+  line-height: 1;
+  will-change: transform;
+}
+.hatch-egg__inner {
+  display: inline-block;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.4));
+}
+.hatch--wobble .hatch-egg__inner {
+  animation: wobble 0.35s ease-in-out infinite;
+}
+.hatch--glow .hatch-egg__inner {
+  animation: wobble 0.25s ease-in-out infinite;
+  filter: drop-shadow(0 0 18px #f0a8bc) drop-shadow(0 0 40px #f0a8bc);
+}
+.hatch--crack .hatch-egg__inner {
+  animation: wobble 0.15s linear infinite;
+  filter: drop-shadow(0 0 26px #ffd700) drop-shadow(0 0 60px #f0a8bc);
+}
+.hatch--burst .hatch-egg__inner {
+  animation: burst 0.7s ease-out both;
+}
+.hatch--fox .hatch-egg__inner {
+  animation: foxPop 0.6s cubic-bezier(0.2, 2, 0.4, 1) both;
+}
+@keyframes wobble {
+  0%,
+  100% {
+    transform: rotate(-7deg);
+  }
+  50% {
+    transform: rotate(7deg);
+  }
+}
+@keyframes burst {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(1.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+@keyframes foxPop {
+  0% {
+    transform: scale(0.2) translateY(24px);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+.hatch-label {
+  font-size: 13px;
+  color: var(--washi);
+  min-height: 18px;
+}
+
+/* HankoButton: varian ghost + progress tekan-lama (Doc 04 §3) */
+.hanko--ghost {
+  background: transparent;
+  color: var(--washi);
+  border-color: var(--washi);
+}
+.hanko--ghost .hanko__cap {
+  border-color: var(--washi);
+}
+.hanko {
+  position: relative;
+  overflow: hidden;
+}
+.hanko__hold {
+  position: absolute;
+  inset: 0;
+  transform-origin: left;
+  background: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+}
+
+/* Tutorial ringan (Doc 04 §5) */
+.tutorial {
+  position: absolute;
+  bottom: 58px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--washi);
+  border: 2px solid var(--hanko);
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  z-index: 7;
+}
+.tutorial__arrow {
+  position: absolute;
+  top: -16px;
+  right: 46px;
+  font-size: 14px;
+  color: var(--hanko);
+  animation: bobUp 0.9s ease-in-out infinite alternate;
+}
+@keyframes bobUp {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-5px);
+  }
+}
+.tutorial p {
+  flex: 1;
+  font-size: 11px;
+  color: var(--ink);
+}
+.tutorial button {
+  padding: 6px 10px;
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--washi);
+  background: var(--hanko);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}

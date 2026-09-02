@@ -16,7 +16,7 @@
 | Milestone | Nama                                   | Status | Mulai | Selesai | Estimasi   |
 | --------- | -------------------------------------- | ------ | ----- | ------- | ---------- |
 | M1        | Playable Core                          | ✅     | 01/09 | 02/09   | 2 hari     |
-| M1.5      | Onboarding (Telur & Nama)              | ⬜     | —     | —       | 3–4 hari   |
+| M1.5      | Onboarding (Telur & Nama)              | ✅     | 02/09 | 02/09   | 3–4 hari   |
 | M2        | Loop Lengkap (Poop, Penyakit, Ekonomi) | ⬜     | —     | —       | 1 minggu   |
 | M3        | Evolusi Zenko/Yako                     | ⬜     | —     | —       | 1 minggu   |
 | M4        | Retensi (Offline, Login, Mini-game)    | ⬜     | —     | —       | 1 minggu   |
@@ -84,18 +84,18 @@
 
 ---
 
-## M1.5 — Onboarding: Telur & Nama 🥚
+## M1.5 — Onboarding: Telur & Nama 🥚 ✅
 
 **Tujuan:** pemain baru: Splash → pilih telur elemen → nama + cap hanko → cutscene menetas → Home.
 **Referensi:** Doc 04, Doc 12 §10 (altar & nama), Doc 01 §4 (elemen).
 
-- [ ] S1 Splash: torii placeholder + logo hanko + tombol Mulai/Lanjutkan (Doc 12 §3.1) — Tgl: ____
-- [ ] Deteksi save ada → `[Lanjutkan]` langsung ke Home + ringkasan offline — Tgl: ____
-- [ ] S2 Altar Telur: 4 telur elemen bergetar saat tap + kartu deskripsi (Doc 12 §10.1) — Tgl: ____
-- [ ] S3 Nama: validasi 12 char, hanko tekan-lama 0.8 dtk + progress ring + getar (Doc 12 §10.2) — Tgl: ____
-- [ ] Cutscene menetas 5 fase (Doc 04 §5) + balon sapaan per kepribadian elemen — Tgl: ____
-- [ ] Starter kit: 100 koin + 5 makanan + grace period 24 jam (stat floor 50 offline) — Tgl: ____
-- [ ] Tutorial ringan Home: highlight Dapur → "Beri makan!" (sekali saja, simpan flag) — Tgl: ____
+- [x] S1 Splash: torii placeholder + logo hanko + tombol Mulai/Lanjutkan (Doc 12 §3.1) — Tgl: 02/09
+- [x] Deteksi save ada → `[Lanjutkan]` langsung ke Home + ringkasan offline — Tgl: 02/09
+- [x] S2 Altar Telur: 4 telur elemen bergetar saat tap + kartu deskripsi (Doc 12 §10.1) — Tgl: 02/09 *(v1: picked-scale + deskripsi; getar sprite final di M5)*
+- [x] S3 Nama: validasi 12 char, hanko tekan-lama 0.8 dtk + progress ring + getar (Doc 12 §10.2) — Tgl: 02/09 *(getar layar menyusul bersama SFX M5)*
+- [x] Cutscene menetas 5 fase (Doc 04 §5) + balon sapaan per kepribadian elemen — Tgl: 02/09
+- [x] Starter kit: 100 koin + 5 makanan + grace period 24 jam (stat floor 50 offline) — Tgl: 02/09 *(via createDefaultSave + offline catch-up core)*
+- [x] Tutorial ringan Home: highlight Dapur → "Beri makan!" (sekali saja, simpan flag) — Tgl: 02/09
 
 ### 🚧 Blokir & Catatan
 

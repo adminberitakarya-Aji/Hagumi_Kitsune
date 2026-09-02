@@ -17,6 +17,10 @@ export interface GameEventMap {
   /* Backup (Doc 09 §4) — SettingsSheet → system */
   "ui/backup-export": undefined;
   "ui/backup-import": { code: string };
+  /* Onboarding (Doc 04) — Splash/Onboarding → system */
+  "ui/continue": undefined;
+  "ui/new-game": { name: string; element: "fire" | "water" | "wind" | "earth" };
+  "ui/tutorial-dismiss": undefined;
   /* Debug panel dev-only (Doc 03 §6) */
   "debug/speed": { multiplier: 1 | 10 | 60 | 3600 };
   "debug/set-phase": { phase: "morning" | "day" | "evening" | "night" };

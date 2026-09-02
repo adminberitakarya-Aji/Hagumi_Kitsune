@@ -16,6 +16,12 @@ export interface OfflineSummaryUi {
 }
 
 export interface GameUiState {
+  /** Layar aktif: splash (dengan onboarding di dalamnya) atau home. */
+  screen: "splash" | "home";
+  /** true = ada save valid → Splash menampilkan [Lanjutkan] (Doc 04 §1). */
+  hasSave: boolean;
+  /** Tutorial ringan Dapur (Doc 04 §5) — sekali saja, flag di localStorage. */
+  tutorialDone: boolean;
   petName: string;
   day: number;
   coins: number;
@@ -31,6 +37,9 @@ export interface GameUiState {
 }
 
 const initialState: GameUiState = {
+  screen: "splash",
+  hasSave: false,
+  tutorialDone: true,
   petName: "Kogitsune",
   day: 1,
   coins: 100,

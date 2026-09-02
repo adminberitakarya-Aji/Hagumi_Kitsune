@@ -19,7 +19,7 @@ export interface GameEventMap {
   "pet/say": { text: string };
   "pet/sleep": { on: boolean };
   "poop/count": { count: number }; // sinkron visual poop di tatami
-  "pet/appearance": { element: string; path: string; tails: number }; // ekor + tint jalur (M3)
+  "pet/appearance": { element: string; path: string; tails: number; coatColor?: string }; // ekor + tint jalur (M3) + warna genetika (M7)
   "fx/hearts": undefined;
   "fx/scoop": { index: number }; // partikel sapu berhasil
   "fx/bathe": undefined; // klip bathe (M5 — aksi onsen)
@@ -60,4 +60,12 @@ export interface GameEventMap {
   "debug/speed": { multiplier: 1 | 10 | 60 | 3600 };
   "debug/set-phase": { phase: "morning" | "day" | "evening" | "night" };
   "debug/skip-day": undefined;
+  /* Breeding & keturunan (M7 — Doc 07, Doc 12 §9) */
+  "ui/breeding-open": undefined; // pintu Breeding House / ActionBar → layar Breeding
+  "ui/breeding-close": undefined;
+  "ui/breeding-start": { partnerId: string }; // pilih mitra NPC → telur keturunan
+  "ui/breeding-continue": undefined; // tutup layar hasil breeding
+  "ui/album-open": undefined; // ActionBar 📖 → Album (pet + telur + silsilah)
+  "ui/album-close": undefined;
+  "ui/legacy-continue": undefined; // memorial: telur keturunan menetas → garis baru
 }

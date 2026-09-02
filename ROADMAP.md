@@ -22,7 +22,7 @@
 | M4        | Retensi (Offline, Login, Mini-game)    | ✅     | 09/09 | 09/09   | 1 minggu   |
 | M5        | Polish (Seni Final, Audio, Balance)    | ✅     | 02/09 | 02/09   | 1 minggu   |
 | M6        | Companion & Siklus Hari                | ✅     | 02/09 | 02/09   | 1 minggu   |
-| M7        | Breeding Offline                       | ⬜     | —     | —       | 1–2 minggu |
+| M7        | Breeding Offline                       | ✅     | 03/09 | 03/09   | 1–2 minggu |
 | M8        | Breeding Online (Supabase)             | ⬜     | —     | —       | 1–2 minggu |
 | M9        | Companion LLM                          | ⬜     | —     | —       | 1–2 minggu |
 
@@ -258,23 +258,26 @@
 **Tujuan:** pet dewasa bisa kawin dengan NPC; genetika turunan; pohon keluarga; warisan saat mati.
 **Referensi:** Doc 07, Doc 12 §9 (album & breeding), GDD §15.
 
-- [ ] Syarat breeding ditegakkan (umur 20+, HP/happy ≥80, cooldown 7 hari, kuota 4) + alasan UI — Tgl: ____
-- [ ] Scene Breeding House: altar, 3 mitra NPC harian, kartu preview anak (Doc 12 §9.2) — Tgl: ____
-- [ ] Algoritma genetika (70/25/5%) + warna mix HSV + kepribadian (Doc 07 §3) — Tgl: ____
-- [ ] Telur keturunan: inkubasi normal, start bonus stat induk — Tgl: ____
-- [ ] Lineage tree skema + Album Keluarga (kartu hidup/memorial, Doc 12 §9.1) — Tgl: ____
-- [ ] Warisan saat mati: koin kenangan, item diwariskan, telur tetap jalan (Doc 07 §5) — Tgl: ____
-- [ ] 1000 simulasi genetika → laporan distribusi (DoD Doc 07 §6) — Tgl: ____
+- [x] Syarat breeding ditegakkan (umur 20+, HP/happy ≥80, cooldown 7 hari, kuota 4) + alasan UI — Tgl: 03/09
+- [x] Scene Breeding House: altar, 3 mitra NPC harian, kartu preview anak (Doc 12 §9.2) — Tgl: 03/09
+- [x] Algoritma genetika (70/25/5%) + warna mix HSV + kepribadian (Doc 07 §3) — Tgl: 03/09
+- [x] Telur keturunan: inkubasi normal, start bonus stat induk — Tgl: 03/09
+- [x] Lineage tree skema + Album Keluarga (kartu hidup/memorial, Doc 12 §9.1) — Tgl: 03/09
+- [x] Warisan saat mati: koin kenangan, item diwariskan, telur tetap jalan (Doc 07 §5) — Tgl: 03/09
+- [x] 1000 simulasi genetika → laporan distribusi (DoD Doc 07 §6) — Tgl: 03/09
 
 ### 🚧 Blokir & Catatan
 
-- (kosong)
+- Mitra NPC disederhanakan jadi 3 pilihan elemen harian deterministik (hash dayKey) — tanpa server, sesuai Fase 1 offline-first (Doc 07 §2A).
+- Bonus stat anak dibekukan sebagai `bonusPoints` di telur saat breeding (pct% × rata-rata stat induk sehat), bukan dihitung ulang dari stat induk yang telah meluruh saat mati.
+- Kepribadian keturunan dipersist sebagai `pet.personality` (opsional) — memengaruhi elemen dialog/chat, bukan wajah sprite.
+- Breeding antar-pemain (Doc 07 §2B) tetap di M8.
 
 ### ✅ Definition of Done — M7
 
-- [ ] Dari pet mati → keturunan jalan dengan warisan benar, pemain tak mulai dari nol
-- [ ] Silsilah 3 generasi tampil benar di Album
-- [ ] Semua syarat & biaya dari data, ditegakkan di UI + core
+- [x] Dari pet mati → keturunan jalan dengan warisan benar, pemain tak mulai dari nol
+- [x] Silsilah 3 generasi tampil benar di Album
+- [x] Semua syarat & biaya dari data, ditegakkan di UI + core
 
 ---
 
@@ -348,6 +351,7 @@
 | 01/09/2026 | **Keputusan arsitektur v0.5:** UI layer = React + TSX di atas Phaser (docs/09 & 12, GDD §11 direvisi); apps/web dimigrasi ke Vite+React, komponen TSX dibuat | UI state-driven butuh deklaratif; canvas+React shell = pola mapan; core tetap TS murni |
 | 02/09/2026 | M1 Fase B selesai — PetStats, TimeService, SaveSystem, PetStateMachine (headless + test)                                                                    | Core logic sebelum UI agar stat punya satu sumber kebenaran                            |
 | 02/09/2026 | M1 Fase C selesai — Scene Home + overlay React; system tersambung core asli (bukan mock)                                                                     | Core sudah siap; menghindari kerja dua kali                                            |
+| 03/09/2026 | **M7 selesai** — breeding offline & keturunan: genetika 70/25/5, mix warna HSV, 3 mitra NPC harian, telur + bonus stat dibekukan, warisan (koin kenangan + item diwariskan), Album silsilah 3 generasi, Memorial lanjut garis; 21 test baru + `pnpm simulate:genetics` lulus; M7 → ✅ | Kelanjutan garis keturunan mengubah kehilangan menjadi kelanjutan (GDD §15); Fase 1 offline-first tanpa server |
 | 02/09/2026 | M1 Fase D selesai — autosave, offline catch-up + ringkasan, debug time-lapse, backup base64; M1 → ✅ (DoD review menyusul)                                    | Persistensi & siklus menuntut playable core                                            |
 | 02/09/2026 | **Balance fix:** decay.json diselaraskan Doc 01 (per jam) + happiness decay ×0.5 untuk stage baby; sim `tools/simulate.ts` ditambahkan                        | Baby-stage tanpa play (BABY_LOCKED) membuat pet mati hari 5–7; "bayi mudah senang"     |
 | 09/09/2026 | M3 selesai — Care Score, evolusi hari-10/20/60, 5 jalur + pemulihan, cutscene, tint ekor; **regen health alami ditambahkan** (rules.json); M3 → ✅            | Simulator menemukan health tanpa pemulihan → kematian tertunda; DoD distribusi 1000 sim lulus |

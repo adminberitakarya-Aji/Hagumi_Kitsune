@@ -12,6 +12,13 @@ export {
 export type { FoodItem, ItemsConfig, MedicineItem, MiscItem, SeasonKey } from "./items";
 export { rulesConfig, rulesConfigSchema } from "./rules";
 export type { RulesConfig } from "./rules";
+export {
+  breedingConfig,
+  breedingConfigSchema,
+  getMixElement,
+  mixKey,
+} from "./breeding";
+export type { BreedingConfig } from "./breeding";
 export { evolutionConfig, evolutionConfigSchema, getPathRule } from "./evolution";
 export type { EvolutionConfig, PathRule } from "./evolution";
 export {

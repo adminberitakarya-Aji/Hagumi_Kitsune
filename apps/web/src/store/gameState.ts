@@ -60,6 +60,68 @@ export interface ChatUi {
   typing?: boolean;
 }
 
+/* Breeding & keturunan (M7 — Doc 07, Doc 12 §9) */
+
+/** Mitra NPC harian + preview anak deterministik (Doc 12 §9.2). */
+export interface BreedingPartnerUi {
+  id: string;
+  name: string;
+  element: string;
+  /** Elemen anak hasil kombinasi (tabel mix — deterministik). */
+  childElement: string;
+  /** Warna bulu anak hasil mix HSV (deterministik, tanpa jitter). */
+  childCoat: string;
+}
+
+export interface BreedingUi {
+  partners: BreedingPartnerUi[];
+  canBreed: boolean;
+  /** Alasan gerbang (TOO_YOUNG/LOW_HEALTH/...) untuk daftar syarat UI. */
+  reasons: string[];
+  costCoins: number;
+  cooldownLeftMs: number;
+  childrenCount: number;
+  maxChildren: number;
+  happinessBonus: number;
+  hasEgg: boolean;
+}
+
+export interface AlbumPersonUi {
+  name: string;
+  element: string;
+  path: string;
+  livedDays?: number;
+  careScore?: number;
+}
+
+export interface AlbumUi {
+  pet: {
+    name: string;
+    element: string;
+    path: string;
+    coatColor?: string;
+    day: number;
+    careScore: number;
+    gen: number;
+    childrenCount: number;
+  };
+  egg: { element: string; coatColor: string; gen: number; parents: AlbumPersonUi[] } | null;
+  /** Silsilah maks 3 generasi (Doc 07 §4): baris-0 = orangtua pet aktif. */
+  generations: AlbumPersonUi[][];
+}
+
+/** Warisan pet yang mati (Doc 07 §5) — tampil di Memorial. */
+export interface LegacyUi {
+  name: string;
+  livedDays: number;
+  memoryCoins: number;
+  inheritedItemName: string | null;
+  hasEgg: boolean;
+  childName: string | null;
+  childElement: string | null;
+  childCoat: string | null;
+}
+
 export interface GameUiState {
   /** Layar aktif: splash (dengan onboarding di dalamnya) atau home. */
   screen: "splash" | "home";
@@ -101,6 +163,12 @@ export interface GameUiState {
   minigameResult: MinigameResultUi | null;
   /** Layar Chat companion (M6 — Doc 12 §8); null = tertutup. */
   chat: ChatUi | null;
+  /** Layar Breeding House (M7 — Doc 12 §9.2); null = tertutup. */
+  breeding: BreedingUi | null;
+  /** Layar Album (M7 — Doc 12 §9.1); null = tertutup. */
+  album: AlbumUi | null;
+  /** Warisan pet mati (M7 — Doc 07 §5); null = tidak ada / sudah dilanjutkan. */
+  legacy: LegacyUi | null;
   /** Kode backup base64 hasil ekspor (Doc 09 §4). */
   backupCode: string;
 }
@@ -129,6 +197,9 @@ const initialState: GameUiState = {
   careScore: 50,
   minigameResult: null,
   chat: null,
+  breeding: null,
+  album: null,
+  legacy: null,
   backupCode: "",
 };
 

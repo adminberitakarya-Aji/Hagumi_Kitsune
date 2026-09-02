@@ -28,9 +28,21 @@ import {
   SaveSystem,
   SystemClock,
   checkPathRecovery,
+  checkBreedingRequirements,
+  childDefaultName,
+  coatColorOf,
+  computeChildGenetics,
+  computeLegacyCoins,
+  cooldownRemainingMs,
+  createBreedingEgg,
   createDefaultSave,
   evolveIfNeeded,
+  lineageGenerations,
+  petToLineageParent,
+  previewChildCoat,
+  previewChildElement,
   processOfflineCatchUp,
+  rollDailyPartners,
   samplePetCare,
   shouldSpawnPoop,
   spawnPoop,
@@ -46,8 +58,8 @@ import {
   type PetStats,
   type SaveData,
 } from "@hagumi/core";
-import type { ChatMessageUi } from "../store/gameState";
-import { evolutionConfig, getDialogConfig, getItemById, minigamesConfig, getMinigameById, getStageRule, rulesConfig } from "@hagumi/data"; // katalog asli M2/M3/M4 (fail-fast JSON)
+import type { ChatMessageUi, LegacyUi } from "../store/gameState";
+import { breedingConfig, evolutionConfig, getDialogConfig, getItemById, minigamesConfig, getMinigameById, getStageRule, rulesConfig } from "@hagumi/data"; // katalog asli M2/M3/M4 (fail-fast JSON)
 import { eventBus } from "../lib/eventBus";
 import { getGameState, setUiState } from "../store/gameState";
 import { pushToast } from "../store/toastStore";
@@ -80,7 +92,6 @@ const REJECT_TEXT: Record<ActionRejectReason, string> = {
 const PAT_LINES = ["Kyuu~!", "Laper...", "Main yuk!", "Ehehe~", "Hari ini cerah, ya!"];
 
 const UNSCRIPTED: Record<string, string> = {
-  album: "📖 Album",
   "door-garden": "⛩️ Taman",
   "door-kitchen": "🍵 Dapur (scene)",
 };
@@ -401,6 +412,7 @@ class GameRuntime {
   sync(): void {
     const save = this.saveData;
     if (!save) return;
+    this.ensureLegacy(); // M7: kematian → warisan (Doc 07 §5)
     const pet = save.pet;
     const day = Math.floor((this.simNow - pet.birthAt) / MS_PER_DAY) + 1;
     setUiState({
@@ -430,7 +442,12 @@ class GameRuntime {
       },
     });
     eventBus.emit("poop/count", { count: pet.poopCount });
-    eventBus.emit("pet/appearance", { element: pet.element, path: pet.path, tails: pet.tails });
+    eventBus.emit("pet/appearance", {
+      element: pet.element,
+      path: pet.path,
+      tails: pet.tails,
+      coatColor: pet.coatColor,
+    });
     // M4: CTA event musiman + data lobi Matsuri (rekor & countdown cooldown)
     const eventId = getSeasonEvent(this.simNow);
     let claimed = false;
@@ -475,10 +492,12 @@ class GameRuntime {
   private ensureDialogue(): DialogueEngine | null {
     const save = this.saveData;
     if (!save || save.pet.stage === "egg") return null;
-    if (!this.dialogue || this.dialogueElement !== save.pet.element) {
-      const cfg = getDialogConfig(save.pet.element);
+    // Kepribadian diwariskan (M7 — Doc 07 §3): elemen dialog ≠ wajib elemen tubuh
+    const personality = save.pet.personality ?? save.pet.element;
+    if (!this.dialogue || this.dialogueElement !== personality) {
+      const cfg = getDialogConfig(personality);
       this.dialogue = new DialogueEngine({
-        element: save.pet.element,
+        element: personality,
         pools: {
           lines: cfg.lines,
           seniorIdle: cfg.senior.idle,
@@ -488,7 +507,7 @@ class GameRuntime {
         rng: new MathRng(),
         nowMs: this.simNow,
       });
-      this.dialogueElement = save.pet.element;
+      this.dialogueElement = personality;
     }
     this.dialogue.setVariant(save.pet.stage, save.pet.path);
     this.dialogue.tick(this.simNow);
@@ -499,8 +518,9 @@ class GameRuntime {
   private ensureChatProvider(): OfflineLlmProvider | null {
     const save = this.saveData;
     if (!save || save.pet.stage === "egg") return null;
-    if (!this.chatProvider || this.chatProviderElement !== save.pet.element) {
-      const cfg = getDialogConfig(save.pet.element);
+    const personality = save.pet.personality ?? save.pet.element;
+    if (!this.chatProvider || this.chatProviderElement !== personality) {
+      const cfg = getDialogConfig(personality);
       const pools: ChatPools = {
         makan: cfg.chat.makan,
         sayang: cfg.chat.sayang,
@@ -509,7 +529,7 @@ class GameRuntime {
         fallback: cfg.chat.fallback,
       };
       this.chatProvider = new OfflineLlmProvider(pools, new MathRng());
-      this.chatProviderElement = save.pet.element;
+      this.chatProviderElement = personality;
     }
     return this.chatProvider;
   }
@@ -1110,6 +1130,291 @@ class GameRuntime {
     this.useMedicine(medId);
   }
 
+  // ===== Breeding & keturunan (M7 — Doc 07, Doc 12 §9) =====
+
+  /** Umur pet dalam hari penuh. */
+  private livedDaysOf(pet: PetData): number {
+    return Math.max(1, Math.floor((this.simNow - pet.birthAt) / MS_PER_DAY));
+  }
+
+  /**
+   * Kematian → warisan sekali saja (Doc 07 §5): koin kenangan + 1 item kesayangan.
+   * Telur keturunan yang sudah ada tetap hidup — pemain tidak mulai dari nol.
+   */
+  private ensureLegacy(): void {
+    const save = this.saveData;
+    if (!save) return;
+    if (save.pet.state !== "dead" && save.pet.stage !== "dead") return;
+    if (save.breeding.pendingLegacy) return;
+    const livedDays = this.livedDaysOf(save.pet);
+    const gen = save.breeding.lineage?.gen ?? 1;
+    const memoryCoins = computeLegacyCoins(livedDays, gen);
+    // Item kesayangan diwariskan: mainan pertama, else dekor pertama (Doc 07 §5)
+    const isKind = (id: string, kind: string): boolean => {
+      const item = getItemById(id);
+      return item !== undefined && "kind" in item && item.kind === kind;
+    };
+    const inheritedId =
+      save.inventory.owned.find((id) => isKind(id, "toy")) ??
+      save.inventory.owned.find((id) => isKind(id, "decor")) ??
+      null;
+    this.saveData = {
+      ...save,
+      breeding: {
+        ...save.breeding,
+        pendingLegacy: {
+          name: save.pet.name,
+          element: save.pet.element,
+          path: save.pet.path,
+          livedDays,
+          careScore: Math.round(save.pet.careScore),
+          gen,
+          memoryCoins,
+          inheritedItemId: inheritedId,
+        },
+      },
+    };
+    const egg = save.breeding.egg;
+    const legacyUi: LegacyUi = {
+      name: save.pet.name,
+      livedDays,
+      memoryCoins,
+      inheritedItemName: inheritedId ? (getItemById(inheritedId)?.name ?? null) : null,
+      hasEgg: egg !== null,
+      childName: egg ? childDefaultName(egg.parents[0]?.name ?? save.pet.name, egg.gen) : null,
+      childElement: egg?.element ?? null,
+      childCoat: egg?.coatColor ?? null,
+    };
+    setUiState({ legacy: legacyUi });
+  }
+
+  /** Buka layar Breeding House (Doc 12 §9.2): 3 mitra NPC harian + syarat. */
+  breedingOpen(): void {
+    const save = this.saveData;
+    if (!save || save.pet.state === "dead" || save.pet.stage === "dead") return;
+    const partners = rollDailyPartners(this.dayKey(this.simNow)).map((p) => ({
+      id: p.id,
+      name: p.name,
+      element: p.element,
+      childElement: previewChildElement(save.pet.element, p.element),
+      childCoat: previewChildCoat(save.pet, p),
+    }));
+    const gate = checkBreedingRequirements(save.pet, save.breeding, this.simNow);
+    setUiState({
+      breeding: {
+        partners,
+        canBreed: gate.allowed,
+        reasons: gate.allowed ? [] : gate.reasons,
+        costCoins: breedingConfig.requirements.costCoins,
+        cooldownLeftMs: cooldownRemainingMs(save.breeding, this.simNow),
+        childrenCount: save.breeding.childrenCount,
+        maxChildren: breedingConfig.requirements.maxChildren,
+        happinessBonus: breedingConfig.breedEffect.happinessBonus,
+        hasEgg: save.breeding.egg !== null,
+      },
+    });
+  }
+
+  breedingClose(): void {
+    setUiState({ breeding: null });
+  }
+
+  /** Pasangkan dengan mitra NPC → telur keturunan (Doc 07 §2A: biaya 500, cd 7 hari, 😊+10). */
+  breedingStart(partnerId: string): void {
+    const save = this.saveData;
+    if (!save) return;
+    const gate = checkBreedingRequirements(save.pet, save.breeding, this.simNow);
+    if (!gate.allowed) {
+      pushToast("Syarat breeding belum terpenuhi — cek daftar di bawah");
+      return;
+    }
+    const partner = rollDailyPartners(this.dayKey(this.simNow)).find((p) => p.id === partnerId);
+    if (!partner) return;
+    const cost = breedingConfig.requirements.costCoins;
+    if (save.player.coins < cost) {
+      pushToast(`🪙 Koin tidak cukup (butuh ${cost})`);
+      return;
+    }
+    const genetics = computeChildGenetics({ parent: save.pet, partner, rng: new MathRng() });
+    // Poin bonus dibekukan dari stat induk yang sehat saat breeding (Doc 07 §3)
+    const avg =
+      (save.pet.stats.hunger + save.pet.stats.happiness + save.pet.stats.energy + save.pet.stats.hygiene) / 4;
+    const bonusPoints = (avg * genetics.startBonusPct) / 100;
+    const childGen = (save.breeding.lineage?.gen ?? 1) + 1;
+    const egg = createBreedingEgg(
+      genetics,
+      [
+        petToLineageParent(save.pet, this.livedDaysOf(save.pet)),
+        { name: partner.name, element: partner.element, path: "biasa" },
+      ],
+      childGen,
+      this.simNow,
+      bonusPoints,
+    );
+    const childNo = save.breeding.childrenCount + 1;
+    this.saveData = {
+      ...save,
+      pet: this.addHappiness(save.pet, breedingConfig.breedEffect.happinessBonus),
+      player: { ...save.player, coins: save.player.coins - cost },
+      breeding: {
+        ...save.breeding,
+        childrenCount: childNo,
+        cooldownUntil: this.simNow + breedingConfig.requirements.cooldownDays * MS_PER_DAY,
+        egg,
+      },
+    };
+    this.recordMemory("breed", `keturunan ke-${childNo} bersama ${partner.name}`);
+    this.sync();
+    this.persist();
+    setUiState({ breeding: null });
+    pushToast(
+      genetics.element === "mystic"
+        ? "🥚 Telur mistik ✨ lahir dari mutasi! (😊+10)"
+        : `🥚 Telur keturunan (${genetics.element}) di altar — 😊+10`,
+    );
+    eventBus.emit("pet/say", { text: "Kyuu~! Bayi kecil kita!" });
+  }
+
+  /** Buka Album (Doc 12 §9.1): pet aktif + telur + silsilah maks 3 generasi. */
+  albumOpen(): void {
+    const save = this.saveData;
+    if (!save) return;
+    const egg = save.breeding.egg;
+    setUiState({
+      album: {
+        pet: {
+          name: save.pet.name,
+          element: save.pet.element,
+          path: save.pet.path,
+          coatColor: save.pet.coatColor ?? coatColorOf(save.pet.element),
+          day: this.livedDaysOf(save.pet),
+          careScore: Math.round(save.pet.careScore),
+          gen: save.breeding.lineage?.gen ?? 1,
+          childrenCount: save.breeding.childrenCount,
+        },
+        egg: egg
+          ? {
+              element: egg.element,
+              coatColor: egg.coatColor,
+              gen: egg.gen,
+              parents: egg.parents.map((p) => ({
+                name: p.name,
+                element: p.element,
+                path: p.path,
+                livedDays: p.livedDays,
+                careScore: p.careScore,
+              })),
+            }
+          : null,
+        generations: save.breeding.lineage
+          ? lineageGenerations(save.breeding.lineage).map((row) =>
+              row.map((p) => ({
+                name: p.name,
+                element: p.element,
+                path: p.path,
+                livedDays: p.livedDays,
+                careScore: p.careScore,
+              })),
+            )
+          : [],
+      },
+    });
+  }
+
+  albumClose(): void {
+    setUiState({ album: null });
+  }
+
+  /** Telur keturunan menetas → garis keluarga berlanjut (Doc 07 §5: tak mulai dari nol). */
+  continueLineage(): void {
+    const save = this.saveData;
+    if (!save) return;
+    const legacy = save.breeding.pendingLegacy;
+    const egg = save.breeding.egg;
+    if (!legacy || !egg) {
+      this.resetAfterDeath(); // tanpa telur → mulai pet baru dari nol
+      return;
+    }
+    const now = Date.now();
+    const bp = egg.bonusPoints;
+    const childName = childDefaultName(egg.parents[0]?.name ?? legacy.name, egg.gen);
+    const inheritedId = legacy.inheritedItemId;
+    this.saveData = {
+      ...save,
+      lastTick: now,
+      pet: {
+        name: childName,
+        element: egg.element,
+        personality: egg.personalityElement,
+        birthAt: now,
+        stage: "baby",
+        state: "idle",
+        // Stat awal = dasar newborn + poin bonus dibekukan saat breeding (Doc 07 §3)
+        stats: clampStats({
+          hunger: 80 + bp,
+          happiness: 80 + bp,
+          energy: 80 + bp,
+          hygiene: 80 + bp,
+          health: 100,
+        }),
+        careScore: 50,
+        careHistory: [],
+        recoverSince: null,
+        tails: 1,
+        path: "biasa",
+        coatColor: egg.coatColor,
+        sickSince: null,
+        lastPoopAt: null,
+        poopCount: 0,
+        lastCuredAt: 0,
+        memoryLog: [
+          { t: now, key: "lineage", detail: `melanjutkan garis ${legacy.name} (generasi ${egg.gen})` },
+        ],
+      },
+      player: { ...save.player, coins: save.player.coins + legacy.memoryCoins },
+      inventory: inheritedId
+        ? {
+            ...save.inventory,
+            owned: save.inventory.owned.includes(inheritedId)
+              ? save.inventory.owned
+              : [...save.inventory.owned, inheritedId],
+          }
+        : save.inventory,
+      // Kuota & cooldown bersifat per-pet → reset untuk keturunan (Doc 07 §1)
+      breeding: {
+        childrenCount: 0,
+        cooldownUntil: 0,
+        lineage: {
+          gen: egg.gen,
+          parents: egg.parents,
+          ancestors: save.breeding.lineage ? [save.breeding.lineage] : [],
+        },
+        egg: null,
+        pendingLegacy: null,
+      },
+    };
+    // Reset runtime state untuk pet baru
+    this.simNow = now;
+    this.recentFeeds = [];
+    this.feedsSincePoop = 0;
+    this.lastCareSampleAt = now;
+    this.strokesSinceSample = 0;
+    this.playsSinceSample = 0;
+    this.penaltySinceSample = 0;
+    this.zeroStats.clear();
+    this.sickPenaltyFrom = 0;
+    this.notifiedAt.clear();
+    this.sickNotified = false;
+    this.chatMessages = [];
+    this.persist();
+    this.sync();
+    setUiState({ screen: "home", dead: false, legacy: null, album: null, breeding: null, offline: null });
+    pushToast(
+      `🥚→🐣 ${childName} menetas! +🪙${legacy.memoryCoins} kenangan${inheritedId ? " + item warisan" : ""}`,
+    );
+    eventBus.emit("pet/say", { text: FIRST_GREETING[egg.element] ?? "Kyuu~!" });
+  }
+
   /** Setelah memorial: hapus save → kembali ke Splash/Altar (Doc 12 §11.4). */
   resetAfterDeath(): void {
     this.saveSystem.deleteSave();
@@ -1117,7 +1422,15 @@ class GameRuntime {
     this.hasSave = false;
     this.recentFeeds = [];
     this.feedsSincePoop = 0;
-    setUiState({ screen: "splash", hasSave: false, dead: false, offline: null });
+    setUiState({
+      screen: "splash",
+      hasSave: false,
+      dead: false,
+      offline: null,
+      legacy: null,
+      album: null,
+      breeding: null,
+    });
   }
 
   /** Persist segera (dipakai visibilitychange/pagehide). */
@@ -1271,6 +1584,13 @@ export function initGameSystem(): () => void {
     eventBus.on("ui/chat-open", () => runtime?.chatOpen()),
     eventBus.on("ui/chat-close", () => runtime?.chatClose()),
     eventBus.on("ui/chat-send", ({ text }) => runtime?.chatSend(text)),
+    // M7 — Breeding & keturunan (Doc 07, Doc 12 §9)
+    eventBus.on("ui/breeding-open", () => runtime?.breedingOpen()),
+    eventBus.on("ui/breeding-close", () => runtime?.breedingClose()),
+    eventBus.on("ui/breeding-start", ({ partnerId }) => runtime?.breedingStart(partnerId)),
+    eventBus.on("ui/album-open", () => runtime?.albumOpen()),
+    eventBus.on("ui/album-close", () => runtime?.albumClose()),
+    eventBus.on("ui/legacy-continue", () => runtime?.continueLineage()),
     // M5 — audio: SFX dari scene + pengaturan musik/SFX/notify/offline-LLM
     eventBus.on("sfx/play", ({ id }) => audioEngine.playSfx(id)),
     eventBus.on("ui/settings", (s) => runtime?.applySettings(s)),

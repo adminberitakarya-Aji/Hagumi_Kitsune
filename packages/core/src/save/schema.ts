@@ -4,6 +4,7 @@
 
 import { z } from "zod";
 import { PET_ELEMENTS, PET_EVOLUTION_PATHS, PET_STAGES, PET_STATES } from "../pet/types";
+import type { LineageNode } from "../breeding/types";
 
 export const CURRENT_SAVE_VERSION = 2;
 export const SAVE_STORAGE_KEY = "hagumi_save_v1";
@@ -51,6 +52,10 @@ export const petDataSchema = z.object({
   poopCount: z.number().min(0).max(3).default(0),
   lastCuredAt: z.number().default(0),
   memoryLog: z.array(memoryLogEntrySchema).default([]),
+  /** M7 (Doc 07 §3): warna bulu hasil genetika — opsional (generasi-1 = warna elemen). */
+  coatColor: z.string().optional(),
+  /** M7 (Doc 07 §3): kepribadian (elemen dialog) yang diwariskan — default = elemen. */
+  personality: z.enum(PET_ELEMENTS).optional(),
 });
 
 export const loginStreakSchema = z.object({
@@ -70,10 +75,59 @@ export const inventoryDataSchema = z.object({
   placedDecor: z.array(z.string()).default([]),
 });
 
+/** M7 (Doc 07 §4): satu induk di pohon silsilah. */
+export const lineageParentSchema = z.object({
+  name: z.string(),
+  element: z.enum(PET_ELEMENTS),
+  path: z.string(),
+  coatColor: z.string().optional(),
+  livedDays: z.number().optional(),
+  careScore: z.number().optional(),
+});
+
+/** M7 (Doc 07 §4): node pohon silsilah rekursif (maks 3 generasi di UI). */
+export const lineageNodeSchema: z.ZodType<LineageNode, z.ZodTypeDef, unknown> = z.lazy(() =>
+  z.object({
+    gen: z.number().int().min(1),
+    parents: z.array(lineageParentSchema),
+    ancestors: z.array(lineageNodeSchema).default([]),
+  }),
+);
+
+/** M7 (Doc 07 §2A): telur keturunan yang diinkubasi di Breeding House. */
+export const breedingEggSchema = z.object({
+  createdAt: z.number(),
+  element: z.enum(PET_ELEMENTS),
+  coatColor: z.string(),
+  personalityElement: z.enum(PET_ELEMENTS),
+  startBonusPct: z.number().min(0).max(100),
+  /** Poin bonus stat yang dibekukan saat breeding (pct% × rata-rata stat induk). */
+  bonusPoints: z.number().min(0).default(0),
+  gen: z.number().int().min(1),
+  parents: z.array(lineageParentSchema),
+});
+
+/** M7 (Doc 07 §5): warisan yang menunggu pemain melanjutkan garis keturunan. */
+export const pendingLegacySchema = z.object({
+  name: z.string(),
+  element: z.enum(PET_ELEMENTS),
+  path: z.string(),
+  livedDays: z.number(),
+  careScore: z.number(),
+  gen: z.number().int().min(1),
+  memoryCoins: z.number().int().min(0),
+  inheritedItemId: z.string().nullable(),
+});
+
 export const breedingDataSchema = z.object({
   childrenCount: z.number().default(0),
   cooldownUntil: z.number().default(0),
-  lineage: z.record(z.string(), z.unknown()).default({}),
+  /** M7: silsilah pet aktif (null = generasi-1 tanpa leluhur tercatat). */
+  lineage: lineageNodeSchema.nullable().default(null),
+  /** M7: telur keturunan aktif (v1: maks 1 — menetas saat induk mati). */
+  egg: breedingEggSchema.nullable().default(null),
+  /** M7: warisan pet yang mati — ditampilkan di memorial sampai lanjut. */
+  pendingLegacy: pendingLegacySchema.nullable().default(null),
 });
 
 export const settingsDataSchema = z.object({
@@ -201,7 +255,9 @@ export function createDefaultSave(params: {
     breeding: {
       childrenCount: 0,
       cooldownUntil: 0,
-      lineage: {},
+      lineage: null,
+      egg: null,
+      pendingLegacy: null,
     },
     settings: {
       sound: true,

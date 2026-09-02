@@ -131,7 +131,13 @@ export class SaveSystem {
         ...data,
         version: 1,
         inventory: data.inventory ?? { food: {}, medicine: {}, owned: [], placedDecor: [] },
-        breeding: data.breeding ?? { childrenCount: 0, cooldownUntil: 0, lineage: {} },
+        breeding: data.breeding ?? {
+          childrenCount: 0,
+          cooldownUntil: 0,
+          lineage: null,
+          egg: null,
+          pendingLegacy: null,
+        },
         settings: data.settings ?? { sound: true, notify: true },
       };
       currentVersion = 1;
@@ -151,6 +157,29 @@ export class SaveSystem {
         },
       };
       wasMigrated = true;
+    }
+
+    // M7: normalisasi breeding lama — `lineage` record kosong (pra-M7) → null,
+    // dan pastikan egg/pendingLegacy tersedia untuk save lama mana pun.
+    const oldBreeding = (data as Record<string, unknown>).breeding as
+      | Record<string, unknown>
+      | undefined;
+    if (oldBreeding && typeof oldBreeding === "object") {
+      const rawLineage = oldBreeding.lineage;
+      const validLineage =
+        typeof rawLineage === "object" &&
+        rawLineage !== null &&
+        "gen" in rawLineage &&
+        Array.isArray((rawLineage as { parents?: unknown }).parents);
+      data = {
+        ...data,
+        breeding: {
+          ...oldBreeding,
+          lineage: validLineage ? rawLineage : null,
+          egg: oldBreeding.egg ?? null,
+          pendingLegacy: oldBreeding.pendingLegacy ?? null,
+        },
+      };
     }
 
     return { data, wasMigrated };

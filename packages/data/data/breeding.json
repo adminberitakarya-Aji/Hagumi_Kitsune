@@ -1,0 +1,43 @@
+{
+  "requirements": {
+    "minAgeDays": 20,
+    "minHealth": 80,
+    "minHappiness": 80,
+    "cooldownDays": 7,
+    "maxChildren": 4,
+    "costCoins": 500
+  },
+  "genetics": {
+    "parentChance": 0.7,
+    "mixChance": 0.95,
+    "colorMixParentA": 0.6,
+    "hueJitterDeg": 6,
+    "personalityInheritChance": 0.6,
+    "startBonusMinPct": 1,
+    "startBonusMaxPct": 4,
+    "startBonusElitePct": 5,
+    "startBonusEliteCareScore": 80,
+    "mixTable": {
+      "earth+fire": "wind",
+      "earth+water": "wind",
+      "earth+wind": "water",
+      "fire+water": "earth",
+      "fire+wind": "water",
+      "water+wind": "fire"
+    }
+  },
+  "breedEffect": {
+    "happinessBonus": 10
+  },
+  "legacy": {
+    "memoryCoinBase": 100,
+    "memoryCoinPerDayOver30": 10,
+    "memoryCoinMax": 600,
+    "generationBonusPctPerGen": 10,
+    "generationBonusMaxPct": 50
+  },
+  "npc": {
+    "names": ["Kon", "Suzu", "Hina", "Riku", "Momo", "Yuzu", "Kaede", "Tama"],
+    "elementPool": ["fire", "water", "wind", "earth", "mystic"]
+  }
+}

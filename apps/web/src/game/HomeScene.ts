@@ -5,7 +5,7 @@ import { eventBus } from "../lib/eventBus";
 import { getGameState } from "../store/gameState";
 import { getSky } from "./timeVisual";
 import { kitsuneAnim, type ClipName } from "./art/kitsuneArt";
-import { getSeason } from "@hagumi/core";
+import { getSeason, ELEMENT_COAT } from "@hagumi/core";
 
 const FOX_HOME = { x: 180, y: 470 };
 const WALK_AREA = { minX: 60, maxX: 300, minY: 430, maxY: 540 };
@@ -220,13 +220,19 @@ export class HomeScene extends Phaser.Scene {
   }
 
   /** Ekor bertambah + tint jalur (M3 DoD: ekor terlihat bertambah di sprite). */
-  private setAppearance({ element, path, tails }: { element: string; path: string; tails: number }): void {
+  private setAppearance({ element, path, tails, coatColor }: { element: string; path: string; tails: number; coatColor?: string }): void {
     const elementChanged = element !== this.element;
     this.element = element;
     this.stage = tails >= 3 ? "adult" : "baby";
     if (elementChanged) this.foxSprite.setTexture(`kitsune_${element}`);
     this.applyStageScale();
-    const tint = PATH_TINT[path] ?? 0xffffff;
+    // M7 — warna bulu genetika: tint mix induk, kecuali masih warna dasar elemen
+    const baseCoat = ELEMENT_COAT[element as keyof typeof ELEMENT_COAT];
+    const hasGeneticCoat =
+      coatColor !== undefined && coatColor.toUpperCase() !== baseCoat.toUpperCase();
+    const tint = hasGeneticCoat
+      ? Number.parseInt(coatColor.slice(1), 16)
+      : (PATH_TINT[path] ?? 0xffffff);
     this.foxSprite.setTint(tint);
     const color = TAIL_COLOR[path] ?? 0xe8874a;
     const g = this.tailsG;

@@ -113,6 +113,40 @@ export {
 export type { MinigameGateResult, MinigameReward, MinigameRewardParams } from "./player/minigame";
 export { calculateMinigameReward, canPlayMinigame } from "./player/minigame";
 
+export { cooldownRemainingMs, breedingMixKey } from "./breeding/breeding";
+export type {
+  BreedingEgg,
+  BreedingGateReason,
+  BreedingGateResult,
+  ChildElementSource,
+  ChildGenetics,
+  ChildStartStats,
+  LegacyInfo,
+  LineageNode,
+  LineageParent,
+  NpcPartner,
+} from "./breeding/types";
+export {
+  applyStartBonus,
+  averageParentStats,
+  buildChildLineage,
+  checkBreedingRequirements,
+  childDefaultName,
+  coatColorOf,
+  computeChildGenetics,
+  computeLegacyCoins,
+  createBreedingEgg,
+  ELEMENT_COAT,
+  hexToHsv,
+  hsvToHex,
+  lineageGenerations,
+  mixCoatColors,
+  petToLineageParent,
+  previewChildCoat,
+  previewChildElement,
+  rollDailyPartners,
+} from "./breeding/breeding";
+
 // Companion: dialog, memori, chat Tier 1 (M6 — Doc 08, Doc 11 §1–2)
 export {
   OfflineLlmProvider,

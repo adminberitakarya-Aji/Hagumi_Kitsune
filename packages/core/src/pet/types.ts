@@ -71,6 +71,8 @@ export interface PetData {
   poopCount: number;
   lastCuredAt: number;
   memoryLog: MemoryLogEntry[];
+  /** M7 (Doc 07 §3): warna bulu hasil genetika — generasi-1 memakai warna elemen. */
+  coatColor?: string;
 }
 
 export type ActionRejectReason =

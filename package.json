@@ -14,7 +14,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "simulate": "tsx tools/simulate.ts"
+    "simulate": "tsx tools/simulate.ts",
+    "simulate:genetics": "tsx tools/simulate-genetics.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

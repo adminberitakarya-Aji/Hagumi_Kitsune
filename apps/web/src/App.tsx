@@ -21,6 +21,8 @@ import { SickBanner } from "./components/SickBanner";
 import { MemorialScreen } from "./components/MemorialScreen";
 import { LoginRewardSheet } from "./components/LoginRewardSheet";
 import { EvolutionCutscene } from "./components/EvolutionCutscene";
+import { BreedingScreen } from "./components/BreedingScreen";
+import { AlbumScreen } from "./components/AlbumScreen";
 import { PhaserHost } from "./game/PhaserHost";
 import { eventBus } from "./lib/eventBus";
 import { initGameSystem } from "./system/gameSystem";
@@ -75,7 +77,9 @@ export default function App() {
             onAction={(id) =>
               id === "chat"
                 ? eventBus.emit("ui/chat-open", undefined)
-                : eventBus.emit("ui/action", { id })
+                : id === "album"
+                  ? eventBus.emit("ui/album-open", undefined) // M7 — Album keluarga (Doc 12 §9.1)
+                  : eventBus.emit("ui/action", { id })
             }
           />
           <Toast />
@@ -85,6 +89,8 @@ export default function App() {
           <EvolutionCutscene />
           <MinigameResultSheet />
           <ChatScreen />
+          <AlbumScreen />
+          <BreedingScreen />
           {sheet && (
             <WashiPanel open title={SHEET_TITLES[sheet]} onClose={() => setSheet(null)}>
               {sheet === "dapur" && <KitchenSheet onFed={() => setSheet(null)} />}

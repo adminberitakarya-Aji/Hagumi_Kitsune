@@ -1,0 +1,56 @@
+{
+  "common": {
+    "energyCost": 12,
+    "minEnergyToPlay": 15,
+    "cooldownMinutes": 30,
+    "happinessMin": 8,
+    "happinessMax": 20,
+    "minCoins": 5,
+    "coinPerPoint": 0.5,
+    "dayPhaseCoinMultiplier": { "day": 1.1 },
+    "streakDay7BonusCoins": 50,
+    "stage": {
+      "baby": { "locked": true },
+      "teen": { "difficulty": 0.7, "coinMultiplier": 1.0 },
+      "adult": { "difficulty": 1.0, "coinMultiplier": 1.0 },
+      "elder": { "difficulty": 0.6, "coinMultiplier": 1.1 }
+    }
+  },
+  "games": [
+    {
+      "id": "kingyo",
+      "name": "Kingyo-Sukui",
+      "icon": "🎏",
+      "tagline": "Sentuh & tahan di atas ikan — poi basi bertahap!",
+      "durationSec": 45,
+      "elementBonus": "water",
+      "bonusDesc": "Poi awal lebih kuat (4 tahap)",
+      "scores": { "normal": 10, "rare": 50 }
+    },
+    {
+      "id": "wanage",
+      "name": "Wanage",
+      "icon": "⭕",
+      "tagline": "Lempar ring saat meter di zona kuning!",
+      "durationSec": 40,
+      "throws": 8,
+      "elementBonus": "wind",
+      "bonusDesc": "Indikator angin terlihat jelas",
+      "scores": { "normal": 10, "rare": 40, "moving": 30 }
+    },
+    {
+      "id": "dash",
+      "name": "Kitsune-Dash",
+      "icon": "🏃",
+      "tagline": "Ketuk lompat, tahan lompat tinggi — hindari rintangan!",
+      "durationSec": 60,
+      "elementBonus": "fire",
+      "bonusDesc": "Dash tembus rintangan 1× per sesi",
+      "scores": { "metersPerPoint": 10, "coinPickup": 2 }
+    }
+  ],
+  "elementNotes": {
+    "earth": "+1 poi/lembaran cadangan (kingyo & wanage)",
+    "mystic": "koin akhir +10%"
+  }
+}

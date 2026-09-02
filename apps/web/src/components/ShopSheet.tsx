@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { eventBus } from "../lib/eventBus";
 import { getSeason, type Season } from "@hagumi/core";
-import { itemsConfig } from "@hagumi/data";
+import { getFoodsForSeason, itemsConfig } from "@hagumi/data";
 import { useGameState } from "../store/gameState";
 
 type Tab = "makanan" | "obat" | "barang";
@@ -21,7 +21,8 @@ export function ShopSheet() {
 
   const cards =
     tab === "makanan"
-      ? itemsConfig.foods.map((f) => ({
+      ? getFoodsForSeason(season).map((f) => ({
+          // Katalog musiman: hanya tampil di musimnya (Doc 06 AC, Doc 03 §4)
           id: f.id,
           icon: f.icon,
           name: f.name,

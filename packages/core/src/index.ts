@@ -74,6 +74,10 @@ export {
   splitByDayPhase,
 } from "./time/time-service";
 
+// Season Events (M4 — Doc 03 §5)
+export type { SeasonEventId } from "./time/season-events";
+export { SEASON_EVENTS, SEASON_EVENT_INFO, getSeasonDay, getSeasonEvent } from "./time/season-events";
+
 // Save System
 export type { LoadSaveResult } from "./save/save-system";
 export { SaveSystem } from "./save/save-system";
@@ -104,3 +108,8 @@ export {
   samplePetCare,
   tailsForPath,
 } from "./pet/evolution";
+
+// Mini-game reward & gating (M4 — Doc 05)
+export type { MinigameGateResult, MinigameReward, MinigameRewardParams } from "./player/minigame";
+export { calculateMinigameReward, canPlayMinigame } from "./player/minigame";
+

@@ -32,6 +32,17 @@ export interface EvolutionUi {
   path?: string;
 }
 
+export interface MinigameResultUi {
+  gameId: string;
+  name: string;
+  icon: string;
+  points: number;
+  coins: number;
+  happiness: number;
+  best: number;
+  newRecord: boolean;
+}
+
 export interface GameUiState {
   /** Layar aktif: splash (dengan onboarding di dalamnya) atau home. */
   screen: "splash" | "home";
@@ -69,6 +80,8 @@ export interface GameUiState {
   tails: number;
   /** Care Score 0–100 (dibulatkan) — ditampilkan di HUD sejak M3. */
   careScore: number;
+  /** Layar hasil mini-game (Doc 05 §6); null = tidak tampil. */
+  minigameResult: MinigameResultUi | null;
   /** Kode backup base64 hasil ekspor (Doc 09 §4). */
   backupCode: string;
 }
@@ -95,6 +108,7 @@ const initialState: GameUiState = {
   element: "fire",
   tails: 1,
   careScore: 50,
+  minigameResult: null,
   backupCode: "",
 };
 

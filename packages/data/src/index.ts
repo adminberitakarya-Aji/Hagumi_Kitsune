@@ -14,4 +14,11 @@ export { rulesConfig, rulesConfigSchema } from "./rules";
 export type { RulesConfig } from "./rules";
 export { evolutionConfig, evolutionConfigSchema, getPathRule } from "./evolution";
 export type { EvolutionConfig, PathRule } from "./evolution";
+export {
+  getMinigameById,
+  getStageRule,
+  minigamesConfig,
+  minigamesConfigSchema,
+} from "./minigames";
+export type { MinigameCommon, MinigameDef, MinigameStageKey, MinigameStageRule, MinigamesConfig } from "./minigames";
 

@@ -3,6 +3,7 @@
 import Phaser from "phaser";
 import { eventBus } from "../lib/eventBus";
 import { getGameState } from "../store/gameState";
+import { getSky } from "./timeVisual";
 
 const FOX_HOME = { x: 180, y: 470 };
 const WALK_AREA = { minX: 60, maxX: 300, minY: 430, maxY: 540 };
@@ -48,6 +49,7 @@ export class HomeScene extends Phaser.Scene {
   private scoopHint?: Phaser.GameObjects.Text;
   private offs: Array<() => void> = [];
   private sleeping = false;
+  private windowSky!: Phaser.GameObjects.Rectangle;
   private eating = false;
   private pointerActive = false;
   private stroked = false;
@@ -126,8 +128,10 @@ export class HomeScene extends Phaser.Scene {
   private drawRoom(): void {
     // Dinding washi (y48..232 — 48px atas tertutup HUD)
     this.add.rectangle(180, 140, 360, 184, 0xede4cc);
-    // Jendela shōji + langit
-    this.add.rectangle(180, 118, 280, 96, 0xa8c8e8);
+    // Jendela shōji + langit — warna mengikuti fase waktu (Doc 03 §3)
+    this.windowSky = this.add.rectangle(180, 118, 280, 96, 0xa8c8e8);
+    this.refreshWindowSky();
+    this.time.addEvent({ delay: 1000, loop: true, callback: () => this.refreshWindowSky() });
     const frame = this.add.graphics();
     frame.lineStyle(8, 0xf5efe0, 1);
     frame.strokeRect(40, 70, 280, 96);
@@ -149,7 +153,7 @@ export class HomeScene extends Phaser.Scene {
       .rectangle(20, 300, 40, 130, 0xe8e0ce)
       .setStrokeStyle(2, 0x3d4a6b)
       .setInteractive({ useHandCursor: true })
-      .on("pointerdown", () => eventBus.emit("ui/action", { id: "door-garden" }));
+      .on("pointerdown", () => eventBus.emit("scene/goto", { key: "garden" }));
     this.add
       .rectangle(340, 300, 40, 130, 0xe8e0ce)
       .setStrokeStyle(2, 0x3d4a6b)
@@ -157,6 +161,12 @@ export class HomeScene extends Phaser.Scene {
       .on("pointerdown", () => eventBus.emit("ui/action", { id: "door-kitchen" }));
     this.add.text(20, 300, "⛩️", { fontSize: "16px" }).setOrigin(0.5);
     this.add.text(340, 300, "🍵", { fontSize: "16px" }).setOrigin(0.5);
+  }
+
+  /** Langit di luar jendela mengikuti fase waktu (Doc 03 §3; musim ikut warna fase). */
+  private refreshWindowSky(): void {
+    const sky = getSky(getGameState().nowMs);
+    this.windowSky.setFillStyle(sky.top, 1);
   }
 
   private createFox(): void {

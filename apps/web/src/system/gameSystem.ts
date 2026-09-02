@@ -8,6 +8,12 @@ import {
   MS_PER_DAY,
   MS_PER_HOUR,
   PetStateMachine,
+  calculateMinigameReward,
+  canPlayMinigame,
+  clampStats,
+  getDayPhase,
+  getSeason,
+  getSeasonEvent,
   SaveSystem,
   SystemClock,
   checkPathRecovery,
@@ -27,7 +33,7 @@ import {
   type PetStats,
   type SaveData,
 } from "@hagumi/core";
-import { evolutionConfig, getItemById, rulesConfig } from "@hagumi/data"; // katalog asli M2/M3 (fail-fast JSON)
+import { evolutionConfig, getItemById, minigamesConfig, getMinigameById, getStageRule, rulesConfig } from "@hagumi/data"; // katalog asli M2/M3/M4 (fail-fast JSON)
 import { eventBus } from "../lib/eventBus";
 import { getGameState, setUiState } from "../store/gameState";
 import { pushToast } from "../store/toastStore";
@@ -344,6 +350,20 @@ class GameRuntime {
     });
     eventBus.emit("poop/count", { count: pet.poopCount });
     eventBus.emit("pet/appearance", { element: pet.element, path: pet.path, tails: pet.tails });
+    // M4: CTA event musiman + data lobi Matsuri (rekor & countdown cooldown)
+    const eventId = getSeasonEvent(this.simNow);
+    let claimed = false;
+    if (eventId === "hanami") claimed = save.seasonEvents.hanamiDoneDay === this.dayKey(this.simNow);
+    else if (eventId === "tsukimi") claimed = save.seasonEvents.tsukimiDoneDay === this.dayKey(this.simNow);
+    else if (eventId === "omikuji") claimed = save.seasonEvents.omikujiLastDay === this.dayKey(this.simNow);
+    eventBus.emit("season/event", { id: eventId, claimed });
+    eventBus.emit("minigame/lobby", {
+      best: { ...save.minigames.bestScores },
+      cooldownLeftMs: Math.max(
+        0,
+        minigamesConfig.common.cooldownMinutes * 60_000 - (this.simNow - save.minigames.lastPlayAt),
+      ),
+    });
   }
 
   private persist(): void {
@@ -461,6 +481,227 @@ class GameRuntime {
     this.sync();
     this.persist();
     eventBus.emit("fx/hearts", undefined);
+  }
+
+  // ===== Mini-game Matsuri (M4 — Doc 05, Doc 12 §7) =====
+
+  /** Kunci tanggal lokal (YYYY-MM-DD) — konsisten dengan login streak. */
+  private dayKey(ms: number): string {
+    return new Date(ms).toISOString().split("T")[0] ?? "1970-01-01";
+  }
+
+  /** Tambah happiness dengan clamp (energi sudah dipotong saat gate — bukan aksi play penuh). */
+  private addHappiness(pet: PetData, amount: number): PetData {
+    return { ...pet, stats: clampStats({ ...pet.stats, happiness: pet.stats.happiness + amount }) };
+  }
+
+  /** Tap kartu di lobi → gate (Doc 05 §1/§7) → potong energi → masuk scene game. */
+  minigameStart(gameId: string): void {
+    const save = this.saveData;
+    if (!save) return;
+    const def = getMinigameById(gameId);
+    if (!def) return;
+    const common = minigamesConfig.common;
+    const stage = save.pet.stage === "baby" || save.pet.stage === "teen" || save.pet.stage === "adult" || save.pet.stage === "elder" ? save.pet.stage : "adult";
+    const gate = canPlayMinigame({
+      state: save.pet.state,
+      stage,
+      energy: save.pet.stats.energy,
+      lastPlayAt: save.minigames.lastPlayAt,
+      nowMs: this.simNow,
+      cooldownMs: common.cooldownMinutes * 60_000,
+      minEnergyToPlay: common.minEnergyToPlay,
+      stageLocked: getStageRule(stage).locked ?? false,
+    });
+    if (!gate.allowed) {
+      const text =
+        gate.reason === "COOLDOWN"
+          ? `⏳ Cooldown ${Math.ceil(
+              (common.cooldownMinutes * 60_000 - (this.simNow - save.minigames.lastPlayAt)) / 60_000,
+            )} mnt`
+          : (REJECT_TEXT[gate.reason as ActionRejectReason] ?? "Tidak bisa main sekarang");
+      pushToast(text);
+      eventBus.emit("pet/say", { text });
+      return;
+    }
+    // Biaya energi dipotong SEBELUM main + cooldown dimulai (Doc 05 §7)
+    this.saveData = {
+      ...save,
+      pet: {
+        ...save.pet,
+        stats: clampStats({ ...save.pet.stats, energy: save.pet.stats.energy - common.energyCost }),
+      },
+      minigames: { ...save.minigames, lastPlayAt: this.simNow },
+    };
+    this.sync();
+    this.persist();
+    eventBus.emit("scene/goto", {
+      key: gameId as "kingyo" | "wanage" | "dash",
+      gameId,
+      best: save.minigames.bestScores[gameId] ?? 0,
+    });
+  }
+
+  /** Sesi selesai → hadiah sesuai formula Doc 05 §5 + rekor + layar hasil. */
+  minigameResult(gameId: string, points: number, coinBonus = 0): void {
+    const save = this.saveData;
+    if (!save) return;
+    const def = getMinigameById(gameId);
+    if (!def) return;
+    const common = minigamesConfig.common;
+    const stage = save.pet.stage === "baby" || save.pet.stage === "teen" || save.pet.stage === "adult" || save.pet.stage === "elder" ? save.pet.stage : "adult";
+    const streakDay = save.player.loginStreak.count;
+    const reward = calculateMinigameReward(points, {
+      coinPerPoint: common.coinPerPoint,
+      minCoins: common.minCoins,
+      happinessMin: common.happinessMin,
+      happinessMax: common.happinessMax,
+      dayPhaseMultipliers: common.dayPhaseCoinMultiplier,
+      stageCoinMultiplier: getStageRule(stage).coinMultiplier ?? 1,
+      mysticBonusPct: save.pet.element === "mystic" ? 0.1 : 0,
+      streakBonusCoins: streakDay > 0 && streakDay % 7 === 0 ? common.streakDay7BonusCoins : 0,
+      seasonMultiplier: getSeason(this.simNow) === "summer" ? 1.5 : 1, // matsuri musiman (Doc 03 §5)
+      dayPhase: getDayPhase(this.simNow),
+    });
+    const prevBest = save.minigames.bestScores[gameId] ?? 0;
+    const newRecord = points > prevBest;
+    this.saveData = {
+      ...save,
+      pet: this.addHappiness(save.pet, reward.happiness),
+      player: { ...save.player, coins: save.player.coins + reward.coins + coinBonus },
+      minigames: {
+        ...save.minigames,
+        bestScores: newRecord
+          ? { ...save.minigames.bestScores, [gameId]: points }
+          : save.minigames.bestScores,
+      },
+    };
+    this.noteInteraction("play"); // Care Score bonus interaksi (GDD §4)
+    this.sync();
+    this.persist();
+    this.finishTransientAfter(1200); // playing → IDLE
+    setUiState({
+      minigameResult: {
+        gameId,
+        name: def.name,
+        icon: def.icon,
+        points,
+        coins: reward.coins + coinBonus,
+        happiness: reward.happiness,
+        best: Math.max(prevBest, points),
+        newRecord,
+      },
+    });
+  }
+
+  /** Tutup layar hasil → kembali ke Home. */
+  minigameContinue(): void {
+    setUiState({ minigameResult: null });
+    eventBus.emit("scene/goto", { key: "home" });
+  }
+
+  // ===== Taman & event musiman (M4 — Doc 03 §5, Doc 12 §5) =====
+
+  /** Beri makan koi: −5🪙 → 😊+3, koi melompat; cooldown 1 jam (Doc 12 §5). */
+  koiFeed(): void {
+    const save = this.saveData;
+    if (!save) return;
+    if (save.pet.state === "dead" || save.pet.stage === "dead") return;
+    if (save.player.coins < 5) {
+      pushToast("🪙 Koin tidak cukup (butuh 5)");
+      return;
+    }
+    const cooldownMs = 60 * 60_000;
+    const since = this.simNow - save.seasonEvents.koiFeedAt;
+    if (save.seasonEvents.koiFeedAt > 0 && since < cooldownMs) {
+      pushToast(`⏳ Koi baru saja diberi makan (${Math.ceil((cooldownMs - since) / 60_000)} mnt)`);
+      return;
+    }
+    this.saveData = {
+      ...save,
+      pet: this.addHappiness(save.pet, 3),
+      player: { ...save.player, coins: save.player.coins - 5 },
+      seasonEvents: { ...save.seasonEvents, koiFeedAt: this.simNow },
+    };
+    this.sync();
+    this.persist();
+    eventBus.emit("fx/koi-jump", undefined);
+    pushToast("🐟 Koi melompat gembira! 😊+3 (−🪙5)");
+  }
+
+  /** CTA event musiman di Taman (Doc 03 §5): Hanami sekali, Tsukimi sekali, Omikuji harian. */
+  claimSeasonEvent(id: "hanami" | "tsukimi" | "omikuji"): void {
+    const save = this.saveData;
+    if (!save) return;
+    const today = this.dayKey(this.simNow);
+    const ev = save.seasonEvents;
+
+    if (id === "hanami") {
+      if (ev.hanamiDoneDay === today) {
+        pushToast("🌸 Hanami sudah dirayakan hari ini");
+        return;
+      }
+      const memory = { t: this.simNow, key: "hanami", detail: `Piknik hanami di taman bersama ${save.pet.name}` };
+      this.saveData = {
+        ...save,
+        pet: {
+          ...this.addHappiness(save.pet, 20),
+          memoryLog: [...save.pet.memoryLog, memory].slice(-20),
+        },
+        seasonEvents: { ...ev, hanamiDoneDay: today },
+      };
+      this.sync();
+      this.persist();
+      pushToast("🌸 Hanami! Piknik bersama — 😊+20 (foto tersimpan di Album)");
+      eventBus.emit("fx/hearts", undefined);
+      return;
+    }
+
+    if (id === "tsukimi") {
+      if (ev.tsukimiDoneDay === today) {
+        pushToast("🌕 Tsukimi sudah dirayakan");
+        return;
+      }
+      this.saveData = {
+        ...save,
+        inventory: save.inventory.owned.includes("decor_dango")
+          ? save.inventory
+          : { ...save.inventory, owned: [...save.inventory.owned, "decor_dango"] },
+        seasonEvents: { ...ev, tsukimiDoneDay: today },
+      };
+      this.sync();
+      this.persist();
+      pushToast("🌕 Tsukimi! Dango gratis diterima — pasang dari Toko 🏮");
+      eventBus.emit("pet/say", { text: "Kyuu~ dango! Ehehe~" });
+      return;
+    }
+
+    // Omikuji (1–7 Jan): ramalan acak 1×/hari (Doc 03 §5)
+    if (ev.omikujiLastDay === today) {
+      pushToast("🎍 Omikuji besok lagi (1× per hari)");
+      return;
+    }
+    const fortunes = [
+      { name: "Daikichi 🎋", coins: 30, happiness: 10 },
+      { name: "Chukichi 🌸", coins: 20, happiness: 5 },
+      { name: "Shokichi 🍀", coins: 10, happiness: 3 },
+      { name: "Kyō 🌧️", coins: 0, happiness: 1 },
+    ] as const;
+    const fortune = fortunes[Math.floor(Math.random() * fortunes.length)] ?? fortunes[0];
+    this.saveData = {
+      ...save,
+      pet: this.addHappiness(save.pet, fortune.happiness),
+      player: { ...save.player, coins: save.player.coins + fortune.coins },
+      seasonEvents: { ...ev, omikujiLastDay: today },
+    };
+    this.sync();
+    this.persist();
+    pushToast(
+      fortune.coins > 0
+        ? `🎍 ${fortune.name}! +🪙${fortune.coins} 😊+${fortune.happiness}`
+        : `🎍 ${fortune.name} — 😊+${fortune.happiness}`,
+    );
+    eventBus.emit("pet/say", { text: `Omikuji-ku... ${fortune.name}!` });
   }
 
   // ===== Ekonomi M2: toko, obat, poop, streak (Doc 06) =====
@@ -724,6 +965,13 @@ export function initGameSystem(): () => void {
       runtime?.noteInteraction("stroke");
     }),
     eventBus.on("game/poop-scoop", () => runtime?.scoop()),
+    eventBus.on("ui/minigame-start", ({ gameId }) => runtime?.minigameStart(gameId)),
+    eventBus.on("game/minigame-result", ({ gameId, points, coinBonus }) =>
+      runtime?.minigameResult(gameId, points, coinBonus),
+    ),
+    eventBus.on("ui/minigame-continue", () => runtime?.minigameContinue()),
+    eventBus.on("ui/koi-feed", () => runtime?.koiFeed()),
+    eventBus.on("ui/event-cta", ({ id }) => runtime?.claimSeasonEvent(id)),
     eventBus.on("ui/backup-export", () => runtime?.exportBackup()),
     eventBus.on("ui/backup-import", ({ code }) => runtime?.importBackup(code)),
     eventBus.on("ui/continue", () => runtime?.continueGame()),

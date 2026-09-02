@@ -15,6 +15,7 @@ import { DebugPanel } from "./components/DebugPanel";
 import { Splash } from "./components/Splash";
 import { TutorialHint } from "./components/TutorialHint";
 import { ShopSheet } from "./components/ShopSheet";
+import { MinigameResultSheet } from "./components/MinigameResultSheet";
 import { SickBanner } from "./components/SickBanner";
 import { MemorialScreen } from "./components/MemorialScreen";
 import { LoginRewardSheet } from "./components/LoginRewardSheet";
@@ -75,6 +76,7 @@ export default function App() {
           <OfflineSummarySheet />
           <LoginRewardSheet />
           <EvolutionCutscene />
+          <MinigameResultSheet />
           {sheet && (
             <WashiPanel open title={SHEET_TITLES[sheet]} onClose={() => setSheet(null)}>
               {sheet === "dapur" && <KitchenSheet onFed={() => setSheet(null)} />}

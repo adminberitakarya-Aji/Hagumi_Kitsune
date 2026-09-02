@@ -78,6 +78,26 @@ export const settingsDataSchema = z.object({
   notify: z.boolean().default(true),
 });
 
+/** Rekor & cooldown mini-game (M4 — Doc 05 §7). */
+export const minigamesDataSchema = z.object({
+  bestScores: z.record(z.string(), z.number()).default({}),
+  lastPlayAt: z.number().default(0),
+});
+export type MinigamesData = z.infer<typeof minigamesDataSchema>;
+
+/** Event musiman & interaksi taman (M4 — Doc 03 §5, Doc 12 §5). */
+export const seasonEventsSchema = z.object({
+  /** Tanggal (YYYY-MM-DD) klaim terakhir Hanami/Tsukimi (1× per event). */
+  hanamiDoneDay: z.string().default(""),
+  tsukimiDoneDay: z.string().default(""),
+  /** Tanggal omikuji terakhir (1× per hari selama 1–7 Jan). */
+  omikujiLastDay: z.string().default(""),
+  /** Timestamp terakhir memberi makan koi (cooldown 1 jam — Doc 12 §5). */
+  koiFeedAt: z.number().default(0),
+});
+export type SeasonEventsData = z.infer<typeof seasonEventsSchema>;
+
+
 export const saveDataSchemaV1 = z.object({
   version: z.literal(1),
   lastTick: z.number(),
@@ -86,11 +106,13 @@ export const saveDataSchemaV1 = z.object({
   inventory: inventoryDataSchema,
   breeding: breedingDataSchema,
   settings: settingsDataSchema,
+  minigames: minigamesDataSchema.default({ bestScores: {}, lastPlayAt: 0 }),
+  seasonEvents: seasonEventsSchema.default({}),
 });
 
 export type SaveDataV1 = z.infer<typeof saveDataSchemaV1>;
 
-/** v2 (M3): + pet.careHistory, pet.recoverSince. */
+/** v2 (M3): + pet.careHistory, pet.recoverSince. v2+: + minigames, seasonEvents (field ber-default). */
 export const saveDataSchemaV2 = z.object({
   version: z.literal(2),
   lastTick: z.number(),
@@ -99,7 +121,10 @@ export const saveDataSchemaV2 = z.object({
   inventory: inventoryDataSchema,
   breeding: breedingDataSchema,
   settings: settingsDataSchema,
+  minigames: minigamesDataSchema.default({ bestScores: {}, lastPlayAt: 0 }),
+  seasonEvents: seasonEventsSchema.default({}),
 });
+
 
 export type SaveDataV2 = z.infer<typeof saveDataSchemaV2>;
 
@@ -159,6 +184,16 @@ export function createDefaultSave(params: {
     settings: {
       sound: true,
       notify: true,
+    },
+    minigames: {
+      bestScores: {},
+      lastPlayAt: 0,
+    },
+    seasonEvents: {
+      hanamiDoneDay: "",
+      tsukimiDoneDay: "",
+      omikujiLastDay: "",
+      koiFeedAt: 0,
     },
   };
 }

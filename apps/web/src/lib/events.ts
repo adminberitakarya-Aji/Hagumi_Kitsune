@@ -23,6 +23,22 @@ export interface GameEventMap {
   "fx/hearts": undefined;
   "fx/scoop": { index: number }; // partikel sapu berhasil
   "fx/evolve": { kind: "first" | "final" | "elder" }; // kilat aura evolusi (Doc 12 §11.3)
+  /* Navigasi scene (M4) — React/system → Phaser */
+  "scene/goto": {
+    key: "home" | "garden" | "matsuri" | "kingyo" | "wanage" | "dash";
+    gameId?: string;
+    best?: number; // rekor mini-game untuk layar pra-main (Doc 05 §6)
+  };
+  /* Mini-game festival Matsuri (Doc 05) */
+  "ui/minigame-start": { gameId: string }; // lobi → system (gate + biaya energi)
+  "game/minigame-result": { gameId: string; points: number; coinBonus?: number }; // scene → system (hadiah; coinBonus = koin jalur dash)
+  "ui/minigame-continue": undefined; // tutup layar hasil → Home
+  "minigame/lobby": { best: Record<string, number>; cooldownLeftMs: number }; // system → lobi (rekor + countdown)
+  /* Taman & event musiman (Doc 03 §5, Doc 12 §5) */
+  "ui/koi-feed": undefined; // beri makan koi (−5🪙 → 😊+3, cd 1 jam)
+  "ui/event-cta": { id: "hanami" | "tsukimi" | "omikuji" }; // tombol CTA event di Taman
+  "season/event": { id: string | null; claimed: boolean }; // system → Garden (CTA aktif)
+  "fx/koi-jump": undefined; // koi melompat saat diberi makan
   /* Backup (Doc 09 §4) — SettingsSheet → system */
   "ui/backup-export": undefined;
   "ui/backup-import": { code: string };

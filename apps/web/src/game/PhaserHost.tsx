@@ -2,6 +2,11 @@
 import { useEffect, useRef } from "react";
 import Phaser from "phaser";
 import { HomeScene } from "./HomeScene";
+import { GardenScene } from "./GardenScene";
+import { MatsuriScene } from "./MatsuriScene";
+import { KingyoScene } from "./minigames/KingyoScene";
+import { WanageScene } from "./minigames/WanageScene";
+import { DashScene } from "./minigames/DashScene";
 
 export function PhaserHost() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -21,7 +26,7 @@ export function PhaserHost() {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
       },
-      scene: [HomeScene],
+      scene: [HomeScene, GardenScene, MatsuriScene, KingyoScene, WanageScene, DashScene],
     });
 
     return () => {

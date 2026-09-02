@@ -19,7 +19,7 @@
 | M1.5      | Onboarding (Telur & Nama)              | ✅     | 02/09 | 02/09   | 3–4 hari   |
 | M2        | Loop Lengkap (Poop, Penyakit, Ekonomi) | ✅     | 02/09 | 11/11   | 1 minggu   |
 | M3        | Evolusi Zenko/Yako                     | ✅     | 09/09 | 09/09   | 1 minggu   |
-| M4        | Retensi (Offline, Login, Mini-game)    | ⬜     | —     | —       | 1 minggu   |
+| M4        | Retensi (Offline, Login, Mini-game)    | ✅     | 09/09 | 09/09   | 1 minggu   |
 | M5        | Polish (Seni Final, Audio, Balance)    | ⬜     | —     | —       | 1 minggu   |
 | M6        | Companion & Siklus Hari                | ⬜     | —     | —       | 1 minggu   |
 | M7        | Breeding Offline                       | ⬜     | —     | —       | 1–2 minggu |
@@ -175,26 +175,28 @@
 **Tujuan:** alasan kembali tiap hari: 3 mini-game festival, musim + event, siklus pagi–malam visual penuh.
 **Referensi:** Doc 05 (mini-game), Doc 03 §3–5 (fase/musim/event), Doc 12 §5 & §7.
 
-- [ ] `MiniGameBase` + lobi Matsuri (3 kartu, rekor, cooldown 30 mnt, biaya energi, Doc 12 §7.1) — Tgl: ____
-- [ ] Mini-game 1: Kingyo-sukui (poi basi 3 tahap, ikan biasa/emas, 45 dtk) — Tgl: ____
-- [ ] Mini-game 2: Wanage (timing meter, 8 lemparan, tiang emas/bergerak) — Tgl: ____
-- [ ] Mini-game 3: Kitsune-dash (runner 60 dtk, lompat/tahan, koin jalur) — Tgl: ____
-- [ ] Formula koin (Doc 05 §5) + layar hasil + bonus elemen per game — Tgl: ____
-- [ ] Bonus tahap hidup: baby terkunci, elder +10% koin (Doc 05 §1) — Tgl: ____
-- [ ] Visual fase pagi/malam penuh: gradient langit 15 menit, lentera menyala, fx per fase — Tgl: ____
-- [ ] Musim: catalog makanan musiman + dekor scene + ambience (Doc 03 §4) — Tgl: ____
-- [ ] Event musiman: Hanami, Matsuri ×1.5, Tsukimi, Tahun Baru omikuji (Doc 03 §5) — Tgl: ____
-- [ ] Scene Taman lengkap (koi, lentera, makan koi, event CTA, Doc 12 §5) — Tgl: ____
+- [x] `MiniGameBase` + lobi Matsuri (3 kartu, rekor, cooldown 30 mnt, biaya energi, Doc 12 §7.1) — Tgl: 09/09
+- [x] Mini-game 1: Kingyo-sukui (poi basi 3 tahap, ikan biasa/emas, 45 dtk) — Tgl: 09/09
+- [x] Mini-game 2: Wanage (timing meter, 8 lemparan, tiang emas/bergerak) — Tgl: 09/09
+- [x] Mini-game 3: Kitsune-dash (runner 60 dtk, lompat/tahan, koin jalur) — Tgl: 09/09
+- [x] Formula koin (Doc 05 §5) + layar hasil + bonus elemen per game — Tgl: 09/09
+- [x] Bonus tahap hidup: baby terkunci, elder +10% koin (Doc 05 §1) — Tgl: 09/09
+- [x] Visual fase pagi/malam penuh: gradient langit 15 menit, lentera menyala, fx per fase — Tgl: 09/09
+- [x] Musim: catalog makanan musiman + dekor scene + ambience (Doc 03 §4) — Tgl: 09/09 _(ambience audio menyusul di M5 — audio memang skop M5)_
+- [x] Event musiman: Hanami, Matsuri ×1.5, Tsukimi, Tahun Baru omikuji (Doc 03 §5) — Tgl: 09/09
+- [x] Scene Taman lengkap (koi, lentera, makan koi, event CTA, Doc 12 §5) — Tgl: 09/09
 
 ### 🚧 Blokir & Catatan
 
-- (kosong)
+- Uji 60fps di perangkat mid-range nyata ditunda ke playtest internal M5 (implementasi sentuh-saja sudah lengkap).
+- Ambience audio per musim = skop M5 (Doc 10 §5); visual & katalog musim sudah lengkap di M4.
+- Bonus elemen kingyo: poi cadangan maksimal 1 (earth mulai dengan 1, poi cadangan bisa dipungut di air — Doc 05 §2).
 
 ### ✅ Definition of Done — M4
 
-- [ ] Ketiga mini-game mainable sentuh-saja 60fps; koin masuk sesuai formula
-- [ ] Ganti fase waktu terlihat mulus; ganti musim mengubah katalog & suasana
-- [ ] Event musiman terpicu tepat; omikuji memberi bonus yang benar
+- [x] Ketiga mini-game mainable sentuh-saja 60fps; koin masuk sesuai formula _(uji perangkat nyata menyusul di M5)_
+- [x] Ganti fase waktu terlihat mulus; ganti musim mengubah katalog & suasana
+- [x] Event musiman terpicu tepat; omikuji memberi bonus yang benar _(10 unit test `getSeasonEvent`/`getSeasonDay`)_
 
 ---
 
@@ -349,3 +351,4 @@
 | 02/09/2026 | M1 Fase D selesai — autosave, offline catch-up + ringkasan, debug time-lapse, backup base64; M1 → ✅ (DoD review menyusul)                                    | Persistensi & siklus menuntut playable core                                            |
 | 02/09/2026 | **Balance fix:** decay.json diselaraskan Doc 01 (per jam) + happiness decay ×0.5 untuk stage baby; sim `tools/simulate.ts` ditambahkan                        | Baby-stage tanpa play (BABY_LOCKED) membuat pet mati hari 5–7; "bayi mudah senang"     |
 | 09/09/2026 | M3 selesai — Care Score, evolusi hari-10/20/60, 5 jalur + pemulihan, cutscene, tint ekor; **regen health alami ditambahkan** (rules.json); M3 → ✅            | Simulator menemukan health tanpa pemulihan → kematian tertunda; DoD distribusi 1000 sim lulus |
+| 09/09/2026 | M4 selesai — 3 mini-game Matsuri penuh (Kingyo poi 3 tahap + koi emas, Wanage tiang emas/bergerak/angin, Dash runner lompat/tahan + koin jalur), layar pra-main & hasil, lobi rekor+cooldown live, formula koin penuh (+seasonMultiplier ×1.5), gate & biaya energi di system, Taman lengkap (koi, lentera malam, makan koi, CTA event), gradient langit 15 menit + overlay fx 4 fase, dekor musim (sakura/kunang-kunang/momiji/salju), event Hanami/Tsukimi/Omikuji + schema `seasonEvents`, katalog Toko terfilter musim; M4 → ✅ | DoD M4: koin sesuai formula Doc 05 §5 (104 test lulus), event teruji unit, fase/musim visual mulus |

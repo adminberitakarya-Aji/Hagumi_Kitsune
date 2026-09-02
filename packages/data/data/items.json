@@ -22,6 +22,7 @@
     { "id": "decor_kakejiku", "name": "Kakejiku", "icon": "🖼️", "price": 140, "kind": "decor" },
     { "id": "decor_maneki", "name": "Maneki-neko", "icon": "🐱", "price": 180, "kind": "decor" },
     { "id": "decor_ikebana", "name": "Ikebana", "icon": "💐", "price": 200, "kind": "decor" },
+    { "id": "decor_dango", "name": "Dango Tsukimi", "icon": "🍡", "price": 60, "kind": "decor" },
     { "id": "decor_koinobori", "name": "Koinobori", "icon": "🎏", "price": 300, "kind": "decor" }
   ]
 }

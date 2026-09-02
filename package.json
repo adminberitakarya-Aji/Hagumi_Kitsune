@@ -17,9 +17,10 @@
     "simulate": "tsx tools/simulate.ts"
   },
   "devDependencies": {
+    "@eslint/js": "^9.0.0",
     "@hagumi/core": "workspace:*",
     "@hagumi/data": "workspace:*",
-    "@eslint/js": "^9.0.0",
+    "@types/node": "^26.4.1",
     "eslint": "^9.0.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "prettier": "^3.3.0",

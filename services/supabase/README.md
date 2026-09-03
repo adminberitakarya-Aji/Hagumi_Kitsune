@@ -12,11 +12,23 @@ services/supabase/
 ├─ config.toml                  # konfigurasi CLI
 ├─ migrations/0001_init.sql     # profiles · pets_gen · breeding_requests · save_backups + RLS
 └─ functions/
-   ├─ _shared/genetics.ts       # SALINAN algoritma genetika core — wajib identik
-   ├─ _shared/breeding-code.ts  # SALINAN decode breeding code
    ├─ _shared/http.ts           # CORS · auth anon-id · rate limit
    ├─ breeding/index.ts         # send · inbox · accept · decline · claim
+   │                            #   (genetika & decode DI-INLINE — lihat catatan di berkas)
    └─ save-sync/index.ts        # push · pull (LWW server-side)
+```
+
+> ⚠️ **Catatan bundler:** function yang menggabungkan import esm.sh supabase-js dengan
+> modul lokal yang menarik `_shared/genetics.ts` mengalami `BOOT_ERROR` di platform
+> (diagnosa 03/09). Karena itu `breeding/index.ts` satu-berkas-mandiri: salinan
+> algoritma genetika & decode breeding code **inline** di dalamnya dan WAJIB
+> identik dengan `packages/core/src/online` + `packages/data/data/breeding.json`.
+
+## Verifikasi cepat
+
+```bash
+pnpm check:online   # REST + kedua edge function hidup?
+pnpm e2e:online     # simulasi 2 pemain: tukar kode → telur → klaim + cloud backup
 ```
 
 ## Setup (sekali)

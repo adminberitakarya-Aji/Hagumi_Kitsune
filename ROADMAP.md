@@ -23,7 +23,7 @@
 | M5        | Polish (Seni Final, Audio, Balance)    | ✅     | 02/09 | 02/09   | 1 minggu   |
 | M6        | Companion & Siklus Hari                | ✅     | 02/09 | 02/09   | 1 minggu   |
 | M7        | Breeding Offline                       | ✅     | 03/09 | 03/09   | 1–2 minggu |
-| M8        | Breeding Online (Supabase)             | 🔨     | 03/09 | —       | 1–2 minggu |
+| M8        | Breeding Online (Supabase)             | ✅     | 03/09 | 03/09   | 1–2 minggu |
 | M9        | Companion LLM                          | ⬜     | —     | —       | 1–2 minggu |
 
 **Stack terkunci:** TS monorepo (ports & adapters) · Phaser 3 + Vite · Capacitor · Supabase — lihat `docs/09`.
@@ -296,14 +296,14 @@
 
 ### 🚧 Blokir & Catatan
 
-- **Butuh proyek Supabase nyata untuk deploy & uji e2e (DoD).** Semua kode (migrasi, edge functions `breeding` & `save-sync`, klien, UI, test unit) sudah lengkap dan lulus; provisioning proyek + `supabase db push` + `functions deploy` menunggu akun/kredensial. Langkah lengkap: `services/supabase/README.md` §Uji e2e dua pemain.
-- Salinan algoritma genetika server-side (`functions/_shared/genetics.ts`) harus disinkronkan bila `data/breeding.json` berubah — sudah diberi catatan header di berkas.
+- **Sudah teratasi (03/09):** `BOOT_ERROR` pada edge function `breeding` — berkas hasil penyusunan bertahap korup + quirk bundler platform (esm.sh supabase-js + modul lokal penarik `_shared/genetics.ts`). Solusi: `breeding/index.ts` satu-berkas-mandiri (genetika & decode di-inline, wajib identik dengan core — catatan di header berkas & README).
+- Salinan algoritma genetika server-side (di dalam `functions/breeding/index.ts`) harus disinkronkan bila `data/breeding.json` berubah — catatan header ada di berkas.
 
 ### ✅ Definition of Done — M8
 
-- [ ] Dua pemain uji-e2e: tukar kode → telur turunan muncul di keduanya
-- [ ] Tanpa koneksi: fitur online nonaktif mulus, game lokal utuh
-- [ ] API key Supabase aman (anon key saja, RLS aktif)
+- [x] Dua pemain uji-e2e: tukar kode → telur turunan muncul di keduanya — Tgl: 03/09 _(via `pnpm e2e:online`: dua pemain anon, send→accept→seed→klaim keduanya, genetika anak deterministik-simetris; playtest UI dua browser menyusul)_
+- [x] Tanpa koneksi: fitur online nonaktif mulus, game lokal utuh — Tgl: 03/09 _(env kosong → banner nonaktif; fetch gagal → status offline + toast; core tak tersentuh)_
+- [x] API key Supabase aman (anon key saja, RLS aktif) — Tgl: 03/09 _(klien hanya anon key; RLS aktif tanpa policy publik; service role hanya di edge function)_
 
 ---
 
@@ -353,7 +353,7 @@
 | 02/09/2026 | M1 Fase B selesai — PetStats, TimeService, SaveSystem, PetStateMachine (headless + test)                                                                    | Core logic sebelum UI agar stat punya satu sumber kebenaran                            |
 | 02/09/2026 | M1 Fase C selesai — Scene Home + overlay React; system tersambung core asli (bukan mock)                                                                     | Core sudah siap; menghindari kerja dua kali                                            |
 | 03/09/2026 | **M7 selesai** — breeding offline & keturunan: genetika 70/25/5, mix warna HSV, 3 mitra NPC harian, telur + bonus stat dibekukan, warisan (koin kenangan + item diwariskan), Album silsilah 3 generasi, Memorial lanjut garis; 21 test baru + `pnpm simulate:genetics` lulus; M7 → ✅ | Kelanjutan garis keturunan mengubah kehilangan menjadi kelanjutan (GDD §15); Fase 1 offline-first tanpa server |
-| 03/09/2026 | **M8 implementasi lengkap** — breeding online via Supabase: `services/supabase` (migrasi SQL profiles/pets_gen/breeding_requests/save_backups + RLS tanpa policy publik, edge functions `breeding` & `save-sync`), Breeding Code `HG1.<b64>.<checksum>` (Doc 07 §2B), genetika anak dari seed server — identik di kedua pemain, UI Tukar Kode + inbox + klaim telur, rate limit 5/hari server-side, cloud backup LWW + diff warning; refaktor `rollChildGenetics` jadi satu sumber algoritma (NPC & online); 14 test baru (169 lulus), typecheck + lint + build bersih; M8 → 🔨 (DoD e2e menunggu deploy proyek) | Backend tipis pertama (Doc 07 §2B, Doc 09 §7) — asinkron penuh tanpa real-time server; degradasi mulus tanpa koneksi |
+| 03/09/2026 | **M8 selesai** — backend ter-deploy ke proyek Supabase aktif & e2e lulus 12/12 (`pnpm e2e:online`): inbox, send, anti-duplikat, accept→seed server, hasil siap di kedua pihak, klaim telur, genetika deterministik-simetris, cloud backup push/pull; akar `BOOT_ERROR` ditemukan (berkas korup + quirk bundler esm.sh+modul lokal) → `breeding/index.ts` dijadikan satu-berkas-mandiri; alat baru `pnpm check:online` & `pnpm e2e:online`; function diagnostik ping1–6 dibersihkan; M8 → ✅ | Backend tipis pertama produksi; DoD terpenuhi — playtest UI dua browser menyusul |
 | 02/09/2026 | M1 Fase D selesai — autosave, offline catch-up + ringkasan, debug time-lapse, backup base64; M1 → ✅ (DoD review menyusul)                                    | Persistensi & siklus menuntut playable core                                            |
 | 02/09/2026 | **Balance fix:** decay.json diselaraskan Doc 01 (per jam) + happiness decay ×0.5 untuk stage baby; sim `tools/simulate.ts` ditambahkan                        | Baby-stage tanpa play (BABY_LOCKED) membuat pet mati hari 5–7; "bayi mudah senang"     |
 | 09/09/2026 | M3 selesai — Care Score, evolusi hari-10/20/60, 5 jalur + pemulihan, cutscene, tint ekor; **regen health alami ditambahkan** (rules.json); M3 → ✅            | Simulator menemukan health tanpa pemulihan → kematian tertunda; DoD distribusi 1000 sim lulus |

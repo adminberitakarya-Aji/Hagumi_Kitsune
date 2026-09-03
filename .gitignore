@@ -21,7 +21,7 @@ apps/native/android/local.properties
 .env
 .env.*
 !.env.example
-supabase/.temp/
+**/.temp/
 supabase/functions/**/.env*
 
 # OS & editor

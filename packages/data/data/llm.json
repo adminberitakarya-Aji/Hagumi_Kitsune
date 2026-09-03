@@ -1,0 +1,23 @@
+{
+  "activeProvider": "openai",
+  "maxTokens": 120,
+  "dailyQuota": 10,
+  "timeoutMs": 8000,
+  "providers": {
+    "openai": {
+      "endpoint": "https://api.openai.com/v1/chat/completions",
+      "model": "gpt-4o-mini"
+    },
+    "gemini": {
+      "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
+      "model": "gemini-1.5-flash"
+    },
+    "ollama": {
+      "endpoint": "http://localhost:11434",
+      "model": "llama3.2"
+    },
+    "offline": {
+      "builtin": true
+    }
+  }
+}

@@ -11,11 +11,13 @@ genetika yang sama secara lokal (polling saat buka game).
 services/supabase/
 ├─ config.toml                  # konfigurasi CLI
 ├─ migrations/0001_init.sql     # profiles · pets_gen · breeding_requests · save_backups + RLS
+├─ migrations/0002_chat.sql     # chat_quota — kuota harian server-side (tanpa konten chat)
 └─ functions/
    ├─ _shared/http.ts           # CORS · auth anon-id · rate limit
    ├─ breeding/index.ts         # send · inbox · accept · decline · claim
    │                            #   (genetika & decode DI-INLINE — lihat catatan di berkas)
-   └─ save-sync/index.ts        # push · pull (LWW server-side)
+   ├─ save-sync/index.ts        # push · pull (LWW server-side)
+   └─ chat/index.ts             # proxy LLM (openai/gemini/ollama) + kuota harian
 ```
 
 > ⚠️ **Catatan bundler:** function yang menggabungkan import esm.sh supabase-js dengan
@@ -23,6 +25,21 @@ services/supabase/
 > (diagnosa 03/09). Karena itu `breeding/index.ts` satu-berkas-mandiri: salinan
 > algoritma genetika & decode breeding code **inline** di dalamnya dan WAJIB
 > identik dengan `packages/core/src/online` + `packages/data/data/breeding.json`.
+
+## Companion LLM (M9)
+
+1. Jalankan `migrations/0002_chat.sql` di SQL Editor dashboard.
+2. Set secrets provider (pilih minimal satu):
+   ```bash
+   supabase secrets set OPENAI_API_KEY=sk-...
+   supabase secrets set GEMINI_API_KEY=...
+   # Ollama tak perlu key (khusus dev lokal via `supabase functions serve`)
+   ```
+3. Deploy: `supabase functions deploy chat --project-ref <REF> --use-api`
+4. Di game: Pengaturan → **matikan** "Mode Tanpa LLM" → chat Tier 2 aktif;
+   gagal/timeout/kuota habis → otomatis kembali Tier 1 (ikon 💬/✨ di layar Chat).
+- Kuota: 10 pesan LLM/pemain/hari (tabel `chat_quota`; konten chat tidak disimpan).
+- Tanpa secrets/API key: chat tetap jalan penuh dengan Tier 1 — degradasi mulus.
 
 ## Verifikasi cepat
 

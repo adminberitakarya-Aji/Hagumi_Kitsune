@@ -58,6 +58,8 @@ export interface ChatUi {
   canForgive: boolean;
   /** true = companion "sedang mengetik" (3 titik — Doc 12 §8). */
   typing?: boolean;
+  /** Tingkat provider aktif (M9 — Doc 11 §1): tier2 = LLM via edge. */
+  tier: "tier1" | "tier2";
 }
 
 /* Breeding & keturunan (M7 — Doc 07, Doc 12 §9) */

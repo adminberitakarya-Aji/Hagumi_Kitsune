@@ -19,6 +19,8 @@ import type { DayPhase, Season } from "../time/types";
 export interface ChatContext {
   petName: string;
   element: string;
+  /** Jalur evolusi saat ini (zenko/yako/…) — opsional (M9: kartu kepribadian). */
+  path?: string;
   stats: PetStats;
   phase: DayPhase;
   season: Season;
@@ -35,6 +37,8 @@ export interface ChatContext {
 export interface ChatRequest {
   text: string;
   context: ChatContext;
+  /** Riwayat percakapan sesi (M9 — memori jangka pendek, maks ±6 bubble). */
+  history?: Array<{ from: "player" | "pet"; text: string }>;
 }
 
 export interface ChatReply {

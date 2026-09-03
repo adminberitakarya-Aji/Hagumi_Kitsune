@@ -56,7 +56,7 @@ export function SettingsSheet() {
           />
         </label>
         <label className="settings-row">
-          <span>Companion offline (LLM lokal)</span>
+          <span>Mode Tanpa LLM (chat Tier 1)</span>
           <input
             type="checkbox"
             checked={offlineLlm}

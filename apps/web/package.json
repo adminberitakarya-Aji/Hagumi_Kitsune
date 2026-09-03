@@ -12,6 +12,7 @@
   "dependencies": {
     "@hagumi/core": "workspace:*",
     "@hagumi/data": "workspace:*",
+    "@hagumi/llm": "workspace:*",
     "phaser": "^3.80.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

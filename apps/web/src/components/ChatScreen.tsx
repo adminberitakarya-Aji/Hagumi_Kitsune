@@ -45,8 +45,15 @@ export function ChatScreen() {
             ←
           </button>
           <span className="chat-screen__name">{petName}</span>
-          <span className="chat-screen__status" title="Provider offline — template Tier 1 (Doc 11 §2)">
-            🟢 online
+          <span
+            className="chat-screen__status"
+            title={
+              chat.tier === "tier2"
+                ? "Tier 2 — LLM via Supabase edge (Doc 11 §2)"
+                : "Tier 1 — memori terstruktur lokal (Doc 08 §5)"
+            }
+          >
+            {chat.tier === "tier2" ? "✨ Tier 2" : "💬 Tier 1"}
           </span>
         </div>
 

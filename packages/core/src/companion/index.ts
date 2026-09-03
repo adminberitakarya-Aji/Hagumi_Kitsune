@@ -39,3 +39,19 @@ export type {
 export { OfflineLlmProvider } from "./llm-provider";
 export type { ReactionAction } from "./reactions";
 export { reactionFor } from "./reactions";
+// M9 (Doc 11 §3–5): PersonalityCard, memori bergulir, guardrail, payload chat
+export type { LlmChatPayload, LlmProviderId, PersonalityCard } from "./personality-card";
+export {
+  GUARDRAILS,
+  MEMORY_SUMMARY_MAX_CHARS,
+  PERSONALITY_CARDS,
+  buildChatPayload,
+  buildMemorySummary,
+  buildSystemPrompt,
+  computeChatEffects,
+  personalityCardOf,
+  quotaAfterEffects,
+  redactPii,
+  sanitizeLlmReply,
+  sanitizePlayerInput,
+} from "./personality-card";

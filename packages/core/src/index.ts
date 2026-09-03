@@ -169,6 +169,7 @@ export {
   NEGLECT_MEMORY_KEYS,
   addMemory,
   applyChatQuota,
+  CHAT_HAPPINESS_DAILY_MAX,
   canChatHappiness,
   chatQuotaLeft,
   emptyChatQuota,
@@ -194,7 +195,25 @@ export type {
   DialoguePools,
   DialogueTriggerKey,
   ILlmProvider,
+  LlmChatPayload,
+  LlmProviderId,
   PendingMemory,
+  PersonalityCard,
   ReactionAction,
+} from "./companion";
+// M9 — PersonalityCard, memori bergulir, guardrail, payload LLM (Doc 11 §3–4)
+export {
+  GUARDRAILS,
+  MEMORY_SUMMARY_MAX_CHARS,
+  PERSONALITY_CARDS,
+  buildChatPayload,
+  buildMemorySummary,
+  buildSystemPrompt,
+  computeChatEffects,
+  personalityCardOf,
+  quotaAfterEffects,
+  redactPii,
+  sanitizeLlmReply,
+  sanitizePlayerInput,
 } from "./companion";
 

@@ -60,6 +60,7 @@ import {
   type BreedingCodePayload,
   type ChatContext,
   type ChatPools,
+  type ChatReply,
   type DayPhase,
   type EvolutionParams,
   type PetData,
@@ -76,6 +77,7 @@ import { WebStorage } from "./webStorage";
 import { bumpSentToday, getOnlineConfig, getOrCreateAnonId, onlineApi, readSentToday, type InboxResponse } from "./onlineClient";
 import { audioEngine } from "./audioEngine";
 import { webNotifier } from "./webNotifier";
+import { EdgeLlmProvider, FallbackLlmProvider } from "@hagumi/llm";
 
 /** Terapkan flag audio dari save ke AudioEngine (M5 — Doc 10 §5). */
 function applyAudioSettings(s: { music: boolean; sfx: boolean }): void {
@@ -648,6 +650,7 @@ class GameRuntime {
         messages: [...this.chatMessages],
         quotaLeft: chatQuotaLeft(rollChatQuotaDay(save.companion.chatQuota, this.dayKey(this.simNow))),
         canForgive: hasUnforgivenNeglect(save.pet.memoryLog),
+        tier: "tier1",
       },
     });
   }
@@ -657,8 +660,8 @@ class GameRuntime {
     setUiState({ chat: null });
   }
 
-  /** Kirim pesan pemain → provider Tier 1 (Doc 08 §5): keyword id/en + kuota + pemaafan.
-   * Typing indicator 3 titik 1–2 dtk sebelum balasan (Doc 12 §8). */
+  /** Kirim pesan pemain → Tier 2 LLM via edge proxy, fallback Tier 1 (M9 — Doc 11 §2 & §4).
+   * Typing indicator 3 titik 1–2 dtk sebelum balasan Tier 1 (Doc 12 §8). */
   chatSend(text: string): void {
     const save = this.saveData;
     const provider = this.ensureChatProvider();
@@ -669,6 +672,7 @@ class GameRuntime {
     const context: ChatContext = {
       petName: pet.name,
       element: pet.element,
+      path: pet.path,
       stats: pet.stats,
       phase: getDayPhase(this.simNow),
       season: getSeason(this.simNow),
@@ -678,42 +682,85 @@ class GameRuntime {
       chatQuota: save.companion.chatQuota,
       day: this.dayKey(this.simNow),
     };
+    const history = this.chatMessages.slice(-6).map((m) => ({ from: m.from, text: m.text }));
     // pesan pemain langsung tampil + mulai "mengetik…"
     this.chatMessages = [
       ...this.chatMessages,
       { from: "player" as const, text: trimmed },
     ].slice(-20);
-    setUiState({ chat: { ...getGameState().chat!, typing: true } });
-    const delay = 1000 + Math.floor(Math.random() * 1000); // 1–2 dtk (Doc 12 §8)
-    window.setTimeout(() => {
-      void provider.chat({ text: trimmed, context }).then((reply) => {
-      const cur = this.saveData;
-      if (!cur) return;
-      let petNow = cur.pet;
-      if (reply.happiness > 0) petNow = this.addHappiness(petNow, reply.happiness);
-      if (reply.forgave) {
-        const { log } = forgiveNeglectMemories(petNow.memoryLog);
-        petNow = { ...petNow, memoryLog: log };
-        pushToast("💝 Memori lalai dimaafkan!");
-      }
-      this.saveData = { ...cur, pet: petNow, companion: { chatQuota: reply.chatQuota } };
-      this.chatMessages = [
-        ...this.chatMessages,
-        { from: "pet" as const, text: reply.text },
-      ].slice(-20); // riwayat sesi maks 20 bubble (privasi — Doc 12 §8)
-      setUiState({
-        chat: {
-          messages: [...this.chatMessages],
-          quotaLeft: chatQuotaLeft(reply.chatQuota),
-          canForgive: hasUnforgivenNeglect(petNow.memoryLog),
-          typing: false,
-        },
-      });
-      this.sync();
-      this.persist();
-      if (reply.happiness > 0) eventBus.emit("pet/reaction", { emoji: reactionFor("stroke") });
-      });
-    }, delay);
+    const useLlm = !save.settings.offlineLlm && getOnlineConfig() !== null;
+    const tier: "tier1" | "tier2" = useLlm ? "tier2" : "tier1";
+    setUiState({ chat: { ...getGameState().chat!, typing: true, tier } });
+
+    const run = (task: Promise<ChatReply>): void => {
+      void task
+        .then((reply) => this.applyChatReply(reply))
+        .catch(() => {
+          // Tier 1 juga gagal (jarang) — tutup typing tanpa crash
+          setUiState({ chat: { ...getGameState().chat!, typing: false } });
+        });
+    };
+
+    if (!useLlm) {
+      const delay = 1000 + Math.floor(Math.random() * 1000); // 1–2 dtk (Doc 12 §8)
+      window.setTimeout(() => run(provider.chat({ text: trimmed, context })), delay);
+      return;
+    }
+
+    // Tier 2: LLM via edge proxy → gagal/timeout/kuota habis → Tier 1 (Doc 11 §2)
+    const cfg = getOnlineConfig()!;
+    let tierNow: "tier1" | "tier2" = "tier2";
+    const chain = new FallbackLlmProvider(
+      new EdgeLlmProvider({
+        url: cfg.url,
+        anonKey: cfg.anonKey,
+        anonId: getOrCreateAnonId(),
+        timeoutMs: 8000,
+      }),
+      provider,
+      () => {
+        tierNow = "tier1";
+        pushToast("📡 LLM tidak tersedia — melanjutkan dengan Tier 1");
+      },
+    );
+    run(
+      chain
+        .chat({ text: trimmed, context, history })
+        .then((reply) => {
+          setUiState({ chat: { ...getGameState().chat!, tier: tierNow } });
+          return reply;
+        }),
+    );
+  }
+
+  /** Terapkan balasan provider ke save & UI — efek Tier 1 tetap dari core (M9, Doc 11 §3). */
+  private applyChatReply(reply: ChatReply): void {
+    const cur = this.saveData;
+    if (!cur) return;
+    let petNow = cur.pet;
+    if (reply.happiness > 0) petNow = this.addHappiness(petNow, reply.happiness);
+    if (reply.forgave) {
+      const { log } = forgiveNeglectMemories(petNow.memoryLog);
+      petNow = { ...petNow, memoryLog: log };
+      pushToast("💝 Memori lalai dimaafkan!");
+    }
+    this.saveData = { ...cur, pet: petNow, companion: { chatQuota: reply.chatQuota } };
+    this.chatMessages = [
+      ...this.chatMessages,
+      { from: "pet" as const, text: reply.text },
+    ].slice(-20); // riwayat sesi maks 20 bubble (privasi — Doc 12 §8)
+    setUiState({
+      chat: {
+        messages: [...this.chatMessages],
+        quotaLeft: chatQuotaLeft(reply.chatQuota),
+        canForgive: hasUnforgivenNeglect(petNow.memoryLog),
+        typing: false,
+        tier: getGameState().chat?.tier ?? "tier1",
+      },
+    });
+    this.sync();
+    this.persist();
+    if (reply.happiness > 0) eventBus.emit("pet/reaction", { emoji: reactionFor("stroke") });
   }
 
   feed(foodId: string): void {

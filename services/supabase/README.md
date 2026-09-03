@@ -31,14 +31,18 @@ supabase functions deploy breeding
 supabase functions deploy save-sync
 ```
 
-Salin URL + anon key proyek ke `apps/web/.env.local`:
+Salin URL + anon key proyek ke env aplikasi web:
 
+```bash
+cp apps/web/.env.example apps/web/.env.local   # lalu isi nilainya
 ```
+
+```dotenv
 VITE_SUPABASE_URL=https://<REF>.supabase.co
 VITE_SUPABASE_ANON_KEY=<anon-key>
 ```
 
-**Tanpa kedua variabel ini game tetap utuh** — fitur online otomatis
+**Tanpa kedua variabel ini (atau masih kosong) game tetap utuh** — fitur online otomatis
 nonaktif mulus (DoD M8: "Tanpa koneksi: fitur online nonaktif mulus").
 
 ## Keamanan

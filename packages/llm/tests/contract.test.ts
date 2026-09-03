@@ -81,7 +81,7 @@ function makeProviders(): Array<[string, ILlmProvider]> {
     ["openai", new OpenAiLlmProvider({ endpoint: "https://api.test/v1/chat", model: "gpt-test", apiKey: "sk-test", maxTokens: 120, timeoutMs: 1000, fetchImpl: openaiFetch })],
     ["gemini", new GeminiLlmProvider({ endpoint: "https://api.test/gemini", model: "gemini-test", apiKey: "gk", maxTokens: 120, timeoutMs: 1000, fetchImpl: geminiFetch })],
     ["ollama", new OllamaLlmProvider({ endpoint: "http://localhost:11434", model: "llama", maxTokens: 120, timeoutMs: 1000, fetchImpl: ollamaFetch })],
-    ["edge", new EdgeLlmProvider({ url: "https://supabase.test", anonKey: "ak", anonId: "11111111-1111-1111-1111-111111111111", timeoutMs: 1000, fetchImpl: edgeFetch })],
+    ["edge", new EdgeLlmProvider({ url: "https://supabase.test", anonKey: "ak", getToken: async () => "jwt-token", timeoutMs: 1000, fetchImpl: edgeFetch })],
   ];
 }
 

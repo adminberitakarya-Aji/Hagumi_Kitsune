@@ -41,6 +41,21 @@ services/supabase/
 - Kuota: 10 pesan LLM/pemain/hari (tabel `chat_quota`; konten chat tidak disimpan).
 - Tanpa secrets/API key: chat tetap jalan penuh dengan Tier 1 — degradasi mulus.
 
+## Keamanan (M9 hardening — hasil audit)
+
+- **Identitas terverifikasi:** klien login via **Supabase Anonymous Auth** (JWT ditandatangani
+  server, persisten per device). Edge functions berjalan dengan **`verify_jwt = true`** —
+  gateway memverifikasi tanda tangan JWT SEBELUM function dieksekusi; identitas = `sub` JWT.
+  Header lama `x-hagumi-anon` (UUID self-asserted) **sudah dihapus dan ditolak 401** —
+  celah spoofing kuota (UUID acak per request) tertutup.
+- **Kuota atomic:** `consume_chat_quota(p_owner, p_max)` — fungsi RPC Postgres yang melakukan
+  increment atomik + reset harian dalam satu operasi (tanpa race read-then-write).
+- **Prasyarat:** Anonymous sign-ins AKTIF di proyek (sudah di-push via `supabase config push`,
+  atau manual: Dashboard → Authentication → Providers → Anonymous sign-ins = ON)
+  **dan** migration `0002_chat.sql` sudah dijalankan (tabel chat_quota + fungsi RPC).
+- Catatan kompatibilitas: baris breeding_requests/chat_quota lama memakai UUID perangkat;
+  setelah hardening identitas = auth sub (id berubah) — data uji pra-rilis, tidak dimigrasi.
+
 ## Verifikasi cepat
 
 ```bash

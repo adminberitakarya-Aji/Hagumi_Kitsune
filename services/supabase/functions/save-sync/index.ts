@@ -3,7 +3,7 @@
 // Konflik ditangani klien (last-write-wins + diff warning); server hanya menyimpan
 // versi dengan lastTick >= yang tersimpan.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { errorJson, json, preflight, requireAnonId } from "../_shared/http.ts";
+import { errorJson, json, preflight, requireUserId } from "../_shared/http.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL") ?? "",
@@ -15,8 +15,8 @@ Deno.serve(async (req: Request) => {
   if (pre) return pre;
   if (req.method !== "POST") return errorJson("Metode harus POST", 405);
 
-  const anonId = requireAnonId(req);
-  if (!anonId) return errorJson("Header x-hagumi-anon tidak valid", 401);
+  const userId = requireUserId(req);
+  if (!userId) return errorJson("Sesi tidak valid - muat ulang halaman", 401);
 
   let body: Record<string, unknown>;
   try {
@@ -25,7 +25,7 @@ Deno.serve(async (req: Request) => {
     return errorJson("Body JSON tidak valid");
   }
 
-  await supabase.from("profiles").upsert({ anon_id: anonId, last_seen_at: new Date().toISOString() });
+  await supabase.from("profiles").upsert({ anon_id: userId, last_seen_at: new Date().toISOString() });
 
   if (body.action === "push") {
     const save = body.save;
@@ -37,14 +37,14 @@ Deno.serve(async (req: Request) => {
     const { data: existing } = await supabase
       .from("save_backups")
       .select("last_tick")
-      .eq("anon_id", anonId)
+      .eq("anon_id", userId)
       .limit(1);
     const existingTick = (existing?.[0] as { last_tick?: number } | undefined)?.last_tick ?? 0;
     if (lastTick < existingTick) {
       return json({ ok: false, reason: "STALE", serverLastTick: existingTick });
     }
     const { error } = await supabase.from("save_backups").upsert({
-      anon_id: anonId,
+      anon_id: userId,
       save,
       last_tick: lastTick,
       updated_at: new Date().toISOString(),
@@ -57,7 +57,7 @@ Deno.serve(async (req: Request) => {
     const { data, error } = await supabase
       .from("save_backups")
       .select("save, last_tick")
-      .eq("anon_id", anonId)
+      .eq("anon_id", userId)
       .limit(1);
     if (error) return errorJson(error.message, 500);
     const row = data?.[0] as { save: unknown; last_tick: number } | undefined;

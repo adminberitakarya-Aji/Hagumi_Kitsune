@@ -6,7 +6,7 @@
 // - Provider dipilih dari secrets yang tersedia; LLM_PROVIDER env bisa memaksa.
 // - Payload "jiwa" dibangun klien oleh core buildChatPayload — edge hanya proxy.
 // - Endpoint/model salinan data/llm.json (wajib identik — Doc 11 §5).
-import { errorJson, json, preflight, requireAnonId } from "../_shared/http.ts";
+import { errorJson, json, preflight, requireUserId } from "../_shared/http.ts";
 
 const DAILY_QUOTA = 10;
 const MAX_TOKENS_CAP = 200;
@@ -38,8 +38,8 @@ Deno.serve(async (req: Request) => {
   if (pre) return pre;
   if (req.method !== "POST") return errorJson("Metode harus POST", 405);
 
-  const anonId = requireAnonId(req);
-  if (!anonId) return errorJson("Header x-hagumi-anon tidak valid", 401);
+  const userId = requireUserId(req);
+  if (!userId) return errorJson("Sesi tidak valid — muat ulang halaman", 401);
 
   let body: { payload?: ChatPayload };
   try {
@@ -57,29 +57,24 @@ Deno.serve(async (req: Request) => {
     return errorJson("payload chat tidak valid");
   }
 
-  // ===== Kuota harian server-side (Doc 11 §5 — batas biaya, bukan monetisasi) =====
-  const today = new Date().toISOString().slice(0, 10);
-  const quotaRes = await fetch(
-    `${Deno.env.get("SUPABASE_URL")}/rest/v1/chat_quota?anon_id=eq.${anonId}`,
-    { headers: restHeaders() },
+  // ===== Kuota harian server-side ATOMIC via RPC (Doc 11 §5 + fix race) =====
+  // consume_chat_quota melakukan increment atomik di Postgres dan mengembalikan
+  // false bila kuota harian habis — tidak ada jeda read-then-write.
+  const rpcRes = await fetch(
+    `${Deno.env.get("SUPABASE_URL")}/rest/v1/rpc/consume_chat_quota`,
+    {
+      method: "POST",
+      headers: restHeaders(),
+      body: JSON.stringify({ p_owner: userId, p_max: DAILY_QUOTA }),
+    },
   );
-  const existing = quotaRes.ok
-    ? ((await quotaRes.json()) as Array<{ day: string; count: number }>)[0]
-    : undefined;
-  const currentCount = existing && existing.day === today ? existing.count : 0;
-  if (currentCount >= DAILY_QUOTA) {
+  if (!rpcRes.ok) {
+    return errorJson("Kuota tidak bisa dicek (tabel chat_quota belum dibuat?)", 500);
+  }
+  const allowed = (await rpcRes.json()) === true;
+  if (!allowed) {
     return json({ error: "Kuota LLM harian habis — beralih Tier 1", quotaLeft: 0 }, 429);
   }
-  await fetch(`${Deno.env.get("SUPABASE_URL")}/rest/v1/chat_quota`, {
-    method: "POST",
-    headers: { ...restHeaders(), Prefer: "resolution=merge-duplicates" },
-    body: JSON.stringify({
-      anon_id: anonId,
-      day: today,
-      count: currentCount + 1,
-      updated_at: new Date().toISOString(),
-    }),
-  });
 
   // ===== Proxy ke provider (urutan fallback dari secrets yang tersedia) =====
   const requested = payload.provider;

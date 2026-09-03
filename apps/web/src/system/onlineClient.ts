@@ -1,8 +1,11 @@
 /**
- * Adapter Supabase web (M8 — Doc 09 §1: ports & adapters).
- * Satu-satunya tempat web memanggil edge function breeding/save-sync.
+ * Adapter Supabase web (M8/M9 — Doc 09 §1: ports & adapters).
+ * Satu-satunya tempat web memanggil edge function breeding/save-sync/chat.
+ * Identitas: Supabase Anonymous Auth — JWT ditandatangani server saat device
+ * pertama connect (tidak bisa dipalsukan seperti UUID header self-asserted).
  * Tanpa konfigurasi VITE_SUPABASE_* → fitur online nonaktif mulus, game lokal utuh.
  */
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 export interface OnlineConfig {
   url: string;
@@ -22,7 +25,10 @@ export function getOnlineConfig(): OnlineConfig | null {
 
 const ANON_ID_KEY = "hagumi_anon_id";
 
-/** UUID perangkat — identitas ringan (anon → akun opsional belakangan). */
+/**
+ * UUID perangkat — KINI HANYA untuk penyimpanan lokal (bukan identitas jaringan).
+ * Identitas jaringan = `sub` dari JWT Anonymous Auth (lihat getAccessToken).
+ */
 export function getOrCreateAnonId(): string {
   let id = localStorage.getItem(ANON_ID_KEY);
   if (!id || !/^[0-9a-f-]{8,64}$/i.test(id)) {
@@ -30,6 +36,68 @@ export function getOrCreateAnonId(): string {
     localStorage.setItem(ANON_ID_KEY, id);
   }
   return id;
+}
+
+let supabaseClient: SupabaseClient | null = null;
+
+/** Klien supabase-js singleton (sesi persisten + auto-refresh JWT). */
+export function getSupabase(): SupabaseClient | null {
+  const cfg = getOnlineConfig();
+  if (!cfg) return null;
+  if (!supabaseClient) {
+    supabaseClient = createClient(cfg.url, cfg.anonKey, {
+      auth: { persistSession: true, autoRefreshToken: true },
+    });
+  }
+  return supabaseClient;
+}
+
+/** Cached auth user id (`sub` JWT) — sinkron; dipakai owner breeding code. */
+let cachedUserId: string | null = localStorage.getItem("hagumi_user_id");
+
+export function getCachedUserId(): string | null {
+  return cachedUserId ?? localStorage.getItem("hagumi_user_id");
+}
+
+/**
+ * Pastikan sesi Anonymous Auth ada & cache user id (dipanggil di app start dan
+ * sebelum memakai identitas — owner breeding code HARUS = `sub` JWT agar
+ * routing request di server benar).
+ */
+export async function ensureAuthUserId(): Promise<string | null> {
+  await getAccessToken();
+  const sb = getSupabase();
+  if (!sb) return null;
+  try {
+    const { data } = await sb.auth.getSession();
+    const uid = data.session?.user.id ?? null;
+    if (uid) {
+      cachedUserId = uid;
+      localStorage.setItem("hagumi_user_id", uid);
+    }
+    return uid ?? cachedUserId;
+  } catch {
+    return cachedUserId;
+  }
+}
+
+/**
+ * JWT Anonymous Auth untuk header Authorization edge function (M9 keamanan).
+ * Sesi dibuat sekali lalu dipersist supabase-js; token di-refresh otomatis.
+ * null = Supabase tidak dikonfigurasi / anonymous sign-ins dimatikan di
+ * dashboard → fitur online degradasi mulus ke offline.
+ */
+export async function getAccessToken(): Promise<string | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  try {
+    const { data } = await sb.auth.getSession();
+    if (data.session?.access_token) return data.session.access_token;
+    const { data: signed } = await sb.auth.signInAnonymously();
+    return signed.session?.access_token ?? null;
+  } catch {
+    return null;
+  }
 }
 
 const SENT_KEY = "hagumi_online_sent";
@@ -56,13 +124,14 @@ async function callFunction<T>(
   body: Record<string, unknown>,
 ): Promise<OnlineResult<T>> {
   try {
+    const token = await getAccessToken();
+    if (!token) return { ok: false, error: "Sesi Supabase tidak tersedia" };
     const res = await fetch(`${config.url}/functions/v1/${fn}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${config.anonKey}`,
+        Authorization: `Bearer ${token}`,
         apikey: config.anonKey,
-        "x-hagumi-anon": getOrCreateAnonId(),
       },
       body: JSON.stringify(body),
     });

@@ -1,15 +1,16 @@
 /**
- * Cek kesiapan backend M8 (run: pnpm check:online):
+ * Cek kesiapan backend M8/M9 (run: pnpm check:online):
  *  1) REST PostgREST + anon key → verifikasi tabel ada & RLS menyaring (200 [])
- *  2) POST /functions/v1/breeding  → 404 berarti function belum di-deploy
- *  3) POST /functions/v1/save-sync → idem
- * Anon key tidak pernah dicetak ke layar.
+ *  2) Anonymous Auth → JWT ditandatangani server (bukan UUID self-asserted)
+ *  3) Edge function breeding — header lama (spoofable) HARUS ditolak 401
+ *  4) Edge function breeding dengan JWT → hidup (respons handler)
+ *  5) Edge function save-sync → hidup
+ * Token JWT tidak pernah dicetak ke layar.
  */
 import { readFileSync } from "node:fs";
 
-const raw = readFileSync("apps/web/.env.local", "utf8");
 const env = Object.fromEntries(
-  raw
+  readFileSync("apps/web/.env.local", "utf8")
     .split(/\r?\n/)
     .filter((l) => l.includes("="))
     .map((l) => [l.slice(0, l.indexOf("=")).trim(), l.slice(l.indexOf("=") + 1).trim()]),
@@ -32,37 +33,52 @@ console.log(
   rest.ok ? "✅ tabel ada — anon key diterima (RLS menyaring baris)" : `❌ ${(await rest.text()).slice(0, 120)}`,
 );
 
-// 2) Edge function breeding (header anon invalid → harus 401 bila deployed)
-const anon = "00000000-0000-4000-8000-000000000000";
-const fn1 = await fetch(`${url}/functions/v1/breeding`, {
+// 2) Anonymous Auth → JWT server-signed (M9 keamanan; header lama dihapus)
+const signup = await fetch(`${url}/auth/v1/signup`, {
   method: "POST",
-  headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, apikey: key, "x-hagumi-anon": anon },
-  body: JSON.stringify({ action: "inbox", code: "" }),
+  headers: { "Content-Type": "application/json", apikey: key, Authorization: `Bearer ${key}` },
+  body: JSON.stringify({}),
 });
-const t1 = await fn1.text();
+const session = await signup.json().catch(() => null);
+const token = session?.access_token;
 console.log(
-  "2) Edge  /functions/v1/breeding :",
-  fn1.status,
-  fn1.status === 404
-    ? "❌ BELUM di-deploy → supabase functions deploy breeding"
-    : fn1.status === 401 && t1.includes("anon")
-      ? "✅ deployed (tolak header anon kosong — wajar)"
-      : t1.slice(0, 120),
+  "2) Auth  /auth/v1/signup (anon) :",
+  signup.status,
+  token ? "✅ JWT Anonymous Auth diterbitkan" : `❌ ${JSON.stringify(session).slice(0, 120)} — aktifkan Anonymous sign-ins di dashboard`,
 );
 
-// 3) Edge function save-sync
-const fn2 = await fetch(`${url}/functions/v1/save-sync`, {
+const authHeaders = token
+  ? { "Content-Type": "application/json", Authorization: `Bearer ${token}`, apikey: key }
+  : null;
+
+// 3) Header lama self-asserted (spoofable) — WAJIB ditolak 401
+const spoof = await fetch(`${url}/functions/v1/breeding`, {
   method: "POST",
-  headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, apikey: key, "x-hagumi-anon": anon },
-  body: JSON.stringify({ action: "pull" }),
+  headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, apikey: key, "x-hagumi-anon": "00000000-0000-4000-8000-000000000000" },
+  body: JSON.stringify({ action: "inbox", code: "" }),
 });
-const t2 = await fn2.text();
 console.log(
-  "3) Edge  /functions/v1/save-sync:",
-  fn2.status,
-  fn2.status === 404
-    ? "❌ BELUM di-deploy → supabase functions deploy save-sync"
-    : fn2.status === 401 && t2.includes("anon")
-      ? "✅ deployed (tolak header anon kosong — wajar)"
-      : t2.slice(0, 120),
+  "3) Edge  header lama (spoof)    :",
+  spoof.status,
+  spoof.status === 401 ? "✅ ditolak — identitas self-asserted tidak berlaku lagi" : "⚠️ masih diterima (verifikasi_jwt belum aktif?)",
+);
+
+// 4) Edge breeding dengan JWT
+const fn1 = authHeaders
+  ? await fetch(`${url}/functions/v1/breeding`, { method: "POST", headers: authHeaders, body: JSON.stringify({ action: "inbox", code: "" }) })
+  : null;
+console.log(
+  "4) Edge  /functions/v1/breeding :",
+  fn1 ? fn1.status : "-",
+  fn1 ? (fn1.status === 404 ? "❌ BELUM di-deploy" : "✅ hidup (respons handler)") : "-",
+);
+
+// 5) Edge save-sync dengan JWT
+const fn2 = authHeaders
+  ? await fetch(`${url}/functions/v1/save-sync`, { method: "POST", headers: authHeaders, body: JSON.stringify({ action: "pull" }) })
+  : null;
+console.log(
+  "5) Edge  /functions/v1/save-sync:",
+  fn2 ? fn2.status : "-",
+  fn2 ? (fn2.status === 404 ? "❌ BELUM di-deploy" : "✅ hidup (respons handler)") : "-",
 );

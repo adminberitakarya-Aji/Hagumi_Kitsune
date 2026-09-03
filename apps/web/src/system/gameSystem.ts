@@ -74,7 +74,7 @@ import { eventBus } from "../lib/eventBus";
 import { getGameState, setUiState } from "../store/gameState";
 import { pushToast } from "../store/toastStore";
 import { WebStorage } from "./webStorage";
-import { bumpSentToday, getOnlineConfig, getOrCreateAnonId, onlineApi, readSentToday, type InboxResponse } from "./onlineClient";
+import { bumpSentToday, getAccessToken, getCachedUserId, ensureAuthUserId, getOnlineConfig, getOrCreateAnonId, onlineApi, readSentToday, type InboxResponse } from "./onlineClient";
 import { audioEngine } from "./audioEngine";
 import { webNotifier } from "./webNotifier";
 import { EdgeLlmProvider, FallbackLlmProvider } from "@hagumi/llm";
@@ -714,7 +714,7 @@ class GameRuntime {
       new EdgeLlmProvider({
         url: cfg.url,
         anonKey: cfg.anonKey,
-        anonId: getOrCreateAnonId(),
+        getToken: getAccessToken, // JWT Anonymous Auth (M9 keamanan)
         timeoutMs: 8000,
       }),
       provider,
@@ -1576,11 +1576,12 @@ class GameRuntime {
 
   // ===== Breeding online via Supabase (M8 — Doc 07 §2B) =====
 
-  /** Payload gen pet aktif untuk Breeding Code (anon id perangkat = pemilik). */
+  /** Payload gen pet aktif untuk Breeding Code (owner = auth user id JWT). */
   private ownGenPayload(): BreedingCodePayload | null {
     const save = this.saveData;
     if (!save) return null;
-    return breedingCodePayloadOf(save.pet, getOrCreateAnonId(), save.breeding.lineage?.gen ?? 1);
+    const owner = getCachedUserId() ?? getOrCreateAnonId();
+    return breedingCodePayloadOf(save.pet, owner, save.breeding.lineage?.gen ?? 1);
   }
 
   /** ID request yang sudah diklaim di perangkat ini (filter inbox). */
@@ -1617,6 +1618,18 @@ class GameRuntime {
     });
     void this.onlineRefresh();
     this.startOnlinePoll();
+    // M9 keamanan: pastikan owner kode = auth user id (JWT sub). Bila sesi
+    // selesai setelah kode dibuat, perbarui kode & sinkron ulang inbox.
+    void ensureAuthUserId().then((uid) => {
+      const current = getGameState().onlineBreeding;
+      const payload = this.ownGenPayload();
+      if (!uid || !current || !payload) return;
+      const fresh = encodeBreedingCode(payload);
+      if (fresh !== current.myCode) {
+        setUiState({ onlineBreeding: { ...current, myCode: fresh } });
+        void this.onlineRefresh();
+      }
+    });
   }
 
   onlineClose(): void {
@@ -1677,7 +1690,7 @@ class GameRuntime {
       pushToast(`❌ ${decoded.error}`);
       return;
     }
-    if (decoded.payload.owner === getOrCreateAnonId()) {
+    if (decoded.payload.owner === (getCachedUserId() ?? getOrCreateAnonId())) {
       pushToast("❌ Itu kodemu sendiri 🦊");
       return;
     }
@@ -1916,6 +1929,8 @@ export function initGameSystem(): () => void {
     tutorialDone: localStorage.getItem(TUTORIAL_KEY) === "1",
   });
   if (runtime.hasSave) runtime.startTicker();
+  // M9 keamanan: siapkan sesi Anonymous Auth di awal (JWT untuk edge function)
+  void ensureAuthUserId();
 
   // M5 — musik ambient: mulai saat game berjalan & pantau perubahan musim/fase
   if (runtime.hasSave) {

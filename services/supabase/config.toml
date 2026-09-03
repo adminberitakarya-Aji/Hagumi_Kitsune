@@ -1,8 +1,11 @@
 # project_id untuk Supabase CLI (services/supabase)
 project_id = "hagumi"
 
-[functions.breeding]
-verify_jwt = false
+# Keamanan M9: Anonymous Auth untuk identitas edge function terverifikasi
+[auth]
+enable_anonymous_sign_ins = true
 
-[functions.save-sync]
-verify_jwt = false
+# Keamanan M9: verify_jwt AKTIF (default) — semua request wajib membawa JWT
+# Anonymous Auth yang ditandatangani Supabase; identitas dari `sub` JWT,
+# bukan header self-asserted. JANGAN set verify_jwt = false.
+

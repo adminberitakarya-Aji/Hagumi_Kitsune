@@ -5,17 +5,23 @@
  */
 import {
   MathRng,
+  MAX_BREEDING_REQUESTS_PER_DAY,
   MemoryStorage,
   MS_PER_DAY,
   MS_PER_HOUR,
   OfflineLlmProvider,
   PetStateMachine,
   addMemory,
+  breedingCodePayloadOf,
   calculateMinigameReward,
   canPlayMinigame,
   chatQuotaLeft,
   clampStats,
+  computeOnlineChildGenetics,
+  decodeBreedingCode,
   DialogueEngine,
+  diffSaves,
+  encodeBreedingCode,
   findPendingMemory,
   forgiveNeglectMemories,
   getDayPhase,
@@ -23,8 +29,10 @@ import {
   getSeasonEvent,
   hasUnforgivenNeglect,
   markMemorySpoken,
+  resolveLastWriteWins,
   rollChatQuotaDay,
   reactionFor,
+  saveDataSchemaV2,
   SaveSystem,
   SystemClock,
   checkPathRecovery,
@@ -49,6 +57,7 @@ import {
   scoopPoop,
   updateLoginStreak,
   type ActionRejectReason,
+  type BreedingCodePayload,
   type ChatContext,
   type ChatPools,
   type DayPhase,
@@ -58,12 +67,13 @@ import {
   type PetStats,
   type SaveData,
 } from "@hagumi/core";
-import type { ChatMessageUi, LegacyUi } from "../store/gameState";
+import type { ChatMessageUi, LegacyUi, OnlineRequestUi } from "../store/gameState";
 import { breedingConfig, evolutionConfig, getDialogConfig, getItemById, minigamesConfig, getMinigameById, getStageRule, rulesConfig } from "@hagumi/data"; // katalog asli M2/M3/M4 (fail-fast JSON)
 import { eventBus } from "../lib/eventBus";
 import { getGameState, setUiState } from "../store/gameState";
 import { pushToast } from "../store/toastStore";
 import { WebStorage } from "./webStorage";
+import { bumpSentToday, getOnlineConfig, getOrCreateAnonId, onlineApi, readSentToday, type InboxResponse } from "./onlineClient";
 import { audioEngine } from "./audioEngine";
 import { webNotifier } from "./webNotifier";
 
@@ -137,6 +147,41 @@ function startAmbientMusic(): void {
   audioEngine.playMusic(`music_${season}${night ? "_night" : ""}`);
 }
 
+/** Baris inbox server → kartu UI (outgoing pending belum punya gen mitra). */
+function toRequestUi(
+  r: InboxResponse["requests"][number],
+  claimed: Set<string>,
+): OnlineRequestUi | null {
+  if (claimed.has(r.id)) return null;
+  if (r.status !== "pending" && r.status !== "ready") return null;
+  const p = r.partner as Record<string, unknown> | null;
+  if (!p || typeof p.name !== "string") {
+    if (r.direction === "outgoing" && r.status === "pending") {
+      return {
+        id: r.id,
+        status: "pending",
+        direction: "outgoing",
+        partnerName: "(menunggu mitra)",
+        partnerElement: "",
+        partnerCoat: "",
+        partnerGen: 0,
+        createdAt: r.createdAt,
+      };
+    }
+    return null;
+  }
+  return {
+    id: r.id,
+    status: r.status,
+    direction: r.direction,
+    partnerName: String(p.name),
+    partnerElement: String(p.element ?? ""),
+    partnerCoat: String(p.coatColor ?? "#888888"),
+    partnerGen: Number(p.gen ?? 1),
+    createdAt: r.createdAt,
+  };
+}
+
 class GameRuntime {
   private readonly saveSystem: SaveSystem;
   /** null = belum ada save (onboarding berjalan — Doc 04 §6: save dibuat tepat setelah menetas). */
@@ -173,6 +218,10 @@ class GameRuntime {
   private chatMessages: ChatMessageUi[] = [];
   /** Lalai yang menunggu dicatat ke memoryLog (di-drain pada tick dialog). */
   private pendingNeglect: Array<{ key: string; detail: string }> = [];
+  /** M8 — polling inbox breeding online selama layar Tukar Kode terbuka. */
+  private onlinePoll: number | null = null;
+  /** M8 — save awan yang menunggu keputusan pemain (diff warning LWW). */
+  private cloudRemote: SaveData | null = null;
 
   constructor() {
     const primary = new SaveSystem(new WebStorage(), new SystemClock());
@@ -1478,6 +1527,294 @@ class GameRuntime {
     eventBus.emit("pet/say", { text: "Kyuu~!" });
   }
 
+  // ===== Breeding online via Supabase (M8 — Doc 07 §2B) =====
+
+  /** Payload gen pet aktif untuk Breeding Code (anon id perangkat = pemilik). */
+  private ownGenPayload(): BreedingCodePayload | null {
+    const save = this.saveData;
+    if (!save) return null;
+    return breedingCodePayloadOf(save.pet, getOrCreateAnonId(), save.breeding.lineage?.gen ?? 1);
+  }
+
+  /** ID request yang sudah diklaim di perangkat ini (filter inbox). */
+  private claimedRequestIds(): Set<string> {
+    try {
+      return new Set(JSON.parse(localStorage.getItem("hagumi_online_claimed") ?? "[]") as string[]);
+    } catch {
+      return new Set();
+    }
+  }
+
+  private markClaimed(requestId: string): void {
+    const ids = [...this.claimedRequestIds(), requestId];
+    localStorage.setItem("hagumi_online_claimed", JSON.stringify(ids));
+  }
+
+  /** Buka layar Tukar Kode + mulai polling inbox (buka game = polling — Doc 07 §2B). */
+  onlineOpen(): void {
+    const save = this.saveData;
+    if (!save) return;
+    const payload = this.ownGenPayload();
+    const gate = checkBreedingRequirements(save.pet, save.breeding, this.simNow);
+    setUiState({
+      onlineBreeding: {
+        status: getOnlineConfig() ? "ready" : "unconfigured",
+        myCode: payload ? encodeBreedingCode(payload) : "",
+        canBreed: gate.allowed,
+        reasons: gate.allowed ? [] : gate.reasons,
+        requests: [],
+        sentToday: readSentToday(this.dayKey(this.simNow)),
+        maxPerDay: MAX_BREEDING_REQUESTS_PER_DAY,
+        busy: false,
+      },
+    });
+    void this.onlineRefresh();
+    this.startOnlinePoll();
+  }
+
+  onlineClose(): void {
+    this.stopOnlinePoll();
+    setUiState({ onlineBreeding: null });
+  }
+
+  private startOnlinePoll(): void {
+    this.stopOnlinePoll();
+    if (!getOnlineConfig()) return;
+    this.onlinePoll = window.setInterval(() => void this.onlineRefresh(), 30_000);
+  }
+
+  private stopOnlinePoll(): void {
+    if (this.onlinePoll !== null) {
+      window.clearInterval(this.onlinePoll);
+      this.onlinePoll = null;
+    }
+  }
+
+  /** Ambil inbox: request masuk/keluar + hasil telur siap (polling asinkron). */
+  async onlineRefresh(): Promise<void> {
+    const config = getOnlineConfig();
+    const current = getGameState().onlineBreeding;
+    if (!config || !current || !current.myCode) return;
+    setUiState({ onlineBreeding: { ...current, busy: true } });
+    const result = await onlineApi.inbox(config, current.myCode);
+    const latest = getGameState().onlineBreeding;
+    if (!latest) return; // layar ditutup di tengah jalan
+    if (!result.ok) {
+      setUiState({ onlineBreeding: { ...latest, status: "offline", busy: false } });
+      return;
+    }
+    const claimed = this.claimedRequestIds();
+    const requests = result.data.requests
+      .map((r) => toRequestUi(r, claimed))
+      .filter((r): r is OnlineRequestUi => r !== null);
+    setUiState({
+      onlineBreeding: {
+        ...latest,
+        status: "ready",
+        busy: false,
+        requests,
+        sentToday: Math.max(result.data.sentToday, readSentToday(this.dayKey(this.simNow))),
+        maxPerDay: result.data.maxPerDay || MAX_BREEDING_REQUESTS_PER_DAY,
+      },
+    });
+  }
+
+  /** Tempel kode teman → kirim request breeding (gerbang + rate limit klien). */
+  async onlineSend(code: string): Promise<void> {
+    const config = getOnlineConfig();
+    const save = this.saveData;
+    const current = getGameState().onlineBreeding;
+    if (!config || !save || !current || !current.myCode) return;
+    const decoded = decodeBreedingCode(code);
+    if (!decoded.success) {
+      pushToast(`❌ ${decoded.error}`);
+      return;
+    }
+    if (decoded.payload.owner === getOrCreateAnonId()) {
+      pushToast("❌ Itu kodemu sendiri 🦊");
+      return;
+    }
+    const gate = checkBreedingRequirements(save.pet, save.breeding, this.simNow);
+    if (!gate.allowed) {
+      pushToast("Syarat breeding belum terpenuhi — cek daftar syarat");
+      return;
+    }
+    if (readSentToday(this.dayKey(this.simNow)) >= MAX_BREEDING_REQUESTS_PER_DAY) {
+      pushToast(`📵 Batas ${MAX_BREEDING_REQUESTS_PER_DAY} request/hari tercapai — coba lagi besok`);
+      return;
+    }
+    setUiState({ onlineBreeding: { ...current, busy: true } });
+    const result = await onlineApi.send(config, current.myCode, code);
+    if (!result.ok) {
+      pushToast(`❌ ${result.error}`);
+      await this.onlineRefresh();
+      return;
+    }
+    bumpSentToday(this.dayKey(this.simNow));
+    pushToast("📨 Permintaan terkirim — hasil muncul saat kalian berdua buka game");
+    await this.onlineRefresh();
+  }
+
+  async onlineAccept(requestId: string): Promise<void> {
+    const config = getOnlineConfig();
+    const current = getGameState().onlineBreeding;
+    if (!config || !current || !current.myCode) return;
+    setUiState({ onlineBreeding: { ...current, busy: true } });
+    const result = await onlineApi.accept(config, current.myCode, requestId);
+    if (!result.ok) pushToast(`❌ ${result.error}`);
+    else pushToast("🤝 Sepakat! Telur disiapkan — hasil muncul saat kalian berdua buka game");
+    await this.onlineRefresh();
+  }
+
+  async onlineDecline(requestId: string): Promise<void> {
+    const config = getOnlineConfig();
+    if (!config) return;
+    await onlineApi.decline(config, requestId);
+    await this.onlineRefresh();
+  }
+
+  /** Klaim telur hasil pertukaran kode → altar (genetika dihitung lokal dari seed). */
+  async onlineClaim(requestId: string): Promise<void> {
+    const config = getOnlineConfig();
+    const save = this.saveData;
+    const current = getGameState().onlineBreeding;
+    if (!config || !save || !current) return;
+    if (save.breeding.egg) {
+      pushToast("🥚 Altar sudah penuh (maks 1 telur)");
+      return;
+    }
+    const gate = checkBreedingRequirements(save.pet, save.breeding, this.simNow);
+    if (!gate.allowed) {
+      pushToast("Syarat breeding belum terpenuhi — cek daftar syarat");
+      return;
+    }
+    setUiState({ onlineBreeding: { ...current, busy: true } });
+    const result = await onlineApi.claim(config, requestId);
+    if (!result.ok) {
+      pushToast(`❌ ${result.error}`);
+      await this.onlineRefresh();
+      return;
+    }
+    const payload = this.ownGenPayload();
+    const partner = result.data.partner as Record<string, unknown> | null;
+    const seed = result.data.seed;
+    if (!payload || seed === null || !partner || typeof partner.owner !== "string") {
+      pushToast("⏳ Data mitra belum lengkap — buka lagi nanti");
+      await this.onlineRefresh();
+      return;
+    }
+    const partnerPayload = partner as unknown as BreedingCodePayload;
+    // Genetika deterministik dari seed server — identik di kedua pemain (Doc 07 §3).
+    const genetics = computeOnlineChildGenetics(payload, partnerPayload, seed);
+    const avg =
+      (save.pet.stats.hunger + save.pet.stats.happiness + save.pet.stats.energy + save.pet.stats.hygiene) / 4;
+    const bonusPoints = (avg * genetics.startBonusPct) / 100;
+    const childGen = (save.breeding.lineage?.gen ?? 1) + 1;
+    const childNo = save.breeding.childrenCount + 1;
+    const egg = createBreedingEgg(
+      genetics,
+      [
+        petToLineageParent(save.pet, this.livedDaysOf(save.pet)),
+        {
+          name: partnerPayload.name,
+          element: partnerPayload.element,
+          path: partnerPayload.path,
+          coatColor: partnerPayload.coatColor,
+        },
+      ],
+      childGen,
+      this.simNow,
+      bonusPoints,
+    );
+    this.saveData = {
+      ...save,
+      pet: this.addHappiness(save.pet, breedingConfig.breedEffect.happinessBonus),
+      breeding: {
+        ...save.breeding,
+        childrenCount: childNo,
+        cooldownUntil: this.simNow + breedingConfig.requirements.cooldownDays * MS_PER_DAY,
+        egg,
+      },
+    };
+    this.markClaimed(requestId);
+    this.recordMemory("breed", `keturunan ke-${childNo} bersama ${partnerPayload.name} (online)`);
+    this.sync();
+    this.persist();
+    pushToast(
+      genetics.element === "mystic"
+        ? "🥚 Telur mistik ✨ dari pertukaran kode!"
+        : `🥚 Telur turunan (${genetics.element}) di altar — hasil tukar kode!`,
+    );
+    eventBus.emit("pet/say", { text: "Kyuu~! Teman baru dari jauh!" });
+    await this.onlineRefresh();
+  }
+
+  // ===== Cloud backup opsional (M8 — Doc 09 §4 & §7: LWW + diff warning) =====
+
+  async cloudPush(): Promise<void> {
+    const config = getOnlineConfig();
+    const save = this.saveData;
+    if (!config || !save) {
+      pushToast("📵 Supabase belum dikonfigurasi — backup lokal saja");
+      return;
+    }
+    setUiState({ cloudSync: { ...getGameState().cloudSync, busy: true } });
+    const result = await onlineApi.push(config, save, save.lastTick);
+    if (!result.ok) pushToast(`❌ ${result.error}`);
+    else if (!result.data.ok) pushToast("☁️ Versi awan lebih baru — tarik dulu untuk membandingkan");
+    else pushToast("☁️ Save terunggah ke awan");
+    setUiState({ cloudSync: { ...getGameState().cloudSync, busy: false } });
+  }
+
+  async cloudPull(): Promise<void> {
+    const config = getOnlineConfig();
+    const save = this.saveData;
+    if (!config || !save) {
+      pushToast("📵 Supabase belum dikonfigurasi");
+      return;
+    }
+    setUiState({ cloudSync: { ...getGameState().cloudSync, busy: true, diffSummary: null } });
+    const result = await onlineApi.pull(config);
+    setUiState({ cloudSync: { ...getGameState().cloudSync, busy: false } });
+    if (!result.ok) {
+      pushToast(`❌ ${result.error}`);
+      return;
+    }
+    if (!result.data.save) {
+      pushToast("☁️ Belum ada backup di awan — unggah dulu");
+      return;
+    }
+    const parsed = saveDataSchemaV2.safeParse(result.data.save);
+    if (!parsed.success) {
+      pushToast("❌ Backup awan tidak valid");
+      return;
+    }
+    const diff = diffSaves(save, parsed.data);
+    if (diff.identical) {
+      pushToast("✅ Data awan sama dengan save lokal");
+      return;
+    }
+    this.cloudRemote = parsed.data;
+    setUiState({ cloudSync: { busy: false, diffSummary: diff.summary, localNewer: diff.localNewer } });
+  }
+
+  /** Keputusan akhir pemain setelah diff warning — pemenang sesuai lastTick (LWW). */
+  cloudRestore(): void {
+    const remote = this.cloudRemote;
+    const save = this.saveData;
+    if (!remote || !save) return;
+    const lww = resolveLastWriteWins(save, remote);
+    this.saveData = { ...lww.data, lastTick: Date.now() };
+    this.cloudRemote = null;
+    this.persist();
+    this.sync();
+    setUiState({ cloudSync: { busy: false, diffSummary: null, localNewer: false } });
+    pushToast(
+      `☁️ Selesai — ${lww.chosen === "remote" ? "data awan" : "data lokal"} lebih baru dan dipertahankan`,
+    );
+    eventBus.emit("pet/say", { text: "Kyuu~!" });
+  }
+
   // ===== Debug time-lapse (Doc 03 §6 — hanya build dev) =====
 
   setSpeed(multiplier: 1 | 10 | 60 | 3600): void {
@@ -1591,6 +1928,17 @@ export function initGameSystem(): () => void {
     eventBus.on("ui/album-open", () => runtime?.albumOpen()),
     eventBus.on("ui/album-close", () => runtime?.albumClose()),
     eventBus.on("ui/legacy-continue", () => runtime?.continueLineage()),
+    // M8 — breeding online via Supabase & cloud backup (Doc 07 §2B, Doc 09 §7)
+    eventBus.on("ui/online-open", () => runtime?.onlineOpen()),
+    eventBus.on("ui/online-close", () => runtime?.onlineClose()),
+    eventBus.on("ui/online-refresh", () => void runtime?.onlineRefresh()),
+    eventBus.on("ui/online-send", ({ code }) => void runtime?.onlineSend(code)),
+    eventBus.on("ui/online-accept", ({ requestId }) => void runtime?.onlineAccept(requestId)),
+    eventBus.on("ui/online-decline", ({ requestId }) => void runtime?.onlineDecline(requestId)),
+    eventBus.on("ui/online-claim", ({ requestId }) => void runtime?.onlineClaim(requestId)),
+    eventBus.on("ui/cloud-push", () => void runtime?.cloudPush()),
+    eventBus.on("ui/cloud-pull", () => void runtime?.cloudPull()),
+    eventBus.on("ui/cloud-restore", () => runtime?.cloudRestore()),
     // M5 — audio: SFX dari scene + pengaturan musik/SFX/notify/offline-LLM
     eventBus.on("sfx/play", ({ id }) => audioEngine.playSfx(id)),
     eventBus.on("ui/settings", (s) => runtime?.applySettings(s)),

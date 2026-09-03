@@ -73,6 +73,8 @@ export interface PetData {
   memoryLog: MemoryLogEntry[];
   /** M7 (Doc 07 §3): warna bulu hasil genetika — generasi-1 memakai warna elemen. */
   coatColor?: string;
+  /** M7 (Doc 07 §3): kepribadian (elemen dialog) yang diwariskan — default = elemen. */
+  personality?: PetElement;
 }
 
 export type ActionRejectReason =

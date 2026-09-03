@@ -81,6 +81,20 @@ export function BreedingScreen() {
 
       {breeding.hasEgg && <p className="breeding__egg">🥚 Telur sudah ada di altar (maks 1)</p>}
       {!canAfford && <p className="breeding__egg">🪙 Koin belum cukup (butuh {breeding.costCoins})</p>}
+
+      {/* M8 — jalur antar-pemain asinkron (Doc 07 §2B) */}
+      <div className="breeding__online">
+        <button
+          type="button"
+          className="breeding__online-btn"
+          onClick={() => eventBus.emit("ui/online-open", undefined)}
+        >
+          🌐 Tukar Kode Antar-Pemain
+        </button>
+        <p className="breeding__egg">
+          Tukar Breeding Code dengan pemain lain — telur turunan muncul saat kalian berdua buka game.
+        </p>
+      </div>
     </div>
   );
 }

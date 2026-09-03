@@ -22,6 +22,7 @@ import { MemorialScreen } from "./components/MemorialScreen";
 import { LoginRewardSheet } from "./components/LoginRewardSheet";
 import { EvolutionCutscene } from "./components/EvolutionCutscene";
 import { BreedingScreen } from "./components/BreedingScreen";
+import { OnlineBreedingScreen } from "./components/OnlineBreedingScreen";
 import { AlbumScreen } from "./components/AlbumScreen";
 import { PhaserHost } from "./game/PhaserHost";
 import { eventBus } from "./lib/eventBus";
@@ -91,6 +92,7 @@ export default function App() {
           <ChatScreen />
           <AlbumScreen />
           <BreedingScreen />
+          <OnlineBreedingScreen />
           {sheet && (
             <WashiPanel open title={SHEET_TITLES[sheet]} onClose={() => setSheet(null)}>
               {sheet === "dapur" && <KitchenSheet onFed={() => setSheet(null)} />}

@@ -7,6 +7,7 @@ import { HankoButton } from "./HankoButton";
 
 export function SettingsSheet() {
   const backupCode = useGameState().backupCode;
+  const cloud = useGameState().cloudSync;
   const [importText, setImportText] = useState("");
   const [music, setMusic] = useState(true);
   const [sfx, setSfx] = useState(true);
@@ -91,6 +92,28 @@ export function SettingsSheet() {
             </button>
           </>
         )}
+      </section>
+      <section className="backup-section">
+        <h4 className="backup-title">☁️ Backup Awan (M8)</h4>
+        <div className="cloud-buttons">
+          <HankoButton size="md" disabled={cloud.busy} onClick={() => eventBus.emit("ui/cloud-push", undefined)}>
+            ⬆️ Unggah
+          </HankoButton>
+          <HankoButton size="md" disabled={cloud.busy} onClick={() => eventBus.emit("ui/cloud-pull", undefined)}>
+            ⬇️ Tarik
+          </HankoButton>
+        </div>
+        {cloud.diffSummary && (
+          <div className="cloud-warning">
+            <p className="sheet__note">⚠️ Perbedaan terdeteksi: {cloud.diffSummary}</p>
+            <HankoButton size="md" onClick={() => eventBus.emit("ui/cloud-restore", undefined)}>
+              Pakai yang Lebih Baru (LWW)
+            </HankoButton>
+          </div>
+        )}
+        <p className="sheet__note">
+          Butuh konfigurasi Supabase (services/supabase/README.md). Tanpa itu, pakai kode backup manual di atas.
+        </p>
       </section>
       <section className="backup-section">
         <h4 className="backup-title">♻️ Pulihkan dari Kode</h4>

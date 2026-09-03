@@ -69,8 +69,8 @@ export function cooldownRemainingMs(breeding: BreedingStateInput, nowMs: number)
 
 // ===== Mitra NPC harian (Doc 07 §2A — 3 pilihan, elemen berbeda) =====
 
-/** Hash FNV-1a string → uint32 (mitra harian sama sepanjang hari). */
-function hashString(s: string): number {
+/** Hash FNV-1a string → uint32 (mitra harian & checksum breeding code sama sepanjang hari). */
+export function hashString(s: string): number {
   let h = 2166136261;
   for (let i = 0; i < s.length; i++) {
     h ^= s.charCodeAt(i);
@@ -79,8 +79,8 @@ function hashString(s: string): number {
   return h >>> 0;
 }
 
-/** Mulberry32 PRNG deterministik dari seed. */
-function mulberry32(seed: number): () => number {
+/** Mulberry32 PRNG deterministik dari seed (dipakai ulang jalur breeding online M8). */
+export function mulberry32(seed: number): () => number {
   let a = seed >>> 0;
   return () => {
     a |= 0;
@@ -208,7 +208,28 @@ export interface GeneticsInput {
   rng: IRng;
 }
 
-export function computeChildGenetics({ parent, partner, rng }: GeneticsInput): ChildGenetics {
+/** Input genetika generik — dipakai jalur NPC (M7) & antar-pemain online (M8). */
+export interface RollGeneticsInput {
+  rng: IRng;
+  parentElement: PetElement;
+  partnerElement: PetElement;
+  parentCoat: string;
+  partnerCoat: string;
+  parentCareScore: number;
+}
+
+/**
+ * Algoritma genetika inti (Doc 07 §3) — SATU sumber untuk breeding NPC & online.
+ * Deterministik terhadap rng; angka dari breeding.json (nol hard-code).
+ */
+export function rollChildGenetics({
+  rng,
+  parentElement,
+  partnerElement,
+  parentCoat,
+  partnerCoat,
+  parentCareScore,
+}: RollGeneticsInput): ChildGenetics {
   const r = rng.next();
   let element: PetElement;
   let source: ChildGenetics["source"];
@@ -218,13 +239,13 @@ export function computeChildGenetics({ parent, partner, rng }: GeneticsInput): C
   if (r < GEN.parentChance) {
     // 70%: elemen salah satu induk (50/50)
     const fromParent = rng.next() < 0.5;
-    element = fromParent ? parent.element : partner.element;
+    element = fromParent ? parentElement : partnerElement;
     source = fromParent ? "parent" : "partner";
     elementGiver = element;
   } else if (r < GEN.mixChance) {
     // 25%: elemen "mix" dari tabel kombinasi (Doc 07 §3)
-    const mixed = getMixElement(parent.element, partner.element);
-    element = (mixed ?? parent.element) as PetElement;
+    const mixed = getMixElement(parentElement, partnerElement);
+    element = (mixed ?? parentElement) as PetElement;
     source = "mix";
   } else {
     // 5%: mutasi mystic ✨
@@ -241,19 +262,26 @@ export function computeChildGenetics({ parent, partner, rng }: GeneticsInput): C
   }
 
   // Warna: mix HSV induk A (60%) + B (40%) + jitter ±6°
-  const coatColor = mixCoatColors(
-    coatColorOf(parent.element, parent.coatColor),
-    coatColorOf(partner.element),
-    rng,
-  );
+  const coatColor = mixCoatColors(parentCoat, partnerCoat, rng);
 
   // Bonus stat awal: 1..4%; induk elite (careScore ≥ ambang) → 5% (Doc 07 §3)
   const startBonusPct =
-    parent.careScore >= GEN.startBonusEliteCareScore
+    parentCareScore >= GEN.startBonusEliteCareScore
       ? GEN.startBonusElitePct
       : rng.int(GEN.startBonusMinPct, GEN.startBonusMaxPct + 1);
 
   return { element, personalityElement, coatColor, startBonusPct, source };
+}
+
+export function computeChildGenetics({ parent, partner, rng }: GeneticsInput): ChildGenetics {
+  return rollChildGenetics({
+    rng,
+    parentElement: parent.element,
+    partnerElement: partner.element,
+    parentCoat: coatColorOf(parent.element, parent.coatColor),
+    partnerCoat: coatColorOf(partner.element),
+    parentCareScore: parent.careScore,
+  });
 }
 
 /** Rata-rata 4 stat utama induk (dasar bonus stat anak). */

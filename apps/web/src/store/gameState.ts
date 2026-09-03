@@ -122,6 +122,42 @@ export interface LegacyUi {
   childCoat: string | null;
 }
 
+/* Breeding online via Supabase (M8 — Doc 07 §2B) */
+
+/** Satu permintaan breeding online di menu Tukar Kode. */
+export interface OnlineRequestUi {
+  id: string;
+  /** "pending" = menunggu mitra, "ready" = telur siap diklaim. */
+  status: "pending" | "ready";
+  direction: "incoming" | "outgoing";
+  partnerName: string;
+  partnerElement: string;
+  partnerCoat: string;
+  partnerGen: number;
+  createdAt: number;
+}
+
+/** Layar Tukar Kode antar-pemain (M8); null = tertutup. */
+export interface OnlineBreedingUi {
+  /** "unconfigured" = Supabase belum diset; "offline" = server tak terjangkau. */
+  status: "unconfigured" | "offline" | "ready";
+  myCode: string;
+  canBreed: boolean;
+  reasons: string[];
+  requests: OnlineRequestUi[];
+  sentToday: number;
+  maxPerDay: number;
+  busy: boolean;
+}
+
+/** Status cloud backup di Pengaturan (M8 — sinkronisasi opsional). */
+export interface CloudSyncUi {
+  busy: boolean;
+  /** Ringkasan diff — tampil sebagai warning konflik (LWW). */
+  diffSummary: string | null;
+  localNewer: boolean;
+}
+
 export interface GameUiState {
   /** Layar aktif: splash (dengan onboarding di dalamnya) atau home. */
   screen: "splash" | "home";
@@ -171,6 +207,10 @@ export interface GameUiState {
   legacy: LegacyUi | null;
   /** Kode backup base64 hasil ekspor (Doc 09 §4). */
   backupCode: string;
+  /** Layar Tukar Kode breeding online (M8 — Doc 07 §2B); null = tertutup. */
+  onlineBreeding: OnlineBreedingUi | null;
+  /** Status cloud backup (M8 — sinkronisasi opsional). */
+  cloudSync: CloudSyncUi;
 }
 
 const initialState: GameUiState = {
@@ -201,6 +241,8 @@ const initialState: GameUiState = {
   album: null,
   legacy: null,
   backupCode: "",
+  onlineBreeding: null,
+  cloudSync: { busy: false, diffSummary: null, localNewer: false },
 };
 
 let state: GameUiState = initialState;

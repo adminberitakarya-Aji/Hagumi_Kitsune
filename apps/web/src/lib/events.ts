@@ -43,6 +43,18 @@ export interface GameEventMap {
   /* Backup (Doc 09 §4) — SettingsSheet → system */
   "ui/backup-export": undefined;
   "ui/backup-import": { code: string };
+  /* Breeding online via Supabase (M8 — Doc 07 §2B) — OnlineBreedingScreen → system */
+  "ui/online-open": undefined; // Breeding House 🌐 → layar Tukar Kode
+  "ui/online-close": undefined;
+  "ui/online-refresh": undefined; // polling manual (buka game = polling)
+  "ui/online-send": { code: string }; // tempel kode teman → request terkirim
+  "ui/online-accept": { requestId: string }; // setuju → server kunci seed
+  "ui/online-decline": { requestId: string };
+  "ui/online-claim": { requestId: string }; // telur turunan masuk altar
+  /* Cloud backup opsional (M8 — Doc 09 §4 & §7) — SettingsSheet → system */
+  "ui/cloud-push": undefined;
+  "ui/cloud-pull": undefined;
+  "ui/cloud-restore": undefined; // terima diff warning → pakai data awan (LWW)
   /* Pengaturan lengkap (M5 — Doc 12 §3.2) — SettingsSheet → system */
   "ui/settings": { music?: boolean; sfx?: boolean; notify?: boolean; offlineLlm?: boolean };
   /* SFX dari scene (M5) — scene minta system memainkan efek (satu gerbang audio) */

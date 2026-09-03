@@ -147,6 +147,20 @@ export {
   rollDailyPartners,
 } from "./breeding/breeding";
 
+// Breeding online & sinkronisasi save (M8 — Doc 07 §2B, services/supabase)
+export type { BreedingCodePayload, OnlineRequest, OnlineRequestStatus } from "./online";
+export {
+  BREEDING_CODE_PREFIX,
+  MAX_BREEDING_REQUESTS_PER_DAY,
+  breedingCodePayloadOf,
+  computeOnlineChildGenetics,
+  decodeBreedingCode,
+  diffSaves,
+  encodeBreedingCode,
+  resolveLastWriteWins,
+} from "./online";
+export type { LwwResult, SaveSyncDiff } from "./online";
+
 // Companion: dialog, memori, chat Tier 1 (M6 — Doc 08, Doc 11 §1–2)
 export {
   OfflineLlmProvider,

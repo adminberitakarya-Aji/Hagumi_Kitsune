@@ -1230,7 +1230,7 @@ body {
   animation: evoRise 0.8s ease-out;
 }
 
-/* ===== M7 � Breeding & Keturunan (Doc 12 §9) ===== */
+/* ===== M7 � Breeding & Keturunan (Doc 12 §9) ===== */
 .swatch {
   display: inline-block;
   width: 14px;
@@ -1452,6 +1452,165 @@ body {
   flex: 1;
   min-width: 0;
 }
+
+/* ===== M8 — Breeding online via Supabase (Tukar Kode) ===== */
+.online {
+  position: absolute;
+  inset: 0;
+  background: #efe6d2;
+  z-index: 32;
+  overflow-y: auto;
+  padding: 12px 16px 24px;
+}
+.online__banner {
+  font-size: 11px;
+  color: #4e7a4e;
+  background: #e8f0e2;
+  border: 1px solid #4e7a4e;
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+}
+.online__banner--off {
+  color: #8a5a3b;
+  background: #f5e8dc;
+  border-color: #b07a4a;
+}
+.online__section {
+  background: #fffdf5;
+  border: 2px solid var(--indigo);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+.online__label {
+  font-size: 12px;
+  color: var(--indigo);
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.online__code {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 10px;
+  color: var(--ink);
+  background: var(--washi);
+  border: 1px dashed var(--indigo);
+  border-radius: 8px;
+  padding: 6px 8px;
+  resize: none;
+  outline: none;
+}
+.online__copy,
+.online__refresh {
+  margin-top: 6px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fffdf5;
+  background: var(--indigo);
+  border: none;
+  border-radius: 8px;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+.online__copy:disabled,
+.online__refresh:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.online__refresh {
+  background: transparent;
+  color: var(--indigo);
+  border: 1px solid var(--indigo);
+  padding: 4px 8px;
+  margin: 0;
+}
+.online__hint {
+  font-size: 10px;
+  color: var(--indigo);
+  opacity: 0.75;
+  margin: 6px 0 0;
+}
+.online__list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.online__card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--washi);
+  border: 1px solid var(--indigo);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+.online__card-info {
+  flex: 1;
+  min-width: 0;
+}
+.online__actions {
+  display: flex;
+  gap: 6px;
+}
+.online__accept,
+.online__decline {
+  font-family: inherit;
+  font-size: 15px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid var(--indigo);
+  cursor: pointer;
+  background: #fffdf5;
+}
+.online__accept {
+  background: #e8f0e2;
+}
+.online__decline {
+  color: #a04a4a;
+}
+.online__accept:disabled,
+.online__decline:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.breeding__online {
+  margin-top: 14px;
+  text-align: center;
+}
+.breeding__online-btn {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fffdf5;
+  background: var(--indigo);
+  border: none;
+  border-radius: 10px;
+  padding: 10px 18px;
+  cursor: pointer;
+}
+
+/* ===== M8 — Cloud backup (Pengaturan) ===== */
+.cloud-buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.cloud-warning {
+  border: 1px dashed #b07a4a;
+  border-radius: 8px;
+  padding: 6px 8px;
+  background: #f5e8dc;
+}
+
 .partner-card__name {
   font-size: 14px;
   font-weight: 700;
@@ -1485,7 +1644,7 @@ body {
   margin-top: 10px;
 }
 
-/* Memorial � warisan (Doc 07 §5) */
+/* Memorial � warisan (Doc 07 §5) */
 .memorial__legacy {
   margin: 8px 0;
   padding: 8px 12px;

@@ -1,0 +1,8 @@
+# project_id untuk Supabase CLI (services/supabase)
+project_id = "hagumi"
+
+[functions.breeding]
+verify_jwt = false
+
+[functions.save-sync]
+verify_jwt = false

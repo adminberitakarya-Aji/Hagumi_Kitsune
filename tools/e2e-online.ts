@@ -9,6 +9,7 @@ import {
   computeOnlineChildGenetics,
   createDefaultSave,
   encodeBreedingCode,
+  type BreedingCodePayload,
 } from "@hagumi/core";
 
 const env = Object.fromEntries(
@@ -20,6 +21,12 @@ const env = Object.fromEntries(
 const url = env.VITE_SUPABASE_URL!.replace(/\/+$/, "");
 const key = env.VITE_SUPABASE_ANON_KEY!;
 
+// Respons signup anon Supabase (field minimal yang dipakai skrip ini).
+interface AnonAuthResponse {
+  access_token: string;
+  user: { id: string };
+}
+
 // Dua pemain = dua sesi Anonymous Auth (JWT server-signed — fix keamanan M9)
 async function anonSession(): Promise<{ token: string; userId: string }> {
   const res = await fetch(`${url}/auth/v1/signup`, {
@@ -27,13 +34,14 @@ async function anonSession(): Promise<{ token: string; userId: string }> {
     headers: { "Content-Type": "application/json", apikey: key, Authorization: `Bearer ${key}` },
     body: JSON.stringify({}),
   });
-  const data = await res.json().catch(() => null);
+  // fetch dari @types/node (lib tanpa DOM) mengetik json() sebagai unknown — ketik eksplisit di sini.
+  const data = (await res.json().catch(() => null)) as AnonAuthResponse | null;
   if (!data?.access_token) {
     throw new Error(
       `Anonymous Auth gagal: ${JSON.stringify(data).slice(0, 120)} — aktifkan Anonymous sign-ins di dashboard`,
     );
   }
-  return { token: data.access_token as string, userId: data.user.id as string };
+  return { token: data.access_token, userId: data.user.id };
 }
 const { token: tokenA, userId: anonA } = await anonSession();
 const { token: tokenB, userId: anonB } = await anonSession();
@@ -44,7 +52,20 @@ function check(label: string, ok: boolean, detail = ""): void {
   if (!ok) failures++;
 }
 
-async function call(token: string, body: Record<string, unknown>): Promise<any> {
+/** Respons edge breeding — bentuk longgar (field tergantung action), cukup untuk asersi e2e. */
+interface EdgeBreedingResponse {
+  status: number;
+  json: {
+    requests: Array<{ status?: string; partner: { name: string } }>;
+    sentToday: number;
+    requestId?: string;
+    error?: string;
+    seed?: number;
+    partner?: BreedingCodePayload;
+  };
+}
+
+async function call(token: string, body: Record<string, unknown>): Promise<EdgeBreedingResponse> {
   const res = await fetch(`${url}/functions/v1/breeding`, {
     method: "POST",
     headers: {
@@ -54,7 +75,8 @@ async function call(token: string, body: Record<string, unknown>): Promise<any> 
     },
     body: JSON.stringify(body),
   });
-  const json = await res.json();
+  // fetch dari @types/node (lib tanpa DOM) mengetik json() sebagai unknown — ketik eksplisit di sini.
+  const json = (await res.json()) as EdgeBreedingResponse["json"];
   return { status: res.status, json };
 }
 
@@ -96,7 +118,7 @@ const requestId = r2.json.requestId as string | undefined;
 const r3 = await call(tokenB, { action: "inbox", code: codeB });
 check(
   "B melihat permintaan masuk",
-  r3.status === 200 && r3.json.requests.length === 1 && r3.json.requests[0].partner.name === "Kogitsune",
+  r3.status === 200 && r3.json.requests.length === 1 && r3.json.requests[0]!.partner.name === "Kogitsune",
 );
 
 // 4) duplikat ditolak
@@ -116,7 +138,7 @@ check("B melihat hasil siap", r6b.json.requests[0]?.status === "ready");
 // 7) A klaim telur → genetika deterministik dari seed
 const r7 = await call(tokenA, { action: "claim", requestId });
 const seed = r7.json.seed as number;
-const partner = r7.json.partner as { owner: string; careScore: number };
+const partner = r7.json.partner as BreedingCodePayload;
 check("A klaim telur", r7.status === 200 && seed !== null && partner?.owner === anonB);
 if (seed !== undefined && seed !== null && partner) {
   const mine = JSON.parse(
@@ -136,6 +158,12 @@ const r8 = await call(tokenB, { action: "claim", requestId });
 check("B klaim telur → request done", r8.status === 200);
 
 // 9) Cloud backup push/pull
+// Respons save-sync (field minimal untuk asersi e2e).
+interface SaveSyncResponse {
+  ok?: boolean;
+  lastTick?: number;
+  save?: { pet?: { name?: string } };
+}
 const saveRes = await fetch(`${url}/functions/v1/save-sync`, {
   method: "POST",
   headers: {
@@ -145,7 +173,7 @@ const saveRes = await fetch(`${url}/functions/v1/save-sync`, {
   },
   body: JSON.stringify({ action: "push", save: saveA, lastTick: saveA.lastTick }),
 });
-const saveJson = await saveRes.json();
+const saveJson = (await saveRes.json()) as SaveSyncResponse;
 check("cloud push", saveRes.status === 200 && saveJson.ok === true);
 const pullRes = await fetch(`${url}/functions/v1/save-sync`, {
   method: "POST",
@@ -156,7 +184,7 @@ const pullRes = await fetch(`${url}/functions/v1/save-sync`, {
   },
   body: JSON.stringify({ action: "pull" }),
 });
-const pullJson = await pullRes.json();
+const pullJson = (await pullRes.json()) as SaveSyncResponse;
 check(
   "cloud pull = data yang di-push",
   pullJson.lastTick === saveA.lastTick && pullJson.save?.pet?.name === "Kogitsune",

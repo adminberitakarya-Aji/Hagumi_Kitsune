@@ -7,7 +7,8 @@ let bad = 0;
 for (const f of files) {
   const src = readFileSync(f, "utf8");
   const sf = ts.createSourceFile(f, src, ts.ScriptTarget.ES2022, true);
-  const diags = sf.parseDiagnostics ?? [];
+  // parseDiagnostics adalah properti internal ts.SourceFile (tidak ada di deklarasi publik TS 5.x).
+  const diags = (sf as unknown as { parseDiagnostics?: ts.Diagnostic[] }).parseDiagnostics ?? [];
   if (diags.length === 0) {
     console.log("OK ", f);
   } else {

@@ -6,7 +6,6 @@
 import { z } from "zod";
 import { PET_ELEMENTS } from "../pet/types";
 import { coatColorOf, hashString } from "../breeding/breeding";
-import type { IRng } from "../ports";
 import type { PetData } from "../pet/types";
 import type { BreedingCodePayload } from "./types";
 

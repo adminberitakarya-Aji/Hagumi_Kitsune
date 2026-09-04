@@ -3,7 +3,7 @@
  * Semua fungsi murni & deterministik-terhadap-RNG: angka dari breeding.json,
  * warna dasar dari tabel elemen, acak hanya via IRng (Doc 09 §1).
  */
-import { breedingConfig, getMixElement, mixKey, type BreedingConfig } from "@hagumi/data";
+import { breedingConfig, getMixElement, mixKey } from "@hagumi/data";
 import { MS_PER_DAY } from "../time/time-service";
 import { clampStat } from "../pet/stats";
 import { PET_ELEMENTS, type PetData, type PetElement, type PetStats } from "../pet/types";

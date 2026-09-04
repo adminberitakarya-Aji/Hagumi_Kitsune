@@ -126,6 +126,7 @@ export function redactPii(text: string): string {
 
 /** Bersihkan input pemain sebelum dikirim ke provider (M9 — Doc 11 §4). */
 export function sanitizePlayerInput(text: string, maxLen = 200): string {
+  // eslint-disable-next-line no-control-regex -- disengaja: sanitasi ini justru MENGHAPUS karakter kontrol dari input pemain (Doc 11 §4)
   return redactPii(text.replace(/[\u0000-\u001f\u007f]/g, " "))
     .trim()
     .slice(0, maxLen);
@@ -133,6 +134,7 @@ export function sanitizePlayerInput(text: string, maxLen = 200): string {
 
 /** Bersihkan balasan LLM sebelum tampil: maks 2 kalimat + tanpa PII (Doc 11 §4). */
 export function sanitizeLlmReply(text: string, maxSentences = 2, maxChars = 240): string {
+  // eslint-disable-next-line no-control-regex -- disengaja: hapus karakter kontrol dari balasan LLM sebelum tampil (Doc 11 §4)
   const redacted = redactPii(text.replace(/[\u0000-\u001f]/g, " ")).trim();
   const sentences = redacted
     .split(/(?<=[.!?…])\s+/)

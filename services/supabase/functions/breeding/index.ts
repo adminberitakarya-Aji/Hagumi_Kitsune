@@ -47,14 +47,6 @@ const MIX_TABLE: Record<string, string> = {
 const PET_ELEMENTS = ["fire", "water", "wind", "earth", "mystic"] as const;
 type PetElement = (typeof PET_ELEMENTS)[number];
 
-const ELEMENT_COAT: Record<PetElement, string> = {
-  fire: "#E8874A",
-  water: "#8FB6D9",
-  wind: "#EFE3C0",
-  earth: "#A98F5C",
-  mystic: "#A98BC4",
-};
-
 function mixKey(a: string, b: string): string {
   return a < b ? a + "+" + b : b + "+" + a;
 }

@@ -13,6 +13,19 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
     },
   },
+  // Skrip tooling Node (tools/*.mjs) berjalan di Node.js, bukan browser —
+  // deklarasikan globals Node agar no-undef tidak salah flags (tools/check-online.mjs).
+  {
+    files: ["tools/**/*.mjs"],
+    languageOptions: {
+      globals: {
+        Buffer: "readonly",
+        console: "readonly",
+        fetch: "readonly",
+        process: "readonly",
+      },
+    },
+  },
   // Service worker berjalan di konteks ServiceWorkerGlobalScope, bukan DOM/Node —
   // deklarasikan globals-nya agar no-undef tidak salah flags (apps/web/public/sw.js).
   {

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <!-- Layer FOREGROUND ikon adaptive (persiapan M15 Capacitor — sumber icon-fg).
+       Kitsune discale 66% terpusat: ujung telinga 74,4px → 49,1px dari pusat,
+       aman di dalam safe zone Android 58,7px (66dp/108dp) & web maskable 76,8px. -->
+  <g transform="translate(32.64 32.64) scale(0.66)">
+    <path d="M44 82l-12-24 26 8zM148 82l12-24-26 8z" fill="#F5EFE0"/>
+    <path d="M96 44c-26 0-46 16-52 38l16 10c2 18 16 32 36 32s34-14 36-32l16-10c-6-22-26-38-52-38z" fill="#F5EFE0"/>
+    <ellipse cx="78" cy="92" rx="7" ry="9" fill="#2B2B33"/>
+    <ellipse cx="114" cy="92" rx="7" ry="9" fill="#2B2B33"/>
+    <path d="M96 104l8 12h-16z" fill="#C1443C"/>
+    <path d="M80 124c10 6 22 6 32 0" stroke="#2B2B33" stroke-width="5" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>

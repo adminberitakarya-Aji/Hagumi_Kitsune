@@ -1,6 +1,6 @@
 /** Shell app (M1.5): router Splash/Onboarding ↔ Home (Doc 04) + overlay React.
  * Satu arah: UI/kanvas → eventBus → gameSystem → gameState → React render. */
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Hud } from "./components/Hud";
 import { ActionBar } from "./components/ActionBar";
 import { Toast } from "./components/Toast";
@@ -25,7 +25,11 @@ import { BreedingScreen } from "./components/BreedingScreen";
 import { OnlineBreedingScreen } from "./components/OnlineBreedingScreen";
 import { AlbumScreen } from "./components/AlbumScreen";
 import { GalleryScreen } from "./components/GalleryScreen";
-import { PhaserHost } from "./game/PhaserHost";
+/** M10.5: Phaser di-chunk terpisah — nol byte Phaser sebelum pemain masuk game.
+ * Semua import "phaser" hanya di game/*, jadi ini satu-satunya boundary split. */
+const PhaserHost = lazy(() =>
+  import("./game/PhaserHost").then((m) => ({ default: m.PhaserHost })),
+);
 import { eventBus } from "./lib/eventBus";
 import { initGameSystem } from "./system/gameSystem";
 import { useGameState } from "./store/gameState";
@@ -83,7 +87,9 @@ export default function App() {
 
   return (
     <div className="stage">
-      <PhaserHost />
+      <Suspense fallback={<div className="phaser-fallback" aria-hidden="true" />}>
+        <PhaserHost />
+      </Suspense>
       {sleeping && <div className="sleep-overlay" aria-hidden="true" />}
       {dead ? (
         <MemorialScreen />

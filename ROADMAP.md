@@ -393,7 +393,7 @@
 
 ### 🚧 Blokir & Catatan
 
-- (kosong)
+- 05/09: **Code-split Phaser sudah diterapkan lebih awal** di `App.tsx` (`lazy()` + Suspense fallback washi) — main bundle turun 2.180 KB → 639 KB (gzip 546 → 187); Phaser 1.539 KB baru diunduh saat masuk game. DoD "nol byte Phaser sebelum CTA" terpenuhi di level app shell; item LandingPage.tsx tetap terbuka.
 
 ### ✅ Definition of Done — M10.5
 
@@ -545,7 +545,7 @@
 
 ### 🚧 Blokir & Catatan
 
-- (kosong)
+- 05/09: **Aset ikon adaptive 2-layer sudah disiapkan lebih awal** — `icon-bg.svg` (merah full-bleed) + `icon-fg.svg` (kitsune discale 66% terpusat; ujung telinga 74,4px → 49,1px dari pusat, aman di safe zone Android 58,7px & web maskable 76,8px) + `icon-maskable.svg` (komposit, terdaftar di manifest purpose "maskable"). Audit: icon flat lama hanya punya margin 2,4px dari safe zone web dan DI LUAR safe zone Android. Saat M15: konversi bg/fg → `mipmap-anydpi-v26/ic_launcher.xml`.
 
 ### ✅ Definition of Done — M15
 

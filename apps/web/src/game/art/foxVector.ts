@@ -171,12 +171,54 @@ function paint(c: CanvasRenderingContext2D, pal: FoxPal, o: PixelFrameOpts): voi
     return;
   }
 
+  // ===== Duduk (M13 Doc 13 §5): tubuh piramida, ekor melingkar, kaki depan tegak =====
+  if (o.sit) {
+    c.globalAlpha = 0.12;
+    blob(c, 15.5, 29.4, 10, 1.8, 0, "#000000", null);
+    c.globalAlpha = 1;
+    c.save();
+    c.translate(0, o.bob);
+    tail(c, pal, 2 + o.tailWag); // ekor melingkar ke depan
+    // tubuh duduk (lebih tinggi di belakang)
+    blob(c, 15, 23.2, 7.6, 6, 0, pal.body, null);
+    c.save();
+    c.beginPath();
+    c.ellipse(15, 23.2, 7.6, 6, 0, 0, Math.PI * 2);
+    c.clip();
+    c.globalAlpha = 0.3;
+    blob(c, 15, 26.8, 7.2, 2.8, 0, pal.shade, null);
+    c.globalAlpha = 1;
+    c.restore();
+    blob(c, 15, 23.2, 7.6, 6, 0, null, pal.line);
+    // paha belakang + kaki depan tegak
+    blob(c, 10.4, 25.8, 2.4, 2.4, 0, pal.body, pal.line);
+    blob(c, 14.2, 27.4, 1.3, 2.1, 0, pal.body, pal.line);
+    blob(c, 18.2, 27.4, 1.3, 2.1, 0, pal.body, pal.line);
+    head(c, pal, o.headSide ?? 0, 3.2, o);
+    c.restore();
+    drawExtras(c, pal, o);
+    drawAura(c, pal, o);
+    return;
+  }
+
   // ===== Berdiri: bayangan → ekor → kaki → badan → kepala =====
   c.globalAlpha = 0.12;
   blob(c, 15.5, 29.6, 10, 1.8, 0, "#000000", null);
   c.globalAlpha = 1;
 
   c.save();
+  // spin (chase_tail — M13): rotasi seluruh pose di sekitar pusat badan
+  if (o.spin) {
+    c.translate(15, 22);
+    c.rotate(o.spin);
+    c.translate(-15, -22);
+  }
+  // lean (run/stretch — M13): condong badan (kepala di kanan → + = menunduk)
+  if (o.lean) {
+    c.translate(15, 24);
+    c.rotate(o.lean);
+    c.translate(-15, -24);
+  }
   c.translate(0, o.bob);
   tail(c, pal, o.tailWag);
 
@@ -200,7 +242,7 @@ function paint(c: CanvasRenderingContext2D, pal: FoxPal, o: PixelFrameOpts): voi
   blob(c, 18.8, 22.6, 3.4, 3.9, 0, pal.belly, null);
   blob(c, 15, 21.3, 7.4, 6.3, 0, null, pal.line);
 
-  head(c, pal, 0, o.headDrop * 0.9, o);
+  head(c, pal, o.headSide ?? 0, o.headDrop * 0.9, o);
   c.restore();
   drawExtras(c, pal, o);
   drawAura(c, pal, o);

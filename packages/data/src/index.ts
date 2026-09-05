@@ -39,5 +39,7 @@ export {
 export type { ChatLines, DialogElementKey, DialogueConfig, DialogueLines } from "./dialogue";
 export { getLlmProvider, llmConfig, llmConfigSchema, LLM_PROVIDER_KEYS } from "./llm";
 export type { LlmConfig, LlmProviderKey } from "./llm";
+export { behaviorConfig, behaviorConfigSchema, getSeasonFlavor } from "./behavior";
+export type { BehaviorConfig, ElementWeights, SeasonFlavorRule } from "./behavior";
 
 

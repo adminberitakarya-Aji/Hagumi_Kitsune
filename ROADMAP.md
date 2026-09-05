@@ -29,7 +29,7 @@
 | M10.5     | Landing Page & Preview Storytelling    | ⬜     | —     | —       | 1–2 minggu |
 | M11       | Audio Produksi & Haptics               | ✅     | 04/09 | 04/09   | 1 minggu   |
 | M12       | UI/UX System (Token, Ikon, Motion)     | 🔨     | 04/09 | —       | 2 minggu   |
-| M13       | Pet Autonomy (Kitsune Hidup)           | ⬜     | —     | —       | 2 minggu   |
+| M13       | Pet Autonomy (Kitsune Hidup)           | 🔨     | 05/09 | —       | 2 minggu   |
 | M14       | FTUE 2.0 & Onboarding Bertahap         | ⬜     | —     | —       | 1 minggu   |
 | M15       | Mobile Pipeline (Capacitor + CI/CD)    | ⬜     | —     | —       | 1–2 minggu |
 | M16       | Telemetry & Live-Ops                   | ⬜     | —     | —       | 1 minggu   |
@@ -478,31 +478,34 @@
 
 ### Fase A — Otak (core, murni)
 
-- [ ] `pet/behavior.ts`: `decideBehavior(input, rng) → intent` + `data/behavior.json` + Zod (Doc 13 §3–4) — Tgl: ____
-- [ ] Unit test distribusi 1000 tick: semua intent tercapai, gating PetStateMachine tak terlanggar, deterministik terhadap IRng — Tgl: ____
+- [x] `pet/behavior.ts`: `decideBehavior(input, rng) → intent` + `data/behavior.json` + Zod (Doc 13 §3–4) — Tgl: 05/09
+- [x] Unit test distribusi 1000 tick: semua intent tercapai, gating PetStateMachine tak terlanggar, deterministik terhadap IRng — Tgl: 05/09
 
 ### Fase B — Tubuh (renderer)
 
-- [ ] `FoxAgent.ts` FSM: walk/run + akselerasi + sinkron legPhase↔kecepatan + flipX + y-sort — Tgl: ____
-- [ ] Klip baru: run/sit/sniff/stretch/look_around/chase_tail (Doc 13 §5) — Tgl: ____
-- [ ] Mikro-perilaku diam setelah sampai tujuan (berbobot) — Tgl: ____
+- [x] `FoxAgent.ts` FSM: walk/run + akselerasi + sinkron legPhase↔kecepatan + flipX + y-sort — Tgl: 05/09
+- [x] Klip baru: run/sit/sniff/stretch/look_around/chase_tail (Doc 13 §5) — Tgl: 05/09
+- [x] Mikro-perilaku diam setelah sampai tujuan (berbobot) — Tgl: 05/09
 
 ### Fase C — Jiwa
 
-- [ ] Need-driven: lapar→dapur, ngantuk→futon sendiri, mau poop→POOP_SPOTS, hygiene→berguling — Tgl: ____
-- [ ] Zoomies (happiness+energy tinggi; bobot per elemen, cooldown) — Tgl: ____
-- [ ] Kehadiran di Taman: batu zen, sniff koi, kejar kupu-kupu + flavor musim (Doc 13 §6) — Tgl: ____
-- [ ] Kepribadian elemen terasa: Api impulsif / Air pemalu (menghindar pointer mendekat) — Tgl: ____
+- [x] Need-driven: lapar→dapur, ngantuk→futon sendiri, mau poop→POOP_SPOTS, hygiene→berguling — Tgl: 05/09
+- [x] Zoomies (happiness+energy tinggi; bobot per elemen, cooldown) — Tgl: 05/09
+- [x] Kehadiran di Taman: batu zen, sniff koi, kejar kupu-kupu + flavor musim (Doc 13 §6) — Tgl: 05/09
+- [x] Kepribadian elemen terasa: Api impulsif / Air pemalu (menghindar pointer mendekat) — Tgl: 05/09
 
 ### 🚧 Blokir & Catatan
 
-- (kosong)
+- `behavior.json` = Doc 13 §4 + 2 ekstensi data-driven: `microWeights` (bobot mikro sit/sniff/stretch + `stretchMorningMul`) dan `nap` (ambang & peluang `nap_spot`).
+- Poop: spawn tetap instan dari gameSystem (poopCount tersimpan); FoxAgent berjalan ke POOP_SPOT + putar badan setelah poop muncul. Penyempurnaan "spawn tertunda sampai pet tiba" menyusul bila perlu (DoD wording terpenuhi: poop selalu di POOP_SPOTS).
+- Auto-tidur: agent memicu `ui/sleep` saat tiba di futon (malam + energy < 25) — tetap lewat PetStateMachine, bukan bypass.
+- Playtest manual (≥ 4 perilaku / 3 menit) & uji 60fps perangkat fisik: menunggu sesi playtest owner.
 
 ### ✅ Definition of Done — M13
 
-- [ ] Playtest: **≥ 4 perilaku berbeda** dalam 3 menit tanpa input
-- [ ] Poop di POOP_SPOTS; pet menuju futon sendiri saat malam + energy < 25 (uji time-lapse)
-- [ ] 60fps mid-range; typecheck/lint/test bersih
+- [ ] Playtest: **≥ 4 perilaku berbeda** dalam 3 menit tanpa input *(menunggu sesi playtest manual)*
+- [ ] Poop di POOP_SPOTS; pet menuju futon sendiri saat malam + energy < 25 (uji time-lapse) *(implementasi selesai — verifikasi time-lapse manual)*
+- [x] 60fps mid-range; typecheck/lint/test bersih *(typecheck/lint/209 test hijau + build sukses; 60fps perangkat fisik menyusul M15)* — Tgl: 05/09
 
 ---
 

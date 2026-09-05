@@ -44,6 +44,17 @@ export {
 } from "./pet/stats";
 export { PetStateMachine, type FeedPayload, type PlayPayload } from "./pet/state-machine";
 export {
+  BEHAVIOR_INTENTS,
+  decideBehavior,
+  isBehaviorGated,
+} from "./pet/behavior";
+export type {
+  BehaviorDecision,
+  BehaviorInput,
+  BehaviorIntent,
+  GoToTarget,
+} from "./pet/behavior";
+export {
   poopHygieneDrainPerHour,
   poopIntervalMs,
   scoopPoop,

@@ -13,12 +13,18 @@ import { drawFoxVectorFrame } from "./foxVector";
 
 export const FRAME_SIZE = 32;
 
-/** Klip resmi Doc 01 §6: nama, jumlah frame, loop, fps. */
+/** Klip resmi Doc 01 §6 + klip otonomi M13 Doc 13 §5: nama, jumlah frame, loop, fps. */
 export const CLIPS: Record<string, { frames: number; loop: boolean; fps: number }> = {
   idle: { frames: 4, loop: true, fps: 5 },
   idle_happy: { frames: 4, loop: true, fps: 5 },
   idle_sad: { frames: 4, loop: true, fps: 4 },
   walk: { frames: 6, loop: true, fps: 8 },
+  run: { frames: 8, loop: true, fps: 12 },
+  sit: { frames: 4, loop: true, fps: 4 },
+  sniff: { frames: 4, loop: true, fps: 5 },
+  stretch: { frames: 4, loop: false, fps: 5 },
+  look_around: { frames: 4, loop: true, fps: 4 },
+  chase_tail: { frames: 6, loop: true, fps: 8 },
   eat: { frames: 6, loop: false, fps: 6 },
   sleep: { frames: 4, loop: true, fps: 3 },
   sick: { frames: 4, loop: true, fps: 4 },
@@ -47,9 +53,14 @@ interface FrameOpts {
   aura: number; // 0..1 progres kilau evolusi
   extra: "none" | "zzz" | "sweat" | "heart" | "bubble" | "sparkle";
   headDrop: number; // M10: turunnya kepala (eat) dalam px
+  // M13 (Doc 13 §5) — pose otonomi
+  sit: boolean; // duduk, ekor melingkar
+  lean: number; // condong badan (radian) — run/stretch
+  spin: number; // rotasi seluruh pose (radian) — chase_tail
+  headSide: number; // geser kepala horizontal (px) — look_around
 }
 
-/** Parameter pose per frame per klip (Doc 01 §6 tabel pemicu). */
+/** Parameter pose per frame per klip (Doc 01 §6 tabel pemicu + Doc 13 §5). */
 function optsFor(clip: ClipName, i: number): FrameOpts {
   const base: FrameOpts = {
     bob: 0,
@@ -63,6 +74,10 @@ function optsFor(clip: ClipName, i: number): FrameOpts {
     aura: 0,
     extra: "none",
     headDrop: 0,
+    sit: false,
+    lean: 0,
+    spin: 0,
+    headSide: 0,
   };
   switch (clip) {
     case "idle":
@@ -73,6 +88,38 @@ function optsFor(clip: ClipName, i: number): FrameOpts {
       return { ...base, eyes: "sad", earsDown: true, mouth: "wavy", tailWag: i % 2 === 0 ? -2 : -1 };
     case "walk":
       return { ...base, bob: i % 2, legPhase: i, tailWag: i % 2 === 0 ? 1 : -1 };
+    case "run":
+      // lari: legPhase cepat, badan condong ke depan, mulut terbuka (Doc 13 §5)
+      return {
+        ...base,
+        bob: i % 2,
+        legPhase: i,
+        lean: 0.14,
+        mouth: "open",
+        eyes: "happy",
+        tailWag: i % 2 === 0 ? 2 : 1,
+      };
+    case "sit":
+      // duduk: ekor melingkar, bob halus napas (Doc 13 §5)
+      return { ...base, sit: true, tailWag: i % 2 === 0 ? 1 : 0, bob: i < 2 ? 0 : 1 };
+    case "sniff":
+      // kepala turun-angkat ke tanah (Doc 13 §5)
+      return { ...base, headDrop: [3, 4, 5, 4][i] ?? 3, mouth: "flat", bob: i % 2 };
+    case "stretch":
+      // peregangan non-loop: front-down, tail-up (Doc 13 §5)
+      return {
+        ...base,
+        lean: [0.12, 0.28, 0.4, 0.4][i] ?? 0.12,
+        tailWag: 2,
+        eyes: "closed",
+        mouth: "flat",
+      };
+    case "look_around":
+      // kuping & kepala bergerak — "dia melihatku!" (Doc 13 §5)
+      return { ...base, headSide: [-1.4, 0, 1.4, 0][i] ?? 0, tailWag: i % 2 === 0 ? 1 : -1 };
+    case "chase_tail":
+      // berputar mengejar ekor (Doc 13 §5)
+      return { ...base, spin: i * 0.42, eyes: "happy", tailWag: 2 };
     case "eat":
       return {
         ...base,

@@ -479,6 +479,7 @@ class GameRuntime {
       path: pet.path,
       tails: pet.tails,
       element: pet.element,
+      personality: pet.personality ?? pet.element,
       careScore: Math.round(pet.careScore),
       inventory: {
         food: { ...save.inventory.food },

@@ -6,7 +6,8 @@ import { eventBus } from "../lib/eventBus";
 import { bindSceneNav } from "./sceneNav";
 import { getSky } from "./timeVisual";
 import { getGameState } from "../store/gameState";
-import { getSeason, type Season } from "@hagumi/core";
+import { getSeason, type PetElement, type Season } from "@hagumi/core";
+import { FoxAgent, type FoxPoi } from "./FoxAgent";
 
 /** Dekor musim: partikel jatuh + warna pohon (Doc 03 §4, GDD §9). */
 const SEASON_DECOR: Record<Season, { particle: string; treeTint: number | null; note: string }> = {
@@ -23,6 +24,8 @@ export class GardenScene extends Phaser.Scene {
   private lanternGlow!: Phaser.GameObjects.Ellipse;
   private seasonParticles: Phaser.GameObjects.Text[] = [];
   private fireflies: Phaser.GameObjects.Text[] = [];
+  private butterflies: Phaser.GameObjects.Text[] = [];
+  private agent!: FoxAgent;
   private tree!: Phaser.GameObjects.Container;
   private kois: Phaser.GameObjects.Text[] = [];
   private ctaBtn?: Phaser.GameObjects.Container;
@@ -48,6 +51,8 @@ export class GardenScene extends Phaser.Scene {
     this.drawNav();
     this.spawnSeasonParticles(season);
     if (season === "summer") this.spawnFireflies();
+    if (season === "spring" || season === "summer") this.spawnButterflies();
+    this.createFox(season); // M13: kitsune hadir di Taman (Doc 13 §6)
 
     this.offs = [
       bindSceneNav(this, "garden"),
@@ -62,8 +67,95 @@ export class GardenScene extends Phaser.Scene {
       this.offs.forEach((off) => off());
       this.seasonParticles.forEach((p) => p.destroy());
       this.fireflies.forEach((f) => f.destroy());
+      this.butterflies.forEach((b) => b.destroy());
+      this.agent?.destroy();
     });
     void decor;
+  }
+
+  override update(_time: number, delta: number): void {
+    this.agent?.update(_time, delta);
+    // Refresh langit murah: 2× per detik
+    this.skyTimer += delta;
+    if (this.skyTimer >= 500) {
+      this.skyTimer = 0;
+      this.refreshSky();
+    }
+  }
+
+  /** M13 (Doc 13 §6): kitsune hadir di Taman — duduk batu zen, sniff koi,
+   * kejar kupu-kupu/kunang musiman, linger lentera saat salju. */
+  private createFox(season: Season): void {
+    const g = getGameState();
+    const pois: FoxPoi[] = [
+      { name: "zen_rock", at: { x: 70, y: 518 }, clip: "sit", weight: 1.2 },
+      { name: "koi", at: { x: 110, y: 488 }, clip: "sniff", weight: 1.0 },
+    ];
+    if (season === "spring" || season === "summer") {
+      // kejar kupu-kupu (lari — Doc 13 §6)
+      pois.push({
+        name: "butterfly",
+        at: () => {
+          const b = Phaser.Utils.Array.GetRandom(this.butterflies);
+          return b ? { x: b.x, y: b.y } : null;
+        },
+        clip: "sniff",
+        weight: 1.0,
+        run: true,
+      });
+    }
+    if (season === "summer") {
+      // fireflyPlay (Doc 13 §4): kunang-kunang malam
+      pois.push({
+        name: "firefly",
+        at: () => {
+          const f = Phaser.Utils.Array.GetRandom(this.fireflies.filter((x) => x.visible));
+          return f ? { x: f.x, y: f.y } : null;
+        },
+        clip: "sniff",
+        weight: 0.8,
+        run: true,
+      });
+    }
+    if (season === "winter") {
+      // lingerLantern (Doc 13 §4): diam dekat lentera batu
+      pois.push({ name: "lantern", at: { x: 62, y: 356 }, clip: "sit", weight: 1.0 });
+    }
+    this.agent = new FoxAgent(
+      this,
+      {
+        wanderBounds: { minX: 40, maxX: 320, minY: 480, maxY: 585 },
+        pois,
+        ySort: true, // y-sort depth di area berumput (Doc 13 §6)
+      },
+      g.element as PetElement,
+      (g.personality ?? g.element) as PetElement,
+    );
+    this.agent.create({ x: 70, y: 515 }); // mulai di batu zen
+    // Belai tetap bisa di Taman (Doc 12 §5)
+    this.agent.fox.on("pointerdown", () => eventBus.emit("game/pet-stroke", undefined));
+  }
+
+  /** Kupu-kupu musim semi/panas — target kejar kitsune (Doc 13 §6). */
+  private spawnButterflies(): void {
+    for (let i = 0; i < 2; i++) {
+      const b = this.add
+        .text(Phaser.Math.Between(50, 310), Phaser.Math.Between(390, 520), "🦋", {
+          fontSize: "13px",
+        })
+        .setDepth(5);
+      this.butterflies.push(b);
+      this.tweens.add({
+        targets: b,
+        x: "+=50",
+        y: "+=30",
+        duration: Phaser.Math.Between(2600, 3800),
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
+        delay: i * 1300,
+      });
+    }
   }
 
   // ===== Latar & suasana =====
@@ -144,12 +236,8 @@ export class GardenScene extends Phaser.Scene {
   }
 
   private drawZenRock(): void {
-    // Batu zen + kitsune duduk — belai tetap bisa (Doc 12 §5)
+    // Batu zen — kitsune otonom duduk di sini via FoxAgent (M13, Doc 13 §6)
     this.add.ellipse(70, 528, 72, 40, 0x9aa89a).setStrokeStyle(2, 0x7a8a7a).setDepth(3);
-    const fox = this.add.text(70, 505, "🦊", { fontSize: "36px" }).setOrigin(0.5, 1).setDepth(4);
-    this.tweens.add({ targets: fox, y: "+=3", duration: 1100, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
-    fox.setInteractive({ useHandCursor: true });
-    fox.on("pointerdown", () => eventBus.emit("game/pet-stroke", undefined));
   }
 
   // ===== Tombol aksi (Doc 12 §5) =====
@@ -286,14 +374,5 @@ export class GardenScene extends Phaser.Scene {
     });
     const splash = this.add.text(koi.x, koi.y - 10, "💧", { fontSize: "14px" }).setDepth(4);
     this.tweens.add({ targets: splash, alpha: 0, y: "-=20", duration: 600, onComplete: () => splash.destroy() });
-  }
-
-  override update(_time: number, delta: number): void {
-    // Refresh langit murah: 2× per detik
-    this.skyTimer += delta;
-    if (this.skyTimer >= 500) {
-      this.skyTimer = 0;
-      this.refreshSky();
-    }
   }
 }

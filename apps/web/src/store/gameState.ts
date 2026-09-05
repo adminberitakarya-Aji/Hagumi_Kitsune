@@ -193,6 +193,8 @@ export interface GameUiState {
   path: string;
   /** Elemen pet (fire/water/wind/earth/mystic) — untuk tint/visual scene. */
   element: string;
+  /** Kepribadian dialog (M7 warisan; default = elemen) — bobot otonomi M13. */
+  personality: string;
   /** Jumlah ekor saat ini (1–9) — indikator tahap hidup (Doc 01 §3). */
   tails: number;
   /** Care Score 0–100 (dibulatkan) — ditampilkan di HUD sejak M3. */
@@ -235,6 +237,7 @@ const initialState: GameUiState = {
   evolution: null,
   path: "biasa",
   element: "fire",
+  personality: "fire",
   tails: 1,
   careScore: 50,
   minigameResult: null,

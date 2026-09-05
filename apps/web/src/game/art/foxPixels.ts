@@ -29,6 +29,14 @@ export interface PixelFrameOpts {
   aura: number;
   extra: "none" | "zzz" | "sweat" | "heart" | "bubble" | "sparkle";
   headDrop: number;
+  /** M13 (Doc 13 §5): pose duduk — ekor melingkar, tubuh piramida. */
+  sit?: boolean;
+  /** M13: condong badan (radian; + = kepala turun, peregangan/lari). */
+  lean?: number;
+  /** M13: rotasi seluruh pose (radian) — chase_tail berputar. */
+  spin?: number;
+  /** M13: geser kepala horizontal (px) — look_around menoleh. */
+  headSide?: number;
 }
 
 // ===== Layer pixel (menghadap kanan; digambar dalam kanvas 32×32) =====

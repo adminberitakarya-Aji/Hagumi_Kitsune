@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "tick": { "minMs": 1200, "maxMs": 3500 },
+  "speed": { "walk": 40, "run": 95, "accelMs": 250 },
+  "needs": { "hungerGoTo": 30, "energyGoTo": 25, "hygieneRoll": 30 },
+  "zoomies": { "happiness": 75, "energy": 60, "cooldownMin": 20, "sprints": [2, 4] },
+  "micro": { "chanceAfterArrive": 0.65, "minMs": 2000, "maxMs": 5000 },
+  "weights": {
+    "fire":   { "zoomies": 1.6, "wander": 1.0, "chaseTail": 1.2, "lookAround": 0.8 },
+    "water":  { "zoomies": 0.5, "wander": 0.8, "chaseTail": 0.4, "lookAround": 1.0 },
+    "wind":   { "zoomies": 1.3, "wander": 1.2, "chaseTail": 0.8, "lookAround": 1.0 },
+    "earth":  { "zoomies": 0.6, "wander": 0.9, "chaseTail": 0.5, "lookAround": 1.1 },
+    "mystic": { "zoomies": 0.9, "wander": 0.7, "chaseTail": 0.3, "lookAround": 1.4 }
+  },
+  "microWeights": { "sit": 1.0, "sniff": 1.0, "stretch": 1.0, "stretchMorningMul": 2.0 },
+  "nap": { "maxEnergy": 60, "chance": 0.35 },
+  "seasonFlavor": {
+    "winter": { "walkSpeedMul": 0.8, "lingerLantern": true },
+    "summer": { "fireflyPlay": true }
+  }
+}

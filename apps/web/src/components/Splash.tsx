@@ -8,6 +8,7 @@ import { HankoButton } from "./HankoButton";
 import { Egg, FoxFace } from "./icons";
 import { ELEMENT_PALETTE } from "../game/art/palette";
 import { haptic } from "../system/haptics";
+import { trackFtueStep } from "../system/ftueFunnel";
 
 type OnboardingStep = "title" | "egg" | "name" | "hatch";
 
@@ -52,6 +53,11 @@ export function Splash() {
   const timers = useRef<number[]>([]);
 
   useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), []);
+  // Funnel FTUE (M14 — Doc 14 §6): langkah 1 — pemain baru membuka Splash
+  useEffect(() => {
+    if (!hasSave) trackFtueStep("splash_seen");
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- hasSave stabil saat mount (M1.5)
+  }, []);
 
   const startHatch = (petName: string, chosen: EggOption) => {
     haptic("hatch"); // momen menetas (M11)

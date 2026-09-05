@@ -160,6 +160,21 @@ export interface CloudSyncUi {
   localNewer: boolean;
 }
 
+/** Hint kontekstual FTUE 2.0 (M14 — Doc 14 §6); null = tidak tampil. */
+export interface HintUi {
+  id: string;
+  text: string;
+  /** futon/toko → sheet App · album → layar Album · garden → scene Taman. */
+  cta: string | null;
+  ctaLabel: string | null;
+}
+
+/** Goal eksplisit hari-1 (M14 — Doc 14 §6): "jaga tetap hidup 1 hari penuh". */
+export interface DayGoalUi {
+  title: string;
+  subtitle: string;
+}
+
 export interface GameUiState {
   /** Layar aktif: splash (dengan onboarding di dalamnya) atau home. */
   screen: "splash" | "home";
@@ -167,6 +182,10 @@ export interface GameUiState {
   hasSave: boolean;
   /** Tutorial ringan Dapur (Doc 04 §5) — sekali saja, flag di localStorage. */
   tutorialDone: boolean;
+  /** Hint kontekstual aktif (M14 — Doc 14 §6); null = tidak tampil. */
+  hint: HintUi | null;
+  /** Goal hari-1 (M14 — Doc 14 §6); null = selesai/tidak relevan. */
+  dayGoal: DayGoalUi | null;
   petName: string;
   day: number;
   coins: number;
@@ -221,6 +240,8 @@ const initialState: GameUiState = {
   screen: "splash",
   hasSave: false,
   tutorialDone: true,
+  hint: null,
+  dayGoal: null,
   petName: "Kogitsune",
   day: 1,
   coins: 100,

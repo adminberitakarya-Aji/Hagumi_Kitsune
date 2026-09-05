@@ -41,5 +41,21 @@ export { getLlmProvider, llmConfig, llmConfigSchema, LLM_PROVIDER_KEYS } from ".
 export type { LlmConfig, LlmProviderKey } from "./llm";
 export { behaviorConfig, behaviorConfigSchema, getSeasonFlavor } from "./behavior";
 export type { BehaviorConfig, ElementWeights, SeasonFlavorRule } from "./behavior";
+export {
+  fillOnboardingText,
+  getOnboardingHint,
+  onboardingConfig,
+  onboardingConfigSchema,
+  onboardingHintCtaSchema,
+  onboardingHintSchema,
+  onboardingHintTriggerSchema,
+} from "./onboarding";
+export type {
+  OnboardingConfig,
+  OnboardingHint,
+  OnboardingHintCta,
+  OnboardingHintTrigger,
+} from "./onboarding";
+
 
 

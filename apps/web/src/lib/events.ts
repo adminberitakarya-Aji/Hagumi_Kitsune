@@ -68,6 +68,9 @@ export interface GameEventMap {
   "ui/continue": undefined;
   "ui/new-game": { name: string; element: "fire" | "water" | "wind" | "earth" };
   "ui/tutorial-dismiss": undefined;
+  /* FTUE 2.0 (M14 — Doc 14 §6): hint kontekstual sekali-tampil */
+  "ui/hint-dismiss": undefined; // tutup hint aktif
+  "ui/hint-cta": { cta: string }; // ikuti CTA hint → sheet/layar/scene terkait
   /* Debug panel dev-only (Doc 03 §6) */
   "debug/speed": { multiplier: 1 | 10 | 60 | 3600 };
   "debug/set-phase": { phase: "morning" | "day" | "evening" | "night" };

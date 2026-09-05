@@ -57,6 +57,24 @@ Aturan: komponen **dilarang** memakai nilai warna/durasi literal — wajib lewat
 - State kosong & error wajib punya konten (album kosong, inbox kosong) — tidak ada layar kering.
 - Funnel FTUE (splash → nama → makan pertama → D2) didefinisikan event-nya di sini, diverifikasi penuh di M16.
 
+### 6.1 Definisi Event Funnel FTUE (didefinisikan M14 — diverifikasi M16)
+
+Implementasi: tracker lokal `apps/web/src/system/ftueFunnel.ts` (idempotent per-install,
+buffer localStorage `hagumi_ftue_funnel`). M16: titik `trackFtueStep` digantungkan ke
+adapter `IAnalytics` (event `ftue_step` — Doc 15 §2).
+
+| # | Event          | Pemicu                                      | Catatan                            |
+| - | -------------- | ------------------------------------------- | ---------------------------------- |
+| 1 | `splash_seen`  | pemain baru (tanpa save) membuka Splash     | mulai pengukuran                   |
+| 2 | `name_created` | save pertama dibuat (hanko tercap)          |                                    |
+| 3 | `first_feed`   | makan berhasil pertama                      | DoD: ≤ 30 dtk sejak `name_created` |
+| 4 | `day2_reached` | hari-2 tercapai dan pet masih hidup         | = selesai goal hari-1              |
+
+- Hint kontekstual ditandai "seen" **saat tampil** (localStorage `hagumi_hint_seen`)
+  → dijamin tidak pernah muncul 2×; pemicu habis (malam lewat, poop disapu) menyembunyikan hint.
+- Reward goal hari-1 (koin seremonial dari `onboarding.json`) diberikan sekali per install
+  (localStorage `hagumi_goal_day1_done`), hanya bila D2 tercapai dengan pet hidup.
+
 ## 7. Aksesibilitas
 
 - Kontras teks ≥ 4.5:1 — **audit otomatis di CI** (bukan manual).

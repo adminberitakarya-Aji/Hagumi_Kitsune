@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "day1Goal": {
+    "title": "Jaga {name} tetap hidup 1 hari penuh",
+    "subtitle": "Beri makan saat lapar, mandikan saat kotor, antar ke futon saat malam",
+    "rewardCoins": 30,
+    "rewardToast": "🎯 Hari pertama bertahan! +🪙{coins} koin seremonial",
+    "memoryDetail": "bertahan hidup 1 hari penuh di hari pertama"
+  },
+  "hints": [
+    {
+      "id": "night_futon",
+      "trigger": "night",
+      "text": "Malam tiba — antar {name} ke futon agar energi pulih.",
+      "cta": "futon",
+      "ctaLabel": "Ke Futon",
+      "coinsThreshold": 0
+    },
+    {
+      "id": "coins_shop",
+      "trigger": "coins_enough",
+      "text": "Pantry kosong tapi koinmu cukup — belanja stok makanan di Toko Dagashiya.",
+      "cta": "toko",
+      "ctaLabel": "Ke Toko",
+      "coinsThreshold": 15
+    },
+    {
+      "id": "day2_album",
+      "trigger": "day_2",
+      "text": "Hari kedua! Perjalananmu mulai tercatat di Album Keluarga.",
+      "cta": "album",
+      "ctaLabel": "Buka Album",
+      "coinsThreshold": 0
+    },
+    {
+      "id": "poop_scoop",
+      "trigger": "first_poop",
+      "text": "Tatami jadi kotor! Tekan & tahan di atas poop untuk menyapunya.",
+      "cta": null,
+      "ctaLabel": null,
+      "coinsThreshold": 0
+    },
+    {
+      "id": "event_cta",
+      "trigger": "season_event",
+      "text": "Event musiman sedang berlangsung di Taman — jangan sampai terlewat!",
+      "cta": "garden",
+      "ctaLabel": "Ke Taman",
+      "coinsThreshold": 0
+    }
+  ]
+}

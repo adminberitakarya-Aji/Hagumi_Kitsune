@@ -128,7 +128,9 @@ export function OnlineBreedingScreen() {
               </button>
             </h4>
             {online.requests.length === 0 && (
-              <p className="online__hint">Belum ada permintaan — minta temanmu menukar kode</p>
+              <p className="online__hint">
+                <IconClock size={12} /> Belum ada permintaan — minta temanmu menukar kode
+              </p>
             )}
             <ul className="online__list">
               {online.requests.map((req) => (

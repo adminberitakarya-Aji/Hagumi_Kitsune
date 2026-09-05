@@ -14,6 +14,8 @@ import { OfflineSummarySheet } from "./components/OfflineSummarySheet";
 import { DebugPanel } from "./components/DebugPanel";
 import { Splash } from "./components/Splash";
 import { TutorialHint } from "./components/TutorialHint";
+import { ContextHint } from "./components/ContextHint";
+import { DayGoalCard } from "./components/DayGoalCard";
 import { ShopSheet } from "./components/ShopSheet";
 import { MinigameResultSheet } from "./components/MinigameResultSheet";
 import { ChatScreen } from "./components/ChatScreen";
@@ -98,7 +100,9 @@ export default function App() {
           <TimeSeasonBadge />
           <Hud />
           <SickBanner />
+          <DayGoalCard />
           <TutorialHint />
+          <ContextHint />
           <ActionBar
             onAction={(id) =>
               id === "chat"

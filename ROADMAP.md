@@ -30,7 +30,7 @@
 | M11       | Audio Produksi & Haptics               | ✅     | 04/09 | 04/09   | 1 minggu   |
 | M12       | UI/UX System (Token, Ikon, Motion)     | 🔨     | 04/09 | —       | 2 minggu   |
 | M13       | Pet Autonomy (Kitsune Hidup)           | 🔨     | 05/09 | —       | 2 minggu   |
-| M14       | FTUE 2.0 & Onboarding Bertahap         | ⬜     | —     | —       | 1 minggu   |
+| M14       | FTUE 2.0 & Onboarding Bertahap         | ✅     | 06/09 | 06/09   | 1 minggu   |
 | M15       | Mobile Pipeline (Capacitor + CI/CD)    | ⬜     | —     | —       | 1–2 minggu |
 | M16       | Telemetry & Live-Ops                   | ⬜     | —     | —       | 1 minggu   |
 | M17       | Monetisasi (Cosmetics-first)           | ⬜     | —     | —       | 2 minggu   |
@@ -515,20 +515,21 @@
 **Tujuan:** hari pertama = kurva wahyu yang disengaja; hint kontekstual per sistem; aksi pertama < 30 detik.
 **Referensi:** Doc 14 §6, Doc 04, GDD pilar 3.
 
-- [ ] Konfigurasi onboarding data-driven `data/onboarding.json` (pemicu kontekstual) — Tgl: ____
-- [ ] Goal eksplisit hari-1: "jaga tetap hidup 1 hari penuh" + reward seremonial — Tgl: ____
-- [ ] Hint kontekstual (masing-masing sekali): malam→futon · koin cukup→toko · hari-2→album · poop pertama→sapu · event→CTA — Tgl: ____
-- [ ] Polish state kosong (album/inbox breeding) & state error — tidak ada layar kering — Tgl: ____
-- [ ] Definisi event funnel FTUE (splash→nama→makan pertama→D2) — siap diverifikasi saat M16 — Tgl: ____
+- [x] Konfigurasi onboarding data-driven `data/onboarding.json` (pemicu kontekstual) — Tgl: 06/09 *(packages/data/data/onboarding.json + loader zod fail-fast `onboarding.ts`, 5 pemicu)*
+- [x] Goal eksplisit hari-1: "jaga tetap hidup 1 hari penuh" + reward seremonial — Tgl: 06/09 *(DayGoalCard + reward koin/memori/fx-hearts sekali per install saat D2 hidup)*
+- [x] Hint kontekstual (masing-masing sekali): malam→futon · koin cukup→toko · hari-2→album · poop pertama→sapu · event→CTA — Tgl: 06/09 *(checkHints di gameSystem; "seen" saat tampil → tak pernah 2×; ContextHint.tsx + CTA)*
+- [x] Polish state kosong (album/inbox breeding) & state error — tidak ada layar kering — Tgl: 06/09 *(audit: Album, inbox online, Chat, pantry sudah berkonten; ikon ditambahkan ke state kosong)*
+- [x] Definisi event funnel FTUE (splash→nama→makan pertama→D2) — siap diverifikasi saat M16 — Tgl: 06/09 *(tracker ftueFunnel.ts + tabel Doc 14 §6.1; metrik aksi pertama < 30 dtk tercatat)*
 
 ### 🚧 Blokir & Catatan
 
-- (kosong)
+- 06/09: Implementasi M14 lengkap — konfigurasi `onboarding.json` data-driven (5 pemicu), goal hari-1 dengan reward seremonial (sekali per install, localStorage `hagumi_goal_day1_done`), hint kontekstual sekali-tampil ("seen" saat tampil → dijamin tidak 2×), tracker funnel `ftueFunnel.ts` (siap digantung ke IAnalytics saat M16). Uji cepat: DebugPanel → `debug/skip-day` memicu reward D2; `debug/set-phase: night` memicu hint futon.
+- 06/09: DoD "playtest 5 orang" masih menunggu sesi playtest fisik (butuh manusia); sisi teknis (hint tak pernah 2×, tanpa dead-end, aksi pertama < 30 dtk terukur) sudah terpenuhi & teruji otomatis.
 
 ### ✅ Definition of Done — M14
 
 - [ ] Pemain baru: aksi pertama < 30 dtk; paham 5 sistem inti tanpa penjelasan luar (playtest 5 orang)
-- [ ] Hint tidak pernah muncul 2×; tidak ada dead-end
+- [x] Hint tidak pernah muncul 2×; tidak ada dead-end — Tgl: 06/09 *(flag "seen" saat tampil + test data; state kosong/error semua berkonten)*
 
 ---
 

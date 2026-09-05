@@ -69,10 +69,11 @@ import {
   type SaveData,
 } from "@hagumi/core";
 import type { ChatMessageUi, LegacyUi, OnlineRequestUi } from "../store/gameState";
-import { breedingConfig, evolutionConfig, getDialogConfig, getItemById, minigamesConfig, getMinigameById, getStageRule, rulesConfig } from "@hagumi/data"; // katalog asli M2/M3/M4 (fail-fast JSON)
+import { breedingConfig, evolutionConfig, fillOnboardingText, getDialogConfig, getItemById, minigamesConfig, getMinigameById, getStageRule, onboardingConfig, rulesConfig, type OnboardingHint } from "@hagumi/data"; // katalog asli M2/M3/M4 (fail-fast JSON) + onboarding M14
 import { eventBus } from "../lib/eventBus";
 import { getGameState, setUiState } from "../store/gameState";
 import { pushToast } from "../store/toastStore";
+import { trackFtueStep } from "./ftueFunnel";
 import { WebStorage } from "./webStorage";
 import { bumpSentToday, getAccessToken, getCachedUserId, ensureAuthUserId, getOnlineConfig, getOrCreateAnonId, onlineApi, readSentToday, type InboxResponse } from "./onlineClient";
 import { audioEngine } from "./audioEngine";
@@ -224,6 +225,10 @@ class GameRuntime {
   private onlinePoll: number | null = null;
   /** M8 — save awan yang menunggu keputusan pemain (diff warning LWW). */
   private cloudRemote: SaveData | null = null;
+  /** M14 — hint kontekstual yang pernah tampil (localStorage — Doc 04 §5). */
+  private hintSeen = loadHintSeen();
+  /** M14 — reward goal hari-1 sudah diberikan (sekali seumur install). */
+  private day1GoalDone = localStorage.getItem(DAY1_GOAL_KEY) === "1";
 
   constructor() {
     const primary = new SaveSystem(new WebStorage(), new SystemClock());
@@ -260,6 +265,7 @@ class GameRuntime {
     pushToast(`Selamat datang, ${petName}! 🦊`);
     // Balon sapaan pertama sesuai kepribadian elemen (Doc 04 §4.4)
     eventBus.emit("pet/say", { text: FIRST_GREETING[element] });
+    trackFtueStep("name_created"); // funnel FTUE: splash → nama (M14 — Doc 14 §6)
     this.checkLoginStreak();
   }
 
@@ -514,6 +520,7 @@ class GameRuntime {
         minigamesConfig.common.cooldownMinutes * 60_000 - (this.simNow - save.minigames.lastPlayAt),
       ),
     });
+    this.checkOnboarding(); // M14 — goal hari-1 + hint kontekstual (Doc 14 §6)
   }
 
   private persist(): void {
@@ -795,6 +802,7 @@ class GameRuntime {
       },
     };
     this.recentFeeds.push(Date.now());
+    trackFtueStep("first_feed"); // funnel FTUE: makan pertama (M14 — Doc 14 §6)
     this.sync();
     this.persist();
     pushToast(`${item.icon} ${item.name} — kenyang! 🍖+${item.hunger}`);
@@ -1087,6 +1095,151 @@ class GameRuntime {
         : `🎍 ${fortune.name} — 😊+${fortune.happiness}`,
     );
     eventBus.emit("pet/say", { text: `Omikuji-ku... ${fortune.name}!` });
+  }
+
+  // ===== FTUE 2.0 — onboarding bertahap (M14 — Doc 14 §6) =====
+
+  /** Evaluasi goal hari-1 + hint kontekstual — dipanggil dari sync() (tiap tick & aksi). */
+  private checkOnboarding(): void {
+    const save = this.saveData;
+    if (!save) return;
+    const pet = save.pet;
+    const alive = pet.stage !== "dead" && pet.state !== "dead";
+    const day = Math.floor((this.simNow - pet.birthAt) / MS_PER_DAY) + 1;
+
+    // 1) Goal eksplisit hari-1 ("jaga tetap hidup 1 hari penuh") + reward seremonial
+    if (alive && !this.day1GoalDone) {
+      if (day <= 1) {
+        if (!getGameState().dayGoal) {
+          setUiState({
+            dayGoal: {
+              title: fillOnboardingText(onboardingConfig.day1Goal.title, { name: pet.name }),
+              subtitle: onboardingConfig.day1Goal.subtitle,
+            },
+          });
+        }
+      } else if (day <= 2) {
+        this.awardDay1Goal(save, pet.name); // D2 tercapai hidup → rayakan sekali
+        return;
+      } else {
+        // Save lama (sebelum M14) — tandai selesai tanpa reward retroaktif
+        this.day1GoalDone = true;
+        localStorage.setItem(DAY1_GOAL_KEY, "1");
+        trackFtueStep("day2_reached");
+      }
+    } else if (getGameState().dayGoal) {
+      setUiState({ dayGoal: null });
+    }
+
+    this.checkHints(save, day, alive);
+  }
+
+  /** Reward seremonial hari-1: koin dari JSON + memori + pesta hati (Doc 08 §4). */
+  private awardDay1Goal(save: SaveData, petName: string): void {
+    this.day1GoalDone = true;
+    localStorage.setItem(DAY1_GOAL_KEY, "1");
+    const goal = onboardingConfig.day1Goal;
+    this.saveData = {
+      ...save,
+      pet: {
+        ...this.addHappiness(save.pet, 10),
+        memoryLog: addMemory(save.pet.memoryLog, {
+          t: this.simNow,
+          key: "goal_day1",
+          detail: goal.memoryDetail,
+        }),
+      },
+      player: { ...save.player, coins: save.player.coins + goal.rewardCoins },
+    };
+    this.persist();
+    setUiState({ dayGoal: null });
+    pushToast(fillOnboardingText(goal.rewardToast, { coins: goal.rewardCoins }));
+    eventBus.emit("fx/hearts", undefined);
+    eventBus.emit("pet/say", { text: `Kyuu~ kita berhasil, ${petName}! Ehehe~` });
+    trackFtueStep("day2_reached"); // funnel FTUE: D2 (hanya bila masih hidup — Doc 14 §6)
+  }
+
+  /**
+   * Pilih satu hint kontekstual (urutan array JSON = prioritas).
+   * Ditandai "seen" SAAT tampil → DoD M14: hint tidak pernah muncul 2×.
+   */
+  private checkHints(save: SaveData, day: number, alive: boolean): void {
+    const pet = save.pet;
+    const clear = (): void => {
+      if (getGameState().hint) setUiState({ hint: null });
+    };
+    if (!alive || pet.stage === "egg") return clear();
+    if (!getGameState().tutorialDone) return clear(); // tutorial Dapur (Doc 04 §5) prioritas
+
+    const current = getGameState().hint;
+    const next = onboardingConfig.hints.find(
+      (h) => !this.hintSeen.has(h.id) && this.hintConditionMet(h, save, day),
+    );
+    if (next) {
+      this.hintSeen.add(next.id);
+      this.persistHintSeen();
+      setUiState({
+        hint: {
+          id: next.id,
+          text: fillOnboardingText(next.text, { name: pet.name }),
+          cta: next.cta,
+          ctaLabel: next.ctaLabel,
+        },
+      });
+    } else if (current) {
+      // Pemicu habis (malam lewat / poop disapu) → sembunyikan; "seen" tetap tercatat
+      const stillActive = onboardingConfig.hints.some(
+        (h) => h.id === current.id && this.hintConditionMet(h, save, day),
+      );
+      if (!stillActive) setUiState({ hint: null });
+    }
+  }
+
+  /** Kondisi pemicu hint (data-driven — Doc 14 §6). */
+  private hintConditionMet(h: OnboardingHint, save: SaveData, day: number): boolean {
+    const pet = save.pet;
+    switch (h.trigger) {
+      case "night":
+        return getDayPhase(this.simNow) === "night" && pet.state !== "sleeping";
+      case "coins_enough": {
+        const pantry = Object.values(save.inventory.food).reduce((a, b) => a + b, 0);
+        return pantry === 0 && save.player.coins >= h.coinsThreshold;
+      }
+      case "day_2":
+        return day >= 2;
+      case "first_poop":
+        return pet.poopCount > 0;
+      case "season_event": {
+        const eventId = getSeasonEvent(this.simNow);
+        if (!eventId) return false;
+        const claimed =
+          (eventId === "hanami" && save.seasonEvents.hanamiDoneDay === this.dayKey(this.simNow)) ||
+          (eventId === "tsukimi" && save.seasonEvents.tsukimiDoneDay === this.dayKey(this.simNow)) ||
+          (eventId === "omikuji" && save.seasonEvents.omikujiLastDay === this.dayKey(this.simNow));
+        return !claimed;
+      }
+    }
+  }
+
+  private persistHintSeen(): void {
+    try {
+      localStorage.setItem(HINT_SEEN_KEY, JSON.stringify([...this.hintSeen]));
+    } catch {
+      /* storage gagal — best-effort */
+    }
+  }
+
+  /** Tutup hint aktif (sudah tercatat "seen" saat tampil — tak muncul lagi). */
+  hintDismiss(): void {
+    setUiState({ hint: null });
+  }
+
+  /** Ikuti CTA hint → sheet/layar/scene terkait, lalu tutup hint. */
+  hintCta(cta: string): void {
+    setUiState({ hint: null });
+    if (cta === "album") eventBus.emit("ui/album-open", undefined);
+    else if (cta === "garden") eventBus.emit("scene/goto", { key: "garden" });
+    else eventBus.emit("ui/action", { id: cta }); // futon | toko → sheet di App.tsx
   }
 
   // ===== Ekonomi M2: toko, obat, poop, streak (Doc 06) =====
@@ -1925,6 +2078,19 @@ let runtime: GameRuntime | null = null;
 
 /** Flag tutorial disimpan terpisah dari save (Doc 04 §5) — tetap ada walau save dihapus. */
 const TUTORIAL_KEY = "hagumi_tutorial_done";
+/** M14 — flag hint kontekstual & goal hari-1 (Doc 14 §6) — terpisah dari save. */
+const HINT_SEEN_KEY = "hagumi_hint_seen";
+const DAY1_GOAL_KEY = "hagumi_goal_day1_done";
+
+/** Set id hint yang pernah tampil (korup/belum ada → kosong, hint tampil ulang sekali). */
+function loadHintSeen(): Set<string> {
+  try {
+    const raw = localStorage.getItem(HINT_SEEN_KEY);
+    return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+  } catch {
+    return new Set();
+  }
+}
 
 export function initGameSystem(): () => void {
   runtime = new GameRuntime();
@@ -2020,6 +2186,9 @@ export function initGameSystem(): () => void {
       localStorage.setItem(TUTORIAL_KEY, "1");
       setUiState({ tutorialDone: true });
     }),
+    // M14 — FTUE 2.0: hint kontekstual sekali-tampil (Doc 14 §6)
+    eventBus.on("ui/hint-dismiss", () => runtime?.hintDismiss()),
+    eventBus.on("ui/hint-cta", ({ cta }) => runtime?.hintCta(cta)),
     eventBus.on("debug/speed", ({ multiplier }) => runtime?.setSpeed(multiplier)),
     eventBus.on("debug/set-phase", ({ phase }) => runtime?.setPhase(phase)),
     eventBus.on("debug/skip-day", () => runtime?.skipDay()),

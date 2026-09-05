@@ -69,7 +69,7 @@ export function AlbumScreen() {
       <h3 className="album__sub">Pohon Keluarga</h3>
       {album.generations.length === 0 ? (
         <p className="album__empty">
-          Belum ada silsilah — breed untuk memulai generasi berikutnya.
+          <IconAlbum size={14} /> Belum ada silsilah — breed untuk memulai generasi berikutnya.
         </p>
       ) : (
         album.generations.map((row, i) => (

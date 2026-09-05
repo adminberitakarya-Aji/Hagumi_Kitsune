@@ -1360,6 +1360,9 @@ body {
   margin: 12px 0 6px;
 }
 .album__empty {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 12px;
   color: var(--indigo);
   opacity: 0.7;
@@ -1734,6 +1737,114 @@ body {
 .chat-screen,
 .album,
 .breeding,
+
+/* ===== FTUE 2.0 — goal hari-1 & hint kontekstual (M14, Doc 14 §6) ===== */
+/* Kartu goal hari-1: di bawah HUD, hilang otomatis saat reward diberikan */
+.day-goal {
+  position: absolute;
+  top: 54px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--washi);
+  border: 2px solid var(--hanko);
+  border-radius: 10px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+  z-index: 6;
+  animation: hintIn var(--dur-sheet, 250ms) ease-out;
+}
+.day-goal__icon {
+  display: inline-flex;
+  color: var(--hanko);
+}
+.day-goal__title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.day-goal__sub {
+  font-size: 10px;
+  color: var(--indigo);
+  opacity: 0.8;
+}
+
+/* Hint kontekstual: posisi tutorial ringan (Doc 04 §5) — tak pernah tampil
+   bersamaan karena hint menunggu tutorialDone */
+.hint-ctx {
+  position: absolute;
+  bottom: 58px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--washi);
+  border: 2px solid var(--hanko);
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  z-index: 7;
+  animation: hintIn var(--dur-sheet, 250ms) ease-out;
+}
+@keyframes hintIn {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.hint-ctx__icon {
+  display: inline-flex;
+  color: var(--hanko);
+}
+.hint-ctx__text {
+  flex: 1;
+  font-size: 11px;
+  color: var(--ink);
+}
+.hint-ctx__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.hint-ctx__cta {
+  padding: 6px 10px;
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--washi);
+  background: var(--hanko);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.hint-ctx__cta:active {
+  transform: scale(0.94);
+}
+.hint-ctx__close {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px;
+  font-family: inherit;
+  color: var(--indigo);
+  background: transparent;
+  border: 1px solid var(--hanko);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* State kosong: ikon inline sejajar teks (M14 — tidak ada layar kering) */
+.online__hint {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
 .online {
   animation: screen-in var(--dur-scene) var(--ease-washi);
 }

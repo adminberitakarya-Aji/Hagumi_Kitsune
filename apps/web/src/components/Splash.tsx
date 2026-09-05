@@ -55,6 +55,7 @@ export function Splash() {
 
   const startHatch = (petName: string, chosen: EggOption) => {
     haptic("hatch"); // momen menetas (M11)
+    eventBus.emit("sfx/play", { id: "hatch" });
     setStep("hatch");
     setHatchStage(0);
     let acc = 0;

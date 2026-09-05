@@ -1,7 +1,7 @@
 /** Action bar grid-6 tetap (Doc 12 §3.2 Gaya 2) — ikon vector (M10, Doc 10 §0).
  * M12: haptic ringan + SFX click di setiap CTA (Doc 14 §4). */
 import { IconAlbum, IconChat, IconDapur, IconFuton, IconOnsen, IconToko } from "./icons";
-import { audioEngine } from "../system/audioEngine";
+import { eventBus } from "../lib/eventBus";
 import { haptic } from "../system/haptics";
 
 export interface ActionBarProps {
@@ -29,7 +29,7 @@ export function ActionBar({ onAction }: ActionBarProps) {
           aria-label={title}
           onClick={() => {
             haptic("light");
-            audioEngine.playSfx("click");
+            eventBus.emit("sfx/play", { id: "click" });
             onAction?.(id);
           }}
         >

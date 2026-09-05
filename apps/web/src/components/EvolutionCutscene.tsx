@@ -37,6 +37,7 @@ export function EvolutionCutscene() {
   useEffect(() => {
     if (!evolution) return;
     haptic("evolution"); // momen seremonial (M11)
+    eventBus.emit("sfx/play", { id: "bell" }); // bonsho — lonceng kuil evolusi (M11)
     setReady(false);
     const timer = window.setTimeout(() => setReady(true), 1200);
     return () => window.clearTimeout(timer);

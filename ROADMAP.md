@@ -419,6 +419,7 @@
 
 - 04/09: **Keputusan "prosedural generatif" menggantikan DoD lama "nol audio prosedural"** — DoD direvisi sesuai keputusan desain di atas. File audio asli tetap terbuka sebagai opsi kualitas pasca-playtest (Doc 10 §5 format ogg+m4a).
 - 04/09: Tempo musim disetel agar loop masuk target: spring 1.1 / summer 1.0 / autumn 1.4 / winter 1.4 (winter turun dari 1.8 — frasa minimalnya sudah menghadirkan kedinginan).
+- 05/09: **Audit menyeluruh menemukan 12 dari 13 SFX tidak pernah dipanggil** (hanya `click` di ActionBar) — pipa `sfx/play` di eventBus terpasang tapi nol emitter. **Kini 13/13 ter-wire** via `eventBus.emit("sfx/play")` (satu gerbang → gameSystem → audioEngine): `stamp`=HankoButton cap · `bite`=feed berhasil · `coin`=beli/sapu poop/koin jalur Dash/klaim hadiah login · `koi`=beri makan koi & tangkapan Kingyo · `pop`=Wanage kena tiang · `fail`=Kingyo poi habis/Wanage meleset/Dash menabrak · `hatch`=Splash menetas · `bell`=EvolutionCutscene · `heart`=fx/hearts belai · `breath`=tidur · `splash`=fx/bathe onsen · `sneeze`=SickBanner · `click`=ActionBar (dimigrasi ke eventBus).
 
 ### ✅ Definition of Done — M11
 
@@ -444,7 +445,7 @@
 - [x] WashiPanel: transisi masuk **dan keluar** slide-down 250ms — unmount SETELAH animasi (bug `if (!open) return null` diperbaiki via state visible/closing) — Tgl: 04/09
 - [x] Transisi antar-scene Phaser: camera fadeOut(220ms) → start → fadeIn(220ms) di `sceneNav.ts` (bukan cut; iris-wipe sakura = upgrade visual nanti) — Tgl: 04/09
 - [x] Koin float ±n di HUD (Doc 12 §12) dengan animasi float-up 0.9s; angka stat tween = transisi bar 0.4s (sudah ada) — Tgl: 04/09
-- [x] SFX + haptics ter-wire di CTA: ActionBar (click + haptic light), HankoButton (cap sukses), Evolution/Menetas/Sakit (M11) — Tgl: 04/09
+- [x] SFX + haptics ter-wire di CTA: ActionBar (click + haptic light), HankoButton (cap sukses), Evolution/Menetas/Sakit (M11) — Tgl: 04/09 *(koreksi 05/09: saat item ini dicentang hanya haptics yang benar-benar terpasang; SFX 12 dari 13 baru disambung penuh 05/09 — lihat M11 catatan)*
 - [x] `prefers-reduced-motion`: semua animasi/transition dipangkas via media query global — Tgl: 04/09
 - [ ] Tombol "bernapas" per-stat terkait (keyframes `breathe` + class `.breathe` sudah siap di CSS — butuh pemetaan stat↔tombol) — Tgl: ____
 

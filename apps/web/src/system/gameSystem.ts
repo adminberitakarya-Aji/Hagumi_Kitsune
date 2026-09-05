@@ -800,6 +800,7 @@ class GameRuntime {
     pushToast(`${item.icon} ${item.name} — kenyang! 🍖+${item.hunger}`);
     if (result.overfeedWarning) pushToast("⚠️ Kegemukan! Jangan terlalu sering (health −5)");
     eventBus.emit("pet/eat", { label: item.icon });
+    eventBus.emit("sfx/play", { id: "bite" }); // gigitan saat makan berhasil (M11)
     eventBus.emit("pet/reaction", { emoji: reactionFor("feed") }); // M6 (Doc 08 §1)
     this.finishTransientAfter(1800);
   }
@@ -1009,6 +1010,7 @@ class GameRuntime {
     this.sync();
     this.persist();
     eventBus.emit("fx/koi-jump", undefined);
+    eventBus.emit("sfx/play", { id: "koi" }); // koi melompat — siraman beri makan koi (M11)
     pushToast("🐟 Koi melompat gembira! 😊+3 (−🪙5)");
   }
 
@@ -1130,6 +1132,7 @@ class GameRuntime {
     this.sync();
     this.persist();
     pushToast(`${item.icon} ${item.name} dibeli! (−🪙${item.price})`);
+    eventBus.emit("sfx/play", { id: "coin" }); // koin belanja berhasil (M11)
   }
 
   /** Pakai obat dari inventaris (banner sakit / toko) — cooldown dari rules.json (Doc 06 §4). */
@@ -1196,6 +1199,7 @@ class GameRuntime {
     this.sync();
     this.persist();
     eventBus.emit("fx/scoop", { index: save.pet.poopCount - 1 });
+    eventBus.emit("sfx/play", { id: "coin" }); // koin untung-untungan dari sapu (M11)
   }
 
   /** Cek streak login saat masuk Home — hadiah sesuai tabel rules.json (Doc 06 §4). */

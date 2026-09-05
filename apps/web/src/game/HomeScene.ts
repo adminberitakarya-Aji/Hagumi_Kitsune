@@ -66,7 +66,10 @@ export class HomeScene extends Phaser.Scene {
       eventBus.on("pet/say", ({ text }) => this.say(text)),
       eventBus.on("pet/sleep", ({ on }) => this.setSleeping(on)),
       eventBus.on("fx/hearts", () => this.hearts()),
-      eventBus.on("fx/bathe", () => this.playOnce("bathe")),
+      eventBus.on("fx/bathe", () => {
+        this.playOnce("bathe");
+        eventBus.emit("sfx/play", { id: "splash" }); // siraman onsen (M11)
+      }),
       eventBus.on("poop/count", ({ count }) => this.setPoopCount(count)),
       eventBus.on("fx/scoop", ({ index }) => this.scoopFx(index)),
       eventBus.on("fx/evolve", () => this.evolveFlash()),
@@ -276,6 +279,7 @@ export class HomeScene extends Phaser.Scene {
     if (on) {
       this.agent.hold();
       this.agent.playClip("sleep"); // klip tidur (rebah + Z z Z baked — Doc 01 §6)
+      eventBus.emit("sfx/play", { id: "breath" }); // erangan tidur (M11)
     } else {
       this.agent.playClip("idle");
       this.agent.release();
@@ -346,6 +350,7 @@ export class HomeScene extends Phaser.Scene {
 
   private hearts(): void {
     this.playOnce("petted"); // klip belai — wajah senang (Doc 01 §6)
+    eventBus.emit("sfx/play", { id: "heart" }); // detak manja saat dibelai (M11)
     for (let i = 0; i < 3; i++) {
       const heart = this.add
         .text(this.fox.x + Phaser.Math.Between(-24, 24), this.fox.y - 30, "❤️", { fontSize: "18px" })

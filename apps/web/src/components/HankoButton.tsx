@@ -3,6 +3,7 @@
  * untuk cap hanko — Doc 04 §3, progress ring saat ditahan). */
 import { useCallback, useRef, useState } from "react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { eventBus } from "../lib/eventBus";
 import { haptic } from "../system/haptics";
 
 const HOLD_MS = 800;
@@ -43,6 +44,7 @@ export function HankoButton({
       if (pct >= 1) {
         stopHold();
         haptic("success");
+        eventBus.emit("sfx/play", { id: "stamp" }); // cap hanko — SFX utama game (M11)
         onHoldComplete();
         return;
       }

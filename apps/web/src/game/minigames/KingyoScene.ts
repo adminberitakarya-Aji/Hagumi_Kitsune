@@ -3,6 +3,7 @@
  * Ikan biasa 10 poin, koi emas 50. Poi cadangan bisa dipungut di air (maks +1; earth mulai +1). */
 import Phaser from "phaser";
 import { MinigameBase } from "./MinigameBase";
+import { eventBus } from "../../lib/eventBus";
 import { getGameState } from "../../store/gameState";
 
 interface Fish {
@@ -81,6 +82,7 @@ export class KingyoScene extends MinigameBase {
         this.poiStages = POI_STAGES_BASE;
       } else {
         this.stageText.setText("Poi robek!");
+        eventBus.emit("sfx/play", { id: "fail" }); // poi habis — sesi berakhir (M11)
         this.endGame();
       }
     }
@@ -145,6 +147,7 @@ export class KingyoScene extends MinigameBase {
           this.time.delayedCall(300, () => splash.destroy());
           fish.obj.destroy();
           this.addPoints(fish.gold ? 50 : 10);
+          eventBus.emit("sfx/play", { id: "koi" }); // tangkapan berhasil (M11)
           this.damagePoi(false); // poi menipis tiap tangkapan
         }
       } else if (fish.progress > 0) {

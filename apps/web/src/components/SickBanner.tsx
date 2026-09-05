@@ -10,7 +10,10 @@ export function SickBanner() {
   const { sick, inventory } = useGameState();
 
   useEffect(() => {
-    if (sick) haptic("warn");
+    if (sick) {
+      haptic("warn");
+      eventBus.emit("sfx/play", { id: "sneeze" }); // bersin — pet sakit (M11)
+    }
   }, [sick]);
 
   if (!sick) return null;

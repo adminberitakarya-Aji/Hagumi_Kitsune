@@ -4,6 +4,7 @@
 import Phaser from "phaser";
 import { getMinigameById } from "@hagumi/data";
 import { MinigameBase } from "./MinigameBase";
+import { eventBus } from "../../lib/eventBus";
 import { getGameState } from "../../store/gameState";
 
 const GROUND_Y = 470;
@@ -144,6 +145,7 @@ export class DashScene extends MinigameBase {
           this.dashUsedFx = this.add.text(FOX_X, GROUND_Y - 60, "🔥", { fontSize: "30px" }).setDepth(4);
           this.time.delayedCall(400, () => this.dashUsedFx?.destroy());
         } else {
+          eventBus.emit("sfx/play", { id: "fail" }); // menabrak rintangan (M11)
           this.endGame(); // menabrak — sesi berakhir (Doc 05 §4)
           return;
         }
@@ -161,6 +163,7 @@ export class DashScene extends MinigameBase {
         this.coins = this.coins.filter((x) => x !== c);
         c.destroy();
         this.coinBonus += 2; // koin jalur = koin langsung (Doc 05 §4)
+        eventBus.emit("sfx/play", { id: "coin" }); // pungut koin jalur (M11)
         this.coinText.setText(`🪙 ${this.coinBonus}`);
       }
     }

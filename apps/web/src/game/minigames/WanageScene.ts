@@ -4,6 +4,7 @@
 import Phaser from "phaser";
 import { getMinigameById } from "@hagumi/data";
 import { MinigameBase } from "./MinigameBase";
+import { eventBus } from "../../lib/eventBus";
 import { getGameState } from "../../store/gameState";
 
 type PegKind = "normal" | "gold" | "moving";
@@ -91,11 +92,14 @@ export class WanageScene extends MinigameBase {
       const pts =
         this.peg === "gold" ? (pegScore.rare ?? 40) : this.peg === "moving" ? (pegScore.moving ?? 30) : (pegScore.normal ?? 10);
       this.addPoints(pts);
+      eventBus.emit("sfx/play", { id: "pop" }); // ring melingkar tiang (M11)
       const fx = this.add.text(this.zoneCenter, 270, "✨", { fontSize: "20px" }).setDepth(4);
       this.time.delayedCall(300, () => fx.destroy());
       this.speed += 0.5; // makin cepat tiap sukses
     } else if (dist <= this.zoneHalfWidth + 30) {
       this.addPoints(5); // nyaris
+    } else {
+      eventBus.emit("sfx/play", { id: "fail" }); // meleset total (M11)
     }
     this.throwsLeft--;
     this.throwText.setText(this.throwsLeft > 0 ? `Lemparan: ${this.throwsLeft}` : "Terakhir!");

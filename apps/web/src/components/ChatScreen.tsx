@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { eventBus } from "../lib/eventBus";
 import { useGameState } from "../store/gameState";
+import { IconBack, IconChat, IconChevron, IconStar } from "./icons";
 
 const MAX_BUBBLES = 20; // riwayat sesi (Doc 12 §8)
 
@@ -42,7 +43,7 @@ export function ChatScreen() {
             aria-label="Kembali"
             onClick={() => eventBus.emit("ui/chat-close", undefined)}
           >
-            ←
+            <IconBack size={18} />
           </button>
           <span className="chat-screen__name">{petName}</span>
           <span
@@ -53,7 +54,15 @@ export function ChatScreen() {
                 : "Tier 1 — memori terstruktur lokal (Doc 08 §5)"
             }
           >
-            {chat.tier === "tier2" ? "✨ Tier 2" : "💬 Tier 1"}
+            {chat.tier === "tier2" ? (
+              <>
+                <IconStar size={12} /> Tier 2
+              </>
+            ) : (
+              <>
+                <IconChat size={12} /> Tier 1
+              </>
+            )}
           </span>
         </div>
 
@@ -75,7 +84,7 @@ export function ChatScreen() {
 
         {chat.quotaLeft <= 0 && (
           <div className="chat-screen__quota-banner">
-            {petName} beristirahat merenung 💭 — kembali besok
+            {petName} beristirahat merenung — kembali besok
           </div>
         )}
 
@@ -99,7 +108,9 @@ export function ChatScreen() {
             disabled={chat.quotaLeft <= 0 || draft.trim().length === 0}
             onClick={send}
           >
-            ➤
+            <span style={{ display: "inline-block", transform: "rotate(90deg)" }}>
+              <IconChevron size={16} />
+            </span>
           </button>
         </div>
         <div className="chat-screen__quota">

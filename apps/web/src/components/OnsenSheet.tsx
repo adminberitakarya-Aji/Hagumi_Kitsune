@@ -2,6 +2,7 @@
 import { eventBus } from "../lib/eventBus";
 import { HankoButton } from "./HankoButton";
 import { useGameState } from "../store/gameState";
+import { IconOnsen } from "./icons";
 
 export function OnsenSheet({ onDone }: { onDone: () => void }) {
   const { sleeping, stats } = useGameState();
@@ -20,7 +21,7 @@ export function OnsenSheet({ onDone }: { onDone: () => void }) {
           onDone();
         }}
       >
-        ♨️ Mandi
+        <IconOnsen size={16} /> Mandi
       </HankoButton>
       <p className="sheet__note">
         {stats.hygiene >= 100 ? "Kitsune sudah bersih!" : `Hygiene sekarang: ${stats.hygiene}/100`}

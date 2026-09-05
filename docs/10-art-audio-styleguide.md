@@ -2,6 +2,25 @@
 
 > Sumber desain: GDD §8.3. Kontrak visual — semua aset harus konsisten dengan dokumen ini.
 
+## 0. REVISI v2 — FLAT VECTOR KAWAII (04/09/2026) ⭐
+
+**Keputusan (persetujuan owner):** gaya resmi HAGUMI = **flat vector kawaii** — bukan pixel-art.
+Alasan: audiens all-age casual & standar visual virtual pet top Play Store (Adorable Home, Animal
+Restaurant); pixel terbukti niche nostalgia dan membatasi animasi (rotasi/squash dilarang grid).
+
+- **§1–3 pixel-art di bawah = v1 (LEGACY)** — dipertahankan sebagai fallback renderer (`foxPixels.ts`); BUKAN acuan aset baru.
+- **Aturan gaya v2:**
+  - Bentuk bulat membulat; kepala besar ±40% tinggi karakter; kaki gemuk pendek; ekor tear-drop
+  - Outline 1 warna per elemen (`line`), lebar optis ±0.7px pada slot 32, lineJoin/lineCap round
+  - Shading 2-tone: base + `shade` (alpha ±0.3) di sisi bawah bentuk
+  - Mata besar glossy (2 kilau putih), blush sakura alpha, mulut kecil
+  - **Rotasi & squash-stretch LEGAL** — wag ekor = rotasi; zoomies (M13) bebas ekspresi
+  - Render: canvas path di-supersample ×4 → slot texture tetap 32×32; dewasa ×2 di layar
+- **Ikon UI = vector icons** (revisi Doc 14 §3: bukan pixel 24×24 — tetap ukuran 24, gaya bulat sejajar karakter)
+- **BG**: tetap prosedural (`bgArt.ts`), bentuk membulat + gradient langit — palet §2 tetap berlaku
+- **Palet**: 28 slot terkunci (Doc 17 §2) TIDAK berubah
+- **Audio §5 di bawah tetap berlaku penuh.**
+
 ## 1. Gaya
 
 - **Pixel-art, palet soft pastel**, garis bersih, outline tipis warna gelap terang (bukan hitam pekat).

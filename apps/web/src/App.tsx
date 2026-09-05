@@ -24,6 +24,7 @@ import { EvolutionCutscene } from "./components/EvolutionCutscene";
 import { BreedingScreen } from "./components/BreedingScreen";
 import { OnlineBreedingScreen } from "./components/OnlineBreedingScreen";
 import { AlbumScreen } from "./components/AlbumScreen";
+import { GalleryScreen } from "./components/GalleryScreen";
 import { PhaserHost } from "./game/PhaserHost";
 import { eventBus } from "./lib/eventBus";
 import { initGameSystem } from "./system/gameSystem";
@@ -42,8 +43,18 @@ const SHEET_TITLES: Record<"dapur" | "onsen" | "futon" | "toko" | "gear", string
 export default function App() {
   const [sheet, setSheet] = useState<SheetId>(null);
   const { screen, sleeping, dead } = useGameState();
+  const [gallery, setGallery] = useState(() => window.location.hash === "#gallery");
 
   useEffect(() => initGameSystem(), []);
+  // Mode teks besar — preferensi perangkat (M12 Fase C)
+  useEffect(() => {
+    document.documentElement.classList.toggle("text-large", localStorage.getItem("hagumi_text_large") === "1");
+  }, []);
+  useEffect(() => {
+    const onHash = (): void => setGallery(window.location.hash === "#gallery");
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
   useEffect(() => {
     const off = eventBus.on("ui/action", ({ id }) => {
       if (id === "dapur" || id === "onsen" || id === "futon" || id === "toko" || id === "gear") {
@@ -52,6 +63,14 @@ export default function App() {
     });
     return off;
   }, []);
+
+  if (gallery) {
+    return (
+      <div className="stage">
+        <GalleryScreen />
+      </div>
+    );
+  }
 
   if (screen === "splash") {
     return (

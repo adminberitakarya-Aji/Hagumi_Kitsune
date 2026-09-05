@@ -1,17 +1,33 @@
-/** Toko Dagashiya (Doc 12 §6 / Doc 06): 3 tab kategori, beli → ui/buy, cek koin & stok milik. */
+/** Toko Dagashiya (Doc 12 §6 / Doc 06): 3 tab kategori, beli → ui/buy, cek koin & stok milik.
+ * M10: ikon UI vector; ikon item dari data katalog (items.json). */
+import type { ReactNode } from "react";
 import { useState } from "react";
 import { eventBus } from "../lib/eventBus";
 import { getSeason, type Season } from "@hagumi/core";
 import { getFoodsForSeason, itemsConfig } from "@hagumi/data";
 import { useGameState } from "../store/gameState";
+import {
+  IconAutumn,
+  IconCoin,
+  IconEnergy,
+  IconHappy,
+  IconHealth,
+  IconHunger,
+  IconHygiene,
+  IconPill,
+  IconSpring,
+  IconSummer,
+  IconToko,
+  IconWinter,
+} from "./icons";
 
 type Tab = "makanan" | "obat" | "barang";
 
-const SEASON_ICON: Record<Season, string> = {
-  spring: "🌸",
-  summer: "🍉",
-  autumn: "🍁",
-  winter: "❄️",
+const SEASON_ICON: Record<Season, (p: { size?: number }) => ReactNode> = {
+  spring: IconSpring,
+  summer: IconSummer,
+  autumn: IconAutumn,
+  winter: IconWinter,
 };
 
 export function ShopSheet() {
@@ -19,7 +35,7 @@ export function ShopSheet() {
   const { coins, inventory, nowMs } = useGameState();
   const season = getSeason(nowMs);
 
-  const cards =
+  const cards: Array<{ id: string; icon: string; name: string; price: number; note: ReactNode; seasonal?: Season; owned: number }> =
     tab === "makanan"
       ? getFoodsForSeason(season).map((f) => ({
           // Katalog musiman: hanya tampil di musimnya (Doc 06 AC, Doc 03 §4)
@@ -27,7 +43,17 @@ export function ShopSheet() {
           icon: f.icon,
           name: f.name,
           price: f.price,
-          note: `🍖+${f.hunger}${f.happiness ? ` · 😊+${f.happiness}` : ""}`,
+          note: (
+            <>
+              <IconHunger size={12} />+{f.hunger}
+              {f.happiness ? (
+                <>
+                  {" · "}
+                  <IconHappy size={12} />+{f.happiness}
+                </>
+              ) : null}
+            </>
+          ),
           seasonal: f.season,
           owned: inventory.food[f.id] ?? 0,
         }))
@@ -37,9 +63,16 @@ export function ShopSheet() {
             icon: m.icon,
             name: m.name,
             price: m.price,
-            note: Object.entries(m.effects)
-              .map(([k, v]) => `${k === "health" ? "❤️" : k === "energy" ? "⚡" : "🫧"}+${v}`)
-              .join(" "),
+            note: (
+              <>
+                {Object.entries(m.effects).map(([k, v]) => (
+                  <span key={k}>
+                    {k === "health" ? <IconHealth size={12} /> : k === "energy" ? <IconEnergy size={12} /> : <IconHygiene size={12} />}
+                    +{v}{" "}
+                  </span>
+                ))}
+              </>
+            ),
             seasonal: undefined,
             owned: inventory.medicine[m.id] ?? 0,
           }))
@@ -48,9 +81,13 @@ export function ShopSheet() {
             icon: m.icon,
             name: m.name,
             price: m.price,
-            note: m.passive?.happinessDecayPct
-              ? `😊 decay ${m.passive.happinessDecayPct}%`
-              : "Dekorasi ruangan",
+            note: m.passive?.happinessDecayPct ? (
+              <>
+                <IconHappy size={12} /> decay {m.passive.happinessDecayPct}%
+              </>
+            ) : (
+              "Dekorasi ruangan"
+            ),
             seasonal: undefined,
             owned: inventory.owned.includes(m.id) ? 1 : 0,
           }));
@@ -67,7 +104,7 @@ export function ShopSheet() {
             className={`shop-tab${tab === t ? " shop-tab--active" : ""}`}
             onClick={() => setTab(t)}
           >
-            {t === "makanan" ? "🍡 Makanan" : t === "obat" ? "💊 Obat" : "🏮 Barang"}
+            {t === "makanan" ? <IconHunger size={13} /> : t === "obat" ? <IconPill size={13} /> : <IconToko size={13} />} {t.charAt(0).toUpperCase() + t.slice(1)}
           </button>
         ))}
       </div>
@@ -90,20 +127,26 @@ export function ShopSheet() {
                     <span
                       className={`shop-item__season${card.seasonal === season ? " shop-item__season--now" : ""}`}
                     >
-                      {SEASON_ICON[card.seasonal]}
+                      {(() => {
+                        const SeasonIcon = SEASON_ICON[card.seasonal];
+                        return <SeasonIcon size={13} />;
+                      })()}
                     </span>
                   )}
                   {card.owned > 0 && <span className="shop-item__owned">×{card.owned}</span>}
                 </span>
                 <span className="shop-item__note">{card.note}</span>
               </span>
-              <span className="shop-item__price">🪙{card.price}</span>
+              <span className="shop-item__price">
+                <IconCoin size={13} />
+                {card.price}
+              </span>
             </button>
           );
         })}
       </div>
       <p className="sheet__note">
-        {coins < 20 ? "Koinmu menipis — sapu poop & main mini-game (M4) untuk tambahan!" : "Item musiman hanya tampil 🗓️ di musimnya."}
+        {coins < 20 ? "Koinmu menipis — sapu poop & main mini-game untuk tambahan!" : "Item musiman hanya tampil di musimnya."}
       </p>
     </div>
   );

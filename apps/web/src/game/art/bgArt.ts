@@ -1,6 +1,7 @@
 /**
  * Generator background 12 scene × musim (M5 — Doc 10 §3, Doc 02 §2).
- * Pixel-art prosedural pada canvas — palet inti Doc 10 §2 + pola seigaiha/asanoha.
+ * **REVISI v2 (M10 — Doc 10 §0):** flat vector kawaii — bentuk membulat (roundRect/ellipse),
+ * palet inti Doc 10 §2 + pola seigaiha/asanoha dipertahankan.
  * Texture key: `bg_<scene>_<musim>` (ukuran 360×640, viewport penuh).
  */
 import type Phaser from "phaser";
@@ -58,6 +59,14 @@ const SEASON_ACCENT: Record<SeasonId, string> = {
 function rect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, c: string): void {
   ctx.fillStyle = c;
   ctx.fillRect(x, y, w, h);
+}
+
+/** Kotak membulat — gaya flat vector kawaii (Doc 10 §0 revisi v2). */
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, c: string): void {
+  ctx.fillStyle = c;
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+  ctx.fill();
 }
 
 /** Pola seigaiha (gelombang Jepang) — Doc 10 §4 panel bg. */
@@ -130,8 +139,14 @@ function sky(ctx: CanvasRenderingContext2D, season: SeasonId, night = false): vo
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, BG_W, 280);
   if (night) {
-    rect(ctx, 288, 48, 18, 18, "#F5EFE0"); // bulan
-    rect(ctx, 292, 52, 10, 10, "#56618C");
+    ctx.fillStyle = "#F5EFE0"; // bulan sabit kawaii (Doc 10 §0)
+    ctx.beginPath();
+    ctx.arc(297, 57, 9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#56618C";
+    ctx.beginPath();
+    ctx.arc(301, 53, 7.5, 0, Math.PI * 2);
+    ctx.fill();
     for (const [sx, sy] of [
       [40, 40],
       [90, 70],
@@ -169,8 +184,8 @@ function drawScene(ctx: CanvasRenderingContext2D, scene: SceneId, season: Season
     }
     case "egg_altar": {
       indoorBase(ctx, "#C9A87C");
-      // altar kayu
-      rect(ctx, 60, 300, 240, 20, "#A87C50");
+      // altar kayu — papan atas membulat (Doc 10 §0)
+      roundRect(ctx, 60, 300, 240, 20, 9, "#A87C50");
       rect(ctx, 80, 320, 20, 160, "#8B6840");
       rect(ctx, 260, 320, 20, 160, "#8B6840");
       asanoha(ctx, 0, 340, BG_W, 300, "#8A8296", 0.1);
@@ -204,8 +219,8 @@ function drawScene(ctx: CanvasRenderingContext2D, scene: SceneId, season: Season
       }
       tat.globalAlpha = 1;
       // kotatsu
-      rect(ctx, 204, 244, 112, 64, "#A84438");
-      rect(ctx, 224, 224, 72, 20, "#8B6840");
+      roundRect(ctx, 204, 244, 112, 64, 12, "#A84438");
+      roundRect(ctx, 222, 222, 76, 22, 9, "#8B6840");
       break;
     }
     case "garden": {
@@ -218,10 +233,10 @@ function drawScene(ctx: CanvasRenderingContext2D, scene: SceneId, season: Season
       ctx.fill();
       seigaiha(ctx, 60, 380, 240, 110, "#F5EFE0", 0.25);
       // lentera batu
-      rect(ctx, 300, 330, 14, 40, "#8A8296");
-      rect(ctx, 292, 310, 30, 22, "#9AA2AE");
+      roundRect(ctx, 300, 330, 14, 40, 5, "#8A8296");
+      roundRect(ctx, 292, 310, 30, 22, 8, "#9AA2AE");
       // batu zen
-      rect(ctx, 40, 560, 40, 16, "#9AA2AE");
+      roundRect(ctx, 40, 560, 40, 16, 7, "#9AA2AE");
       // pohon musiman (kanan atas)
       rect(ctx, 310, 240, 8, 46, "#8B6840");
       ctx.fillStyle = accent;
@@ -238,17 +253,16 @@ function drawScene(ctx: CanvasRenderingContext2D, scene: SceneId, season: Season
     case "onsen": {
       sky(ctx, season, true);
       rect(ctx, 0, 280, BG_W, BG_H - 280, "#8B6840"); // dek kayu
-      ctx.fillStyle = "#7FA8C9";
-      ctx.fillRect(40, 380, 280, 160);
-      seigaiha(ctx, 40, 380, 280, 160, "#F5EFE0", 0.3);
-      rect(ctx, 30, 370, 300, 10, "#C9A87C");
+      roundRect(ctx, 40, 380, 280, 170, 26, "#7FA8C9");
+      seigaiha(ctx, 50, 390, 260, 140, "#F5EFE0", 0.3);
+      roundRect(ctx, 30, 368, 300, 14, 7, "#C9A87C");
       break;
     }
     case "bedroom": {
       indoorBase(ctx, "#C9A87C");
-      rect(ctx, 60, 400, 240, 110, "#F7C8D0"); // futon
-      rect(ctx, 60, 400, 240, 14, "#E8B0BE");
-      rect(ctx, 290, 120, 26, 40, "#F5E6B0"); // andon
+      roundRect(ctx, 60, 400, 240, 110, 18, "#F7C8D0"); // futon
+      roundRect(ctx, 60, 400, 240, 22, 11, "#E8B0BE");
+      roundRect(ctx, 290, 120, 26, 40, 8, "#F5E6B0"); // andon
       break;
     }
     case "kitchen": {
@@ -262,9 +276,9 @@ function drawScene(ctx: CanvasRenderingContext2D, scene: SceneId, season: Season
       sky(ctx, season);
       rect(ctx, 0, 200, BG_W, BG_H - 200, "#C9A87C"); // warung
       // noren
-      rect(ctx, 60, 210, 60, 70, "#A84438");
-      rect(ctx, 150, 210, 60, 70, "#A84438");
-      rect(ctx, 240, 210, 60, 70, "#A84438");
+      roundRect(ctx, 60, 210, 60, 70, 6, "#A84438");
+      roundRect(ctx, 150, 210, 60, 70, 6, "#A84438");
+      roundRect(ctx, 240, 210, 60, 70, 6, "#A84438");
       asanoha(ctx, 0, 300, BG_W, 340, "#8A8296", 0.08);
       break;
     }
@@ -282,21 +296,26 @@ function drawScene(ctx: CanvasRenderingContext2D, scene: SceneId, season: Season
       for (let i = 0; i < 6; i++) {
         const lx = 40 + i * 56;
         const ly = 130 + Math.round(24 * Math.sin((i / 5) * Math.PI));
-        rect(ctx, lx, ly, 16, 22, "#C1443C");
-        rect(ctx, lx + 2, ly + 22, 12, 4, "#F5EFE0");
+        // lampion membulat kawaii (Doc 10 §0)
+        ctx.fillStyle = "#C1443C";
+        ctx.beginPath();
+        ctx.ellipse(lx + 8, ly + 11, 9, 11.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        roundRect(ctx, lx + 2, ly + 21, 12, 4, 2, "#F5EFE0");
       }
-      // tenda permainan
+      // tenda permainan — atap membulat
       for (const sx of [30, 210]) {
-        rect(ctx, sx, 330, 120, 14, "#C1443C");
-        rect(ctx, sx + 6, 344, 108, 70, "#A84438");
+        roundRect(ctx, sx, 330, 120, 14, 7, "#C1443C");
+        roundRect(ctx, sx + 6, 344, 108, 70, 8, "#A84438");
       }
       break;
     }
     case "breeding": {
       indoorBase(ctx, "#C9A87C");
-      rect(ctx, 120, 300, 120, 16, "#A84438"); // tali enmusubi
-      rect(ctx, 130, 316, 100, 60, "#F5EFE0");
-      seigaiha(ctx, 130, 316, 100, 60, "#C1443C", 0.2);
+      // tali enmusubi + plakat altar membulat
+      roundRect(ctx, 120, 300, 120, 16, 8, "#A84438");
+      roundRect(ctx, 130, 318, 100, 62, 12, "#F5EFE0");
+      seigaiha(ctx, 138, 326, 84, 46, "#C1443C", 0.2);
       break;
     }
     case "album": {
@@ -304,8 +323,8 @@ function drawScene(ctx: CanvasRenderingContext2D, scene: SceneId, season: Season
       for (let i = 0; i < 6; i++) {
         const fx = 40 + (i % 3) * 100;
         const fy = 260 + Math.floor(i / 3) * 120;
-        rect(ctx, fx, fy, 80, 100, "#8B6840");
-        rect(ctx, fx + 6, fy + 6, 68, 88, "#F5EFE0");
+        roundRect(ctx, fx, fy, 80, 100, 10, "#8B6840"); // bingkai foto
+        roundRect(ctx, fx + 6, fy + 6, 68, 88, 7, "#F5EFE0");
       }
       break;
     }

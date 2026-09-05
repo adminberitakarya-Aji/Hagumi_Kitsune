@@ -1,10 +1,42 @@
 /* ====== HAGUMI global styles (Doc 10 §4 palet, Doc 12 layout) ====== */
 :root {
-  --washi: #f5efe0;
-  --indigo: #3d4a6b;
-  --hanko: #c1443c;
-  --ink: #2b2b33;
-  --wood: #c9a87c;
+  /* ===== Warna inti (Doc 10 §2) ===== */
+  --washi: var(--washi);
+  --indigo: var(--indigo);
+  --hanko: var(--hanko);
+  --ink: var(--ink);
+  --wood: var(--wood);
+  --shadow: var(--shadow);
+  --sakura: var(--sakura);
+  --matcha: var(--matcha);
+  /* ===== Token semantik (M12 — Doc 14 §2) ===== */
+  --surface: var(--surface);
+  --surface-dim: var(--track);
+  --track: var(--track);
+  --cta: var(--hanko);
+  --cta-pressed: var(--cta-pressed);
+  --text: var(--ink);
+  --text-dim: var(--text-dim);
+  /* ===== Spacing (grid 8 — Doc 12 §1.1) ===== */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  /* ===== Type scale (Doc 14 §2) ===== */
+  --font-display: 20px;
+  --font-body: 14px;
+  --font-small: 12px;
+  --font-caption: 10px;
+  /* ===== Motion (Doc 14 §2) ===== */
+  --dur-fast: 150ms;
+  --dur-sheet: 250ms;
+  --dur-scene: 400ms;
+  --ease-washi: cubic-bezier(0.22, 1, 0.36, 1);
+  /* ===== Radius ===== */
+  --r-sm: 4px;
+  --r-md: 8px;
 }
 * {
   margin: 0;
@@ -72,7 +104,7 @@ body {
 .stat__bar {
   width: 28px;
   height: 8px;
-  background: #e8e0ce;
+  background: var(--track);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -148,13 +180,13 @@ body {
   font-family: inherit;
   background: var(--hanko);
   color: var(--washi);
-  border: 2px solid #8e2f2a;
+  border: 2px solid var(--cta-pressed);
   border-radius: 8px;
   cursor: pointer;
 }
 .hanko:active:not(:disabled) {
   transform: scale(0.94);
-  background: #a93a33;
+  background: var(--cta-pressed);
 }
 .hanko:disabled {
   opacity: 0.45;
@@ -407,7 +439,7 @@ body {
 }
 .sheet__note {
   font-size: 10px;
-  color: #8a8375;
+  color: var(--text-dim);
   text-align: center;
 }
 
@@ -424,7 +456,7 @@ body {
   align-items: center;
   gap: 2px;
   padding: 8px 4px;
-  background: #fffdf6;
+  background: var(--surface);
   border: 2px solid var(--indigo);
   border-radius: 8px;
   font-family: inherit;
@@ -467,7 +499,7 @@ body {
 .offline-list li {
   font-size: 12px;
   color: var(--indigo);
-  background: #fffdf6;
+  background: var(--surface);
   border: 1px solid rgba(61, 74, 107, 0.25);
   border-radius: 6px;
   padding: 5px 8px;
@@ -495,7 +527,7 @@ body {
   border: 2px solid var(--indigo);
   border-radius: 8px;
   padding: 6px;
-  background: #fffdf6;
+  background: var(--surface);
   color: var(--ink);
 }
 .backup-copy {
@@ -583,7 +615,7 @@ body {
   font-family: inherit;
   font-size: 12px;
   color: var(--indigo);
-  background: #fffdf6;
+  background: var(--surface);
   border: 2px solid var(--indigo);
   border-radius: 8px 8px 0 0;
   cursor: pointer;
@@ -607,7 +639,7 @@ body {
   padding: 8px 10px;
   font-family: inherit;
   text-align: left;
-  background: #fffdf6;
+  background: var(--surface);
   border: 2px solid var(--indigo);
   border-radius: 8px;
   cursor: pointer;
@@ -742,7 +774,7 @@ body {
   margin: 0;
   font-size: 12px;
   line-height: 1.7;
-  color: #8a8375;
+  color: var(--text-dim);
 }
 .memorial__btn {
   margin-top: 12px;
@@ -781,7 +813,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  background: linear-gradient(180deg, #2b2b33 0%, #3d4a6b 55%, #7a2f28 100%);
+  background: linear-gradient(180deg, var(--ink) 0%, var(--indigo) 55%, #7a2f28 100%);
   z-index: 10;
   padding: 24px;
 }
@@ -790,8 +822,8 @@ body {
   height: 110px;
   margin-bottom: 8px;
   background:
-    linear-gradient(#a84438, #a84438) 50% 100% / 180px 14px no-repeat,
-    linear-gradient(#a84438, #a84438) 50% 78% / 200px 10px no-repeat,
+    linear-gradient(var(--cta-pressed), var(--cta-pressed)) 50% 100% / 180px 14px no-repeat,
+    linear-gradient(var(--cta-pressed), var(--cta-pressed)) 50% 78% / 200px 10px no-repeat,
     linear-gradient(#8b3a30, #8b3a30) 22% 12% / 14px 80px no-repeat,
     linear-gradient(#8b3a30, #8b3a30) 78% 12% / 14px 80px no-repeat,
     linear-gradient(#b8514a, #b8514a) 50% 0 / 240px 18px no-repeat;
@@ -902,7 +934,7 @@ body {
 
 /* Cutscene menetas (Doc 04 §4 — 5 tahap) */
 .splash--hatch {
-  background: radial-gradient(circle at 50% 42%, #4a4458 0%, #2b2b33 70%);
+  background: radial-gradient(circle at 50% 42%, #4a4458 0%, var(--ink) 70%);
 }
 .hatch-egg {
   font-size: 72px;
@@ -1157,7 +1189,7 @@ body {
   height: 44px;
   border: 2px solid var(--indigo);
   border-radius: 10px;
-  background: #fffdf6;
+  background: var(--surface);
   color: var(--ink);
   font-family: inherit;
   font-size: 13px;
@@ -1359,7 +1391,7 @@ body {
 }
 .album__note {
   font-size: 10px;
-  color: #8a8375;
+  color: var(--text-dim);
   margin-top: 10px;
 }
 .album__breed-cta {
@@ -1623,7 +1655,7 @@ body {
 }
 .partner-card__coat {
   font-size: 10px;
-  color: #8a8375;
+  color: var(--text-dim);
 }
 .partner-card__btn {
   height: 40px;
@@ -1657,4 +1689,100 @@ body {
   font-size: 12px;
   color: var(--indigo);
   margin: 2px 0;
+}
+
+/* ===== Ikon vector (M10 — Doc 10 §0) ===== */
+.hud svg,
+.action-bar svg,
+.stat__icon svg,
+.sick-banner svg,
+.tutorial svg,
+.time-badge svg {
+  display: block;
+}
+.action-bar svg {
+  margin: 0 auto;
+}
+.hud .coins svg,
+.hud .health-pill svg,
+.hud .pet-info svg {
+  display: inline-block;
+  vertical-align: -3px;
+}
+
+/* ===== M12 — Motion & transisi (Doc 14 §4) ===== */
+@keyframes fade-out { to { opacity: 0; } }
+@keyframes slide-up { from { transform: translateY(24px); opacity: 0; } }
+@keyframes slide-down { to { transform: translateY(24px); opacity: 0; } }
+@keyframes screen-in { from { transform: translateY(14px) scale(0.99); opacity: 0; } }
+@keyframes float-up { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-22px); opacity: 0; } }
+@keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+
+.sheet-backdrop { animation: fadeIn var(--dur-fast) ease-out; }
+.sheet-backdrop--closing { animation: fade-out var(--dur-fast) ease-in forwards; }
+.sheet { animation: slide-up var(--dur-sheet) var(--ease-washi); }
+.sheet-backdrop--closing .sheet { animation: slide-down var(--dur-sheet) ease-in forwards; }
+
+/* Layar penuh: entrance halus (exit menyusul via refactor presence — catatan ROADMAP) */
+.chat-screen,
+.album,
+.breeding,
+.online {
+  animation: screen-in var(--dur-scene) var(--ease-washi);
+}
+
+/* Koin float ±n (Doc 12 §12) */
+.coins {
+  position: relative;
+}
+.coin-float {
+  position: absolute;
+  right: 0;
+  top: -4px;
+  animation: float-up 0.9s var(--ease-washi) forwards;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--hanko);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Tombol bernapas saat stat urgent (M12 Fase B) */
+.action-bar button.breathe {
+  animation: breathe 1.1s ease-in-out infinite;
+}
+
+/* Safe area (M12 Fase C — notch & gesture bar) */
+.hud {
+  padding-top: env(safe-area-inset-top);
+}
+.action-bar {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Mode teks besar (M12 Fase C — preferensi perangkat via localStorage) */
+html.text-large {
+  font-size: 112.5%;
+}
+html.text-large .food-card__name,
+html.text-large .offline-list li,
+html.text-large .toast,
+html.text-large .album__person-name {
+  font-size: 14px;
+}
+html.text-large .sheet__note,
+html.text-large .food-card__meta,
+html.text-large .album__person-meta,
+html.text-large .chat-screen__status {
+  font-size: 12px;
+}
+
+/* prefers-reduced-motion (Doc 14 §4) — hormati preferensi pengguna */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

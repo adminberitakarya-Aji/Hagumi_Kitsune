@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { eventBus } from "../lib/eventBus";
 import { useGameState } from "../store/gameState";
 import { HankoButton } from "./HankoButton";
+import { FoxFace } from "./icons";
+import { haptic } from "../system/haptics";
 
 const PATH_LABEL: Record<string, string> = {
   tenko: "Tenko — Rubah Ilahi 9 Ekor",
@@ -22,10 +24,11 @@ const AURA: Record<string, string> = {
 };
 
 const KIND_LABEL: Record<string, string> = {
-  first: "🌟 Evolusi Pertama!",
-  final: "✨ Jalur Hidupmu Terkunci",
-  elder: "🍁 Memasuki Masa Senior",
+  first: "Evolusi Pertama!",
+  final: "Jalur Hidupmu Terkunci",
+  elder: "Memasuki Masa Senior",
 };
+const KIND_FALLBACK = "Evolusi";
 
 export function EvolutionCutscene() {
   const evolution = useGameState().evolution;
@@ -33,6 +36,7 @@ export function EvolutionCutscene() {
 
   useEffect(() => {
     if (!evolution) return;
+    haptic("evolution"); // momen seremonial (M11)
     setReady(false);
     const timer = window.setTimeout(() => setReady(true), 1200);
     return () => window.clearTimeout(timer);
@@ -44,9 +48,9 @@ export function EvolutionCutscene() {
   return (
     <div className="evo-overlay" style={{ background: `radial-gradient(circle, ${aura}55 0%, rgba(43,43,51,0.92) 75%)` }}>
       <div className="evo-flash" style={{ background: aura }} aria-hidden="true" />
-      <div className="evo-kind">{KIND_LABEL[evolution.kind] ?? "✨ Evolusi"}</div>
+      <div className="evo-kind">{KIND_LABEL[evolution.kind] ?? KIND_FALLBACK}</div>
       <div className="evo-fox" style={{ filter: `drop-shadow(0 0 18px ${aura})` }}>
-        🦊
+        <FoxFace size={72} />
       </div>
       <div className="evo-tier" style={{ borderColor: aura }}>
         {evolution.path ? PATH_LABEL[evolution.path] ?? evolution.path : evolution.tier || "Berubah"}

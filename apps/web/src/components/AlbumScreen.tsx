@@ -1,10 +1,15 @@
-/** Layar Album (M7 — Doc 12 §9.1): kartu pet aktif, telur, dan pohon silsilah 3 generasi. */
+/** Layar Album (M7 — Doc 12 §9.1): kartu pet aktif, telur, dan pohon silsilah 3 generasi.
+ * M10: avatar = FoxFace vector (Doc 10 §0). */
 import { eventBus } from "../lib/eventBus";
 import { useGameState } from "../store/gameState";
-import { ELEMENT_ICON, ELEMENT_LABEL } from "../lib/elements";
+import { ELEMENT_LABEL } from "../lib/elements";
+import { ELEMENT_PALETTE } from "../game/art/palette";
+import { Egg, FoxFace, IconAlbum, IconTorii } from "./icons";
 
 const ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
 const genLabel = (gen: number): string => `Generasi ${ROMAN[gen] ?? gen}`;
+/** Warna wajah per elemen (palet elemen — Doc 17 §2). */
+const elemColor = (element: string): string => ELEMENT_PALETTE[element]?.body ?? "#E8874A";
 
 export function AlbumScreen() {
   const { album } = useGameState();
@@ -21,13 +26,15 @@ export function AlbumScreen() {
         >
           ‹
         </button>
-        <h2 className="album__title">📖 Album Keluarga</h2>
+        <h2 className="album__title">
+          <IconAlbum size={16} /> Album Keluarga
+        </h2>
       </header>
 
       {/* Kartu pet aktif (Doc 12 §9.1) */}
       <section className="album__card album__card--alive">
         <div className="album__avatar" style={{ background: album.pet.coatColor }}>
-          {ELEMENT_ICON[album.pet.element] ?? "🦊"}
+          <FoxFace color={elemColor(album.pet.element)} size={22} />
         </div>
         <div className="album__info">
           <div className="album__name">
@@ -37,7 +44,7 @@ export function AlbumScreen() {
             {genLabel(album.pet.gen)} · hari {album.pet.day} · Care {album.pet.careScore}
           </div>
           <div className="album__meta">
-            🧾 Keturunan {album.pet.childrenCount}/4 · {ELEMENT_LABEL[album.pet.element] ?? album.pet.element}
+            Keturunan {album.pet.childrenCount}/4 · {ELEMENT_LABEL[album.pet.element] ?? album.pet.element}
           </div>
         </div>
       </section>
@@ -46,7 +53,7 @@ export function AlbumScreen() {
       {album.egg && (
         <section className="album__card album__card--egg">
           <div className="album__avatar album__avatar--egg" style={{ background: album.egg.coatColor }}>
-            🥚
+            <Egg color={elemColor(album.egg.element)} size={22} />
           </div>
           <div className="album__info">
             <div className="album__name">Telur Keturunan {ROMAN[album.egg.gen] ?? album.egg.gen}</div>
@@ -59,7 +66,7 @@ export function AlbumScreen() {
       )}
 
       {/* Pohon silsilah (maks 3 generasi — Doc 07 §4) */}
-      <h3 className="album__sub">🌳 Pohon Keluarga</h3>
+      <h3 className="album__sub">Pohon Keluarga</h3>
       {album.generations.length === 0 ? (
         <p className="album__empty">
           Belum ada silsilah — breed untuk memulai generasi berikutnya.
@@ -71,7 +78,9 @@ export function AlbumScreen() {
             <div className="album__row">
               {row.map((p, j) => (
                 <div key={j} className="album__person">
-                  <span className="swatch swatch--lg">{ELEMENT_ICON[p.element] ?? "🦊"}</span>
+                  <span className="swatch swatch--lg">
+                    <FoxFace color={elemColor(p.element)} size={18} />
+                  </span>
                   <span className="album__person-name">{p.name}</span>
                   <span className="album__person-meta">
                     {p.path}
@@ -92,7 +101,7 @@ export function AlbumScreen() {
         className="album__breed-cta"
         onClick={() => eventBus.emit("ui/breeding-open", undefined)}
       >
-        ⛩️ Ke Breeding House
+        <IconTorii size={14} /> Ke Breeding House
       </button>
     </div>
   );

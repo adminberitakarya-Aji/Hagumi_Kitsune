@@ -1,8 +1,10 @@
-/** Layar hasil mini-game (Doc 05 §6): poin → koin/happiness/rekor, tombol lanjut → Home. */
+/** Layar hasil mini-game (Doc 05 §6): poin → koin/happiness/rekor, tombol lanjut → Home.
+ * M10: ikon UI vector; ikon game dari data minigames.json. */
 import { getMinigameById } from "@hagumi/data";
 import { eventBus } from "../lib/eventBus";
 import { useGameState } from "../store/gameState";
 import { HankoButton } from "./HankoButton";
+import { IconCoin, IconHappy, IconStar, IconTrophy } from "./icons";
 
 export function MinigameResultSheet() {
   const result = useGameState().minigameResult;
@@ -16,12 +18,24 @@ export function MinigameResultSheet() {
           {result.icon} {result.name}
         </div>
         <div className="sheet__body">
-          <div className="mg-result__points">⭐ {result.points} poin</div>
-          {result.newRecord && <div className="mg-result__record">🏅 Rekor baru!</div>}
+          <div className="mg-result__points">
+            <IconStar size={14} /> {result.points} poin
+          </div>
+          {result.newRecord && (
+            <div className="mg-result__record">
+              <IconTrophy size={14} /> Rekor baru!
+            </div>
+          )}
           <ul className="offline-list">
-            <li>🪙 +{result.coins} koin</li>
-            <li>😊 +{result.happiness} happiness</li>
-            <li>🏆 Rekor: {result.best}</li>
+            <li>
+              <IconCoin size={14} /> +{result.coins} koin
+            </li>
+            <li>
+              <IconHappy size={14} /> +{result.happiness} happiness
+            </li>
+            <li>
+              <IconTrophy size={14} /> Rekor: {result.best}
+            </li>
           </ul>
           <p className="sheet__note">{getMinigameById(result.gameId)?.bonusDesc ?? ""}</p>
         </div>

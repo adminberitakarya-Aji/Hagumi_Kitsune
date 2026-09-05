@@ -6,6 +6,9 @@
  * - SFX aksi: cap hanko, lonceng kuil, siraman onsen, gigitan, koin, menetas, tidur, bersin.
  * - Musik −12 dB di bawah SFX (Doc 10 §5); voice limit SFX (Doc 10 §6).
  * - Audio hanya mulai setelah interaksi pertama (kebijakan autoplay — Doc 10 §5).
+ * - **M11 upgrade:** komposisi phrase-based (frasa 32-langkah × 4 bar ≈ loop 60–90 dtk),
+ *   bend koto (suri), drone shamisen, lonceng kuil jauh, desau angin ber-LFO, bonsho SFX
+ *   partial inharmonik.
  */
 import type { IAudio } from "@hagumi/core";
 
@@ -19,7 +22,31 @@ const SCALE: Record<Season, number[]> = {
   winter: [146.83, 174.61, 220.0, 233.08, 293.66], // D F A Bb D — renggang
 };
 
-const BASE_TEMPO: Record<Season, number> = { spring: 1.1, summer: 0.9, autumn: 1.4, winter: 1.8 };
+const BASE_TEMPO: Record<Season, number> = { spring: 1.1, summer: 1.0, autumn: 1.4, winter: 1.4 };
+
+/**
+ * Frasa melodi per musim (indeks skala; −1 = rest) — 32 langkah × 2 frasa.
+ * Komposisi phrase-based (bukan aritmetika acak) → loop mulus & bermakna musikal (M11):
+ * 4 bar = 128 langkah ≈ 60–90 detik tergantung tempo musim.
+ */
+const PHRASES: Record<Season, number[][]> = {
+  spring: [
+    [0, -1, 1, 2, -1, 3, -1, 2, 1, -1, 2, 3, 4, -1, 3, -1, 2, -1, 1, 2, -1, 3, 2, 1, 0, -1, -1, 1, 2, -1, -1, -1],
+    [4, -1, 3, 2, 3, -1, 1, -1, 2, -1, 3, 4, 3, -1, 2, -1, 1, -1, 2, -1, 0, -1, 1, -1, 2, 3, 2, 1, 0, -1, -1, -1],
+  ],
+  summer: [
+    [0, 2, 1, 2, 3, -1, 2, 3, 4, -1, 3, 4, -1, 3, 2, -1, 1, 2, 3, -1, 4, -1, 3, -1, 2, 3, 2, 1, 2, -1, -1, -1],
+    [3, 4, -1, 3, 4, -1, -1, 3, 2, 3, 4, -1, 3, 2, 1, -1, 2, -1, 3, -1, 4, 3, 2, 1, 2, -1, 1, -1, 0, -1, -1, -1],
+  ],
+  autumn: [
+    [2, -1, -1, 1, -1, 0, -1, -1, 1, -1, 2, -1, -1, 1, -1, -1, 0, -1, -1, 1, -1, 2, -1, -1, 1, -1, 0, -1, -1, -1, -1, -1],
+    [3, -1, -1, 2, -1, 1, -1, -1, 2, -1, -1, 1, -1, 0, -1, -1, 1, -1, 2, -1, -1, 3, -1, -1, 2, -1, 1, -1, -1, -1, -1, -1],
+  ],
+  winter: [
+    [0, -1, -1, -1, 2, -1, -1, -1, 1, -1, -1, -1, -1, -1, 0, -1, 3, -1, -1, -1, 2, -1, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1],
+    [4, -1, -1, -1, 3, -1, -1, -1, 2, -1, -1, -1, 1, -1, -1, -1, 0, -1, -1, -1, 1, -1, -1, -1, 2, -1, -1, -1, -1, -1, -1, -1],
+  ],
+};
 
 export type SfxId =
   | "stamp"
@@ -154,17 +181,30 @@ export class AudioEngine implements IAudio {
     }
   }
 
-  /** Satu langkah melodi — arpeggio pentatonik deterministik; malam lebih rendah & jarang. */
+  /** Satu langkah komposisi: frasa koto + drone shamisen + lonceng jauh (M11).
+   * 4 bar × 32 langkah, putaran kedua divariasikan (nada ke-8 tiap grup dilewati). */
   private scheduleStep(season: Season, scale: number[], night: boolean, beat: number): void {
     const s = this.step++;
-    if (s % 2 === 0 || (s * 7 + 3) % 5 === 0) {
-      const idx = (s * 5 + (season === "winter" ? 1 : 0)) % scale.length;
-      let freq = scale[idx]!;
-      if (night && s % 4 !== 0) freq /= 2;
-      const gainScale = night ? 0.5 : 1;
+    const bar = Math.floor(s / 32) % 4;
+    const pos = s % 32;
+    const phrase = PHRASES[season][bar % 2]!;
+    const deg = phrase[pos]!;
+    const pass = bar >= 2;
+    const gainScale = night ? 0.45 : 1;
+
+    if (deg >= 0 && !(pass && pos % 8 === 4) && (night ? pos % 2 === 0 : true)) {
+      let freq = scale[deg]!;
+      if (night) freq /= 2;
       this.pluck(freq, this.nextNoteTime, gainScale);
-      if (s % 8 === 0) this.pluck(freq / 2, this.nextNoteTime, gainScale * 0.7); // dron bas
     }
+    // drone shamisen: akar frasa, berganti di bar ganjil
+    if (pos % 32 === 0) {
+      const root = scale[bar % 2 === 1 ? 2 : 0]! / (night ? 4 : 2);
+      this.drone(root, this.nextNoteTime, beat * 16);
+    }
+    // lonceng kuil dari kejauhan — sekali per siklus (awal bar 3)
+    if (s % 128 === 64) this.farBell(this.nextNoteTime);
+
     this.nextNoteTime += beat / 2;
   }
 
@@ -174,7 +214,9 @@ export class AudioEngine implements IAudio {
     if (!ctx || !this.musicGain) return;
     const osc = ctx.createOscillator();
     osc.type = "triangle";
-    osc.frequency.value = freq;
+    osc.frequency.setValueAtTime(freq, t);
+    // bend koto (suri) — pitch turun tipis setelah serangan (M11)
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.965, t + 0.45);
     const lp = ctx.createBiquadFilter();
     lp.type = "lowpass";
     lp.frequency.value = 1800;
@@ -189,6 +231,52 @@ export class AudioEngine implements IAudio {
     osc.stop(t + 1.5);
   }
 
+  /** Drone shamisen: nada akar panjang, sangat lembut di bawah frasa (M11). */
+  private drone(freq: number, t: number, dur: number): void {
+    const ctx = this.ctx;
+    if (!ctx || !this.musicGain) return;
+    const osc = ctx.createOscillator();
+    osc.type = "sawtooth";
+    osc.frequency.value = freq;
+    const lp = ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = 320;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(0.05, t + 0.6);
+    g.gain.setValueAtTime(0.05, t + Math.max(0.7, dur - 0.5));
+    g.gain.linearRampToValueAtTime(0.0001, t + dur);
+    osc.connect(lp);
+    lp.connect(g);
+    g.connect(this.musicGain);
+    osc.start(t);
+    osc.stop(t + dur + 0.1);
+  }
+
+  /** Lonceng kuil dari kejauhan — sekali per siklus frasa (M11). */
+  private farBell(t: number): void {
+    const ctx = this.ctx;
+    if (!ctx || !this.musicGain) return;
+    const partials: Array<[number, number, number]> = [
+      [660, 2.6, 0.5],
+      [1005, 1.8, 0.28],
+      [1470, 1.2, 0.16],
+    ];
+    for (const [f, d, v] of partials) {
+      const osc = ctx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.value = f;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(v * 0.12, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      osc.connect(g);
+      g.connect(this.musicGain);
+      osc.start(t);
+      osc.stop(t + d + 0.05);
+    }
+  }
+
   // ===== Ambience per musim =====
 
   private startAmbience(season: Season, night: boolean): void {
@@ -197,7 +285,7 @@ export class AudioEngine implements IAudio {
     if (season === "spring" && !night) this.loopChirps(2.2, 3.8, 2400, 3400, 0.25); // burung siang
     else if (season === "summer") this.loopChirps(0.4, 0.9, 4200, 5200, 0.18); // jangkrik
     else if (season === "autumn") this.loopNoise("bandpass", 900, 0.035); // hujan rintik
-    else if (season === "winter") this.loopNoise("lowpass", 400, 0.05); // angin
+    else if (season === "winter") this.loopNoise("lowpass", 400, 0.05, 0.07); // angin berdesau (LFO)
     if (night) this.loopChirps(3.5, 7, 3600, 4400, 0.1); // suara malam halus
   }
 
@@ -231,8 +319,8 @@ export class AudioEngine implements IAudio {
     this.ambStop.push(() => window.clearTimeout(id));
   }
 
-  /** Tekstur noise loop (hujan/angin) via buffer acak + filter. */
-  private loopNoise(filterType: BiquadFilterType, freq: number, vol: number): void {
+  /** Tekstur noise loop (hujan/angin) via buffer acak + filter; opsional LFO desau (M11). */
+  private loopNoise(filterType: BiquadFilterType, freq: number, vol: number, lfoHz = 0): void {
     const ctx = this.ctx;
     if (!ctx || !this.ambGain) return;
     const len = ctx.sampleRate * 2;
@@ -256,9 +344,21 @@ export class AudioEngine implements IAudio {
     filt.connect(g);
     g.connect(this.ambGain);
     src.start();
+    let lfo: OscillatorNode | null = null;
+    if (lfoHz > 0) {
+      // desau angin: modulasi cutoff pelan naik-turun (M11)
+      lfo = ctx.createOscillator();
+      lfo.frequency.value = lfoHz;
+      const lfoGain = ctx.createGain();
+      lfoGain.gain.value = freq * 0.45;
+      lfo.connect(lfoGain);
+      lfoGain.connect(filt.frequency);
+      lfo.start();
+    }
     this.ambStop.push(() => {
       try {
         src.stop();
+        lfo?.stop();
       } catch {
         /* sudah berhenti */
       }
@@ -280,8 +380,11 @@ export class AudioEngine implements IAudio {
           this.noiseBurst(t, 0.05, 1200, 0.3);
           break;
         case "bell":
-          this.tone(t, 880, 0.9, "sine", 0.35, 0.01);
-          this.tone(t, 1320, 0.7, "sine", 0.15, 0.01);
+          // bonsho: partial inharmonik + decay panjang (M11)
+          this.tone(t, 440, 2.4, "sine", 0.3, 0.015);
+          this.tone(t, 880, 1.6, "sine", 0.16, 0.01);
+          this.tone(t, 1344, 1.1, "sine", 0.09, 0.01);
+          this.tone(t, 1792, 0.7, "sine", 0.05, 0.008);
           break;
         case "splash":
           this.noiseBurst(t, 0.3, 2400, 0.35);

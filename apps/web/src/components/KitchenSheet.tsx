@@ -1,8 +1,9 @@
 /** Dapur (Doc 02 S8, Doc 06 §2): grid inventaris makanan — makan dari stok, bukan beli langsung.
- * Makanan musiman selalu bisa dimakan selama stok ada. */
+ * Makanan musiman selalu bisa dimakan selama stok ada. Ikon UI vector (M10); ikon item dari data. */
 import { eventBus } from "../lib/eventBus";
 import { itemsConfig } from "@hagumi/data";
 import { useGameState } from "../store/gameState";
+import { IconHappy, IconHunger, IconToko } from "./icons";
 
 export function KitchenSheet({ onFed }: { onFed: () => void }) {
   const { inventory, sleeping } = useGameState();
@@ -32,8 +33,13 @@ export function KitchenSheet({ onFed }: { onFed: () => void }) {
               <span className="food-card__icon">{card.icon}</span>
               <span className="food-card__name">{card.name}</span>
               <span className="food-card__meta">
-                🍖+{card.hunger}
-                {card.happiness ? ` · 😊+${card.happiness}` : ""}
+                <IconHunger size={12} />+{card.hunger}
+                {card.happiness ? (
+                  <>
+                    {" · "}
+                    <IconHappy size={12} />+{card.happiness}
+                  </>
+                ) : null}
                 {card.count > 0 && <span className="food-card__count">×{card.count}</span>}
               </span>
             </button>
@@ -44,8 +50,12 @@ export function KitchenSheet({ onFed }: { onFed: () => void }) {
         {sleeping
           ? "Kitsune sedang tidur..."
           : anyFood
-            ? "Stok dari pantry — beli lagi di Toko 🏪"
-            : "Pantry kosong! Beli makanan di Toko 🏪"}
+            ? (
+              <>Stok dari pantry — beli lagi di Toko <IconToko size={12} /></>
+            )
+            : (
+              <>Pantry kosong! Beli makanan di Toko <IconToko size={12} /></>
+            )}
       </p>
     </div>
   );

@@ -5,6 +5,7 @@ import { eventBus } from "../lib/eventBus";
 import { getGameState } from "../store/gameState";
 import { getSky } from "./timeVisual";
 import { kitsuneAnim, type ClipName } from "./art/kitsuneArt";
+import { buildPropsTextures } from "./art/propsArt";
 import { getSeason, ELEMENT_COAT } from "@hagumi/core";
 
 const FOX_HOME = { x: 180, y: 470 };
@@ -66,6 +67,7 @@ export class HomeScene extends Phaser.Scene {
   }
 
   create(): void {
+    buildPropsTextures(this); // fx_poop, nav_torii, nav_tea (M10 — idempoten)
     this.drawRoom();
     this.createFox();
     this.createBubble();
@@ -159,8 +161,8 @@ export class HomeScene extends Phaser.Scene {
       .rectangle(340, 300, 48, 130, 0xe8e0ce, 0.01)
       .setInteractive({ useHandCursor: true })
       .on("pointerdown", () => eventBus.emit("ui/action", { id: "door-kitchen" }));
-    this.add.text(20, 300, "⛩️", { fontSize: "16px" }).setOrigin(0.5);
-    this.add.text(340, 300, "🍵", { fontSize: "16px" }).setOrigin(0.5);
+    this.add.image(20, 300, "nav_torii");
+    this.add.image(340, 300, "nav_tea");
   }
 
   /** Langit di luar jendela mengikuti fase waktu (Doc 03 §3; musim ikut warna fase). */
@@ -356,7 +358,7 @@ export class HomeScene extends Phaser.Scene {
     while (this.poops.length < count) {
       const spot = POOP_SPOTS[this.poops.length] ?? POOP_SPOTS[0]!;
       const poop = this.add
-        .container(spot.x, spot.y, [this.add.text(0, 0, "💩", { fontSize: "20px" }).setOrigin(0.5)])
+        .container(spot.x, spot.y, [this.add.image(0, 0, "fx_poop")])
         .setDepth(1);
       poop.setSize(48, 48).setInteractive({ useHandCursor: true });
       this.attachScoopHold(poop, this.poops.length);

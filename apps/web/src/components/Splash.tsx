@@ -5,21 +5,33 @@ import { useEffect, useRef, useState } from "react";
 import { eventBus } from "../lib/eventBus";
 import { useGameState } from "../store/gameState";
 import { HankoButton } from "./HankoButton";
+import { Egg, FoxFace } from "./icons";
+import { ELEMENT_PALETTE } from "../game/art/palette";
+import { haptic } from "../system/haptics";
 
 type OnboardingStep = "title" | "egg" | "name" | "hatch";
 
+type EggElement = "fire" | "water" | "wind" | "earth";
+
 interface EggOption {
-  element: "fire" | "water" | "wind" | "earth";
-  icon: string;
+  element: EggElement;
   name: string;
   desc: string;
 }
 
+/** Warna telur dari palet elemen (M10 — ikon vector, Doc 17 §3.3). */
+const EGG_COLOR: Record<EggElement, string> = {
+  fire: ELEMENT_PALETTE.fire!.body,
+  water: ELEMENT_PALETTE.water!.body,
+  wind: ELEMENT_PALETTE.wind!.body,
+  earth: ELEMENT_PALETTE.earth!.body,
+};
+
 const EGGS: EggOption[] = [
-  { element: "fire", icon: "🔥", name: "Telur Ember", desc: "Bersemangat & aktif" },
-  { element: "water", icon: "💧", name: "Telur Tide", desc: "Tenang & penyayang" },
-  { element: "wind", icon: "🌬️", name: "Telur Gale", desc: "Ceria & jenaka" },
-  { element: "earth", icon: "⛰️", name: "Telur Terra", desc: "Tenang & penuh kasih" },
+  { element: "fire", name: "Telur Ember", desc: "Bersemangat & aktif" },
+  { element: "water", name: "Telur Tide", desc: "Tenang & penyayang" },
+  { element: "wind", name: "Telur Gale", desc: "Ceria & jenaka" },
+  { element: "earth", name: "Telur Terra", desc: "Tenang & penuh kasih" },
 ];
 
 /** Cutscene menetas 5 tahap (Doc 04 §4) — durasi per tahap dalam ms. */
@@ -42,6 +54,7 @@ export function Splash() {
   useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), []);
 
   const startHatch = (petName: string, chosen: EggOption) => {
+    haptic("hatch"); // momen menetas (M11)
     setStep("hatch");
     setHatchStage(0);
     let acc = 0;
@@ -99,7 +112,9 @@ export function Splash() {
               className={`egg-card${egg?.element === option.element ? " egg-card--picked" : ""}`}
               onClick={() => setEgg(option)}
             >
-              <span className="egg-card__icon">{option.icon}</span>
+              <span className="egg-card__icon">
+                <Egg color={EGG_COLOR[option.element]} size={36} />
+              </span>
               <span className="egg-card__name">{option.name}</span>
               <span className="egg-card__desc">{option.desc}</span>
             </button>
@@ -122,7 +137,7 @@ export function Splash() {
     return (
       <div className="splash">
         <h2 className="splash__heading">
-          Beri Nama {egg.icon}
+          Beri Nama <Egg color={EGG_COLOR[egg.element]} size={18} />
         </h2>
         <input
           className="name-input"
@@ -137,7 +152,7 @@ export function Splash() {
           disabled={name.trim().length === 0}
           onHoldComplete={() => startHatch(name.trim(), egg)}
         >
-          🈴 Cap Hanko (tahan)
+          Cap Hanko (tahan)
         </HankoButton>
         <button type="button" className="splash__back" onClick={() => setStep("egg")}>
           ← pilih telur lain
@@ -152,7 +167,13 @@ export function Splash() {
   return (
     <div className="splash splash--hatch">
       <div className={`hatch-egg ${stage?.cls ?? ""}`} aria-hidden="true">
-        <span className="hatch-egg__inner">{hatchStage >= 4 ? "🦊" : "🥚"}</span>
+        <span className="hatch-egg__inner">
+          {hatchStage >= 4 ? (
+            <FoxFace size={56} color={egg ? EGG_COLOR[egg.element] : "#E8874A"} />
+          ) : (
+            <Egg color={egg ? EGG_COLOR[egg.element] : "#F5EFE0"} size={56} />
+          )}
+        </span>
       </div>
       {stage?.label && <p className="hatch-label">{stage.label}</p>}
     </div>

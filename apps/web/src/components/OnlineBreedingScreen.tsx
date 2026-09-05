@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { eventBus } from "../lib/eventBus";
 import { useGameState } from "../store/gameState";
-import { ELEMENT_ICON, ELEMENT_LABEL } from "../lib/elements";
+import { ELEMENT_LABEL } from "../lib/elements";
+import { ELEMENT_PALETTE } from "../game/art/palette";
+import { Egg, FoxFace, IconChat, IconCheck, IconClock, IconClose } from "./icons";
+
+const elemColor = (element: string): string => ELEMENT_PALETTE[element]?.body ?? "#E8874A";
 
 const REASON_TEXT: Record<string, string> = {
   TOO_YOUNG: "Umur minimal 20 hari (Dewasa)",
@@ -42,20 +46,22 @@ export function OnlineBreedingScreen() {
         >
           ‹
         </button>
-        <h2 className="breeding__title">🌐 Tukar Kode</h2>
+        <h2 className="breeding__title">
+          <IconChat size={16} /> Tukar Kode
+        </h2>
       </header>
 
       {online.status === "unconfigured" && (
         <p className="online__banner online__banner--off">
-          📵 Fitur online nonaktif (Supabase belum dikonfigurasi) — game lokal tetap utuh.
+          Fitur online nonaktif (Supabase belum dikonfigurasi) — game lokal tetap utuh.
         </p>
       )}
       {online.status === "offline" && (
         <p className="online__banner online__banner--off">
-          📡 Server tidak terjangkau — coba Muat Ulang, atau mainkan offline.
+          Server tidak terjangkau — coba Muat Ulang, atau mainkan offline.
         </p>
       )}
-      {online.status === "ready" && <p className="online__banner">🌐 Online — asinkron, tanpa real-time.</p>}
+      {online.status === "ready" && <p className="online__banner">Online — asinkron, tanpa real-time.</p>}
 
       {online.status !== "unconfigured" && (
         <>
@@ -63,7 +69,13 @@ export function OnlineBreedingScreen() {
             <h4 className="online__label">Breeding Code-mu</h4>
             <textarea className="online__code" readOnly value={online.myCode} rows={2} />
             <button type="button" className="online__copy" onClick={copyCode}>
-              {copied ? "✅ Tersalin!" : "📋 Salin Kode"}
+              {copied ? (
+                <>
+                  <IconCheck size={12} /> Tersalin!
+                </>
+              ) : (
+                "Salin Kode"
+              )}
             </button>
             <p className="online__hint">Tukarkan kode ini dengan teman — berisi hash gen pet (Doc 07 §2B).</p>
           </section>
@@ -86,7 +98,7 @@ export function OnlineBreedingScreen() {
                 setPaste("");
               }}
             >
-              📨 Kirim Permintaan
+              Kirim Permintaan
             </button>
             <p className="online__hint">
               Kuota harian {online.sentToday}/{online.maxPerDay} — hasil telur muncul saat kalian berdua buka game.
@@ -95,12 +107,12 @@ export function OnlineBreedingScreen() {
               <ul className="breeding__reqs">
                 {online.reasons.map((r) => (
                   <li key={r} className="breeding__req">
-                    ⬜ {REASON_TEXT[r] ?? r}
+                    • {REASON_TEXT[r] ?? r}
                   </li>
                 ))}
               </ul>
             )}
-            {quotaFull && <p className="online__hint">📵 Kuota harian habis — coba lagi besok.</p>}
+            {quotaFull && <p className="online__hint">Kuota harian habis — coba lagi besok.</p>}
           </section>
 
           <section className="online__section">
@@ -112,11 +124,11 @@ export function OnlineBreedingScreen() {
                 disabled={online.busy}
                 onClick={() => eventBus.emit("ui/online-refresh", undefined)}
               >
-                🔄 Muat Ulang
+                Muat Ulang
               </button>
             </h4>
             {online.requests.length === 0 && (
-              <p className="online__hint">Belum ada permintaan — minta temanmu menukar kode 🦊</p>
+              <p className="online__hint">Belum ada permintaan — minta temanmu menukar kode</p>
             )}
             <ul className="online__list">
               {online.requests.map((req) => (
@@ -125,9 +137,11 @@ export function OnlineBreedingScreen() {
                     className="partner-card__avatar"
                     style={{ background: req.partnerCoat || "var(--washi)" }}
                   >
-                    {req.partnerElement
-                      ? (ELEMENT_ICON[req.partnerElement as keyof typeof ELEMENT_ICON] ?? "🦊")
-                      : "⏳"}
+                    {req.partnerElement ? (
+                      <FoxFace color={elemColor(req.partnerElement)} size={20} />
+                    ) : (
+                      <IconClock size={20} />
+                    )}
                   </div>
                   <div className="online__card-info">
                     <div className="partner-card__name">{req.partnerName}</div>
@@ -146,7 +160,7 @@ export function OnlineBreedingScreen() {
                       disabled={online.busy}
                       onClick={() => eventBus.emit("ui/online-claim", { requestId: req.id })}
                     >
-                      🥚 Klaim
+                      <Egg color="#F5EFE0" size={14} /> Klaim
                     </button>
                   ) : req.direction === "incoming" ? (
                     <div className="online__actions">
@@ -156,7 +170,7 @@ export function OnlineBreedingScreen() {
                         disabled={online.busy}
                         onClick={() => eventBus.emit("ui/online-accept", { requestId: req.id })}
                       >
-                        🤝
+                        <IconCheck size={14} />
                       </button>
                       <button
                         type="button"
@@ -164,7 +178,7 @@ export function OnlineBreedingScreen() {
                         disabled={online.busy}
                         onClick={() => eventBus.emit("ui/online-decline", { requestId: req.id })}
                       >
-                        ✕
+                        <IconClose size={14} />
                       </button>
                     </div>
                   ) : null}

@@ -7,7 +7,9 @@
  * Anim key   : `kitsune_<element>_<clip>`.
  */
 import Phaser from "phaser";
-import { ELEMENT_PALETTE, type Palette } from "./palette";
+import { ELEMENT_PALETTE, ELEMENT_SHADE, type Palette } from "./palette";
+import { type FoxPal } from "./foxPixels";
+import { drawFoxVectorFrame } from "./foxVector";
 
 export const FRAME_SIZE = 32;
 
@@ -44,6 +46,7 @@ interface FrameOpts {
   inWater: boolean; // bathe — badan di bawah garis air
   aura: number; // 0..1 progres kilau evolusi
   extra: "none" | "zzz" | "sweat" | "heart" | "bubble" | "sparkle";
+  headDrop: number; // M10: turunnya kepala (eat) dalam px
 }
 
 /** Parameter pose per frame per klip (Doc 01 §6 tabel pemicu). */
@@ -59,6 +62,7 @@ function optsFor(clip: ClipName, i: number): FrameOpts {
     inWater: false,
     aura: 0,
     extra: "none",
+    headDrop: 0,
   };
   switch (clip) {
     case "idle":
@@ -76,6 +80,7 @@ function optsFor(clip: ClipName, i: number): FrameOpts {
         mouth: i % 2 === 0 ? "open" : "smile",
         eyes: i < 2 ? "happy" : "open",
         tailWag: i % 2 === 0 ? 2 : 0,
+        headDrop: i % 2 === 0 ? 2 : 1,
       };
     case "sleep":
       return { ...base, lying: true, eyes: "sleep", mouth: "flat", bob: i < 2 ? 0 : 1, extra: i >= 2 ? "zzz" : "none" };
@@ -101,8 +106,8 @@ function px(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: n
   ctx.fillRect(x, y, w, h);
 }
 
-/** Gambar satu frame kitsune 32×32 pada offset canvas (ox, oy). */
-function drawFoxFrame(ctx: CanvasRenderingContext2D, pal: Palette, ox: number, oy: number, o: FrameOpts): void {
+/** @deprecated M10 — digantikan `drawFoxPixelFrame` (foxPixels.ts); dipertahankan sebagai fallback/referensi. */
+export function drawFoxFrame(ctx: CanvasRenderingContext2D, pal: Palette, ox: number, oy: number, o: FrameOpts): void {
   const X = (x: number): number => ox + x;
   const Y = (y: number): number => oy + y + o.bob;
   const baseY = o.lying ? 9 : 0; // rebah: tubuh turun
@@ -250,12 +255,13 @@ export function buildKitsuneTextures(scene: Phaser.Scene, element: string): void
   if (!ctx) return;
   ctx.imageSmoothingEnabled = false;
 
+  const foxPal: FoxPal = { ...pal, shade: ELEMENT_SHADE[element] ?? pal.line };
   let slot = 0;
   const layout = new Map<string, { start: number; count: number }>();
   for (const [clip, def] of Object.entries(CLIPS)) {
     layout.set(clip, { start: slot, count: def.frames });
     for (let i = 0; i < def.frames; i++) {
-      drawFoxFrame(ctx, pal, slot * FRAME_SIZE, 0, optsFor(clip as ClipName, i));
+      drawFoxVectorFrame(ctx, foxPal, slot * FRAME_SIZE, 0, optsFor(clip as ClipName, i));
       slot++;
     }
   }

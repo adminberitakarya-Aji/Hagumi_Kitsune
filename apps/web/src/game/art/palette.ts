@@ -75,6 +75,15 @@ export const ELEMENT_PALETTE: Record<string, Palette> = {
   },
 };
 
+/** Bayangan tubuh per elemen (slot Doc 17 §2 — lebih gelap dari body, untuk pixel-map v2). */
+export const ELEMENT_SHADE: Record<string, string> = {
+  fire: "#C96A35",
+  water: "#6E93B8",
+  wind: "#D0BC8A",
+  earth: "#8A7448",
+  mystic: "#8A6B9E",
+};
+
 /** Tint jalur evolusi (M3) — overlay lembut di atas sprite final. */
 export const PATH_TINT_HEX: Record<string, string | null> = {
   tenko: "#F5E6B0",

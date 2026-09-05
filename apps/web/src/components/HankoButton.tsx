@@ -3,6 +3,7 @@
  * untuk cap hanko — Doc 04 §3, progress ring saat ditahan). */
 import { useCallback, useRef, useState } from "react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { haptic } from "../system/haptics";
 
 const HOLD_MS = 800;
 
@@ -33,6 +34,7 @@ export function HankoButton({
   }, []);
 
   const startHold = useCallback(() => {
+    haptic("light");
     if (!onHoldComplete) return;
     startRef.current = performance.now();
     const step = (): void => {
@@ -40,6 +42,7 @@ export function HankoButton({
       setHoldProgress(pct);
       if (pct >= 1) {
         stopHold();
+        haptic("success");
         onHoldComplete();
         return;
       }

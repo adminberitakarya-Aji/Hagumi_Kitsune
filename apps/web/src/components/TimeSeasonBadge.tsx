@@ -1,13 +1,15 @@
 /** Ikon waktu + bingkai musim (Doc 12 §1.3, x312 y88, non-interaktif) — dari TimeService core (Doc 03).
- * Memakai jam simulasi dari store agar ikut time-lapse debug. */
+ * Memakai jam simulasi dari store agar ikut time-lapse debug. Ikon vector (M10, Doc 10 §0). */
+import type { ReactNode } from "react";
 import { getDayPhase, getSeason, type DayPhase, type Season } from "@hagumi/core";
 import { useGameState } from "../store/gameState";
+import { IconDusk, IconMoon, IconSun, IconSunrise, type IconProps } from "./icons";
 
-const PHASE_ICON: Record<DayPhase, string> = {
-  morning: "🌅",
-  day: "☀️",
-  evening: "🌇",
-  night: "🌙",
+const PHASE_ICON: Record<DayPhase, (p: IconProps) => ReactNode> = {
+  morning: IconSunrise,
+  day: IconSun,
+  evening: IconDusk,
+  night: IconMoon,
 };
 
 const SEASON_COLOR: Record<Season, string> = {
@@ -26,7 +28,7 @@ const SEASON_NAME: Record<Season, string> = {
 
 export function TimeSeasonBadge() {
   const nowMs = useGameState().nowMs;
-  const phase = PHASE_ICON[getDayPhase(nowMs)];
+  const Phase = PHASE_ICON[getDayPhase(nowMs)];
   const season = getSeason(nowMs);
 
   return (
@@ -35,7 +37,7 @@ export function TimeSeasonBadge() {
       style={{ borderColor: SEASON_COLOR[season] }}
       title={`${SEASON_NAME[season]} · ${getDayPhase(nowMs)}`}
     >
-      {phase}
+      <Phase size={20} />
     </div>
   );
 }

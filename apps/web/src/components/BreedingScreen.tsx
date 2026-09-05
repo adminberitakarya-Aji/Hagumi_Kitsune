@@ -1,7 +1,12 @@
-/** Layar Breeding House (M7 — Doc 12 §9.2): altar, 3 mitra NPC harian, syarat, preview anak. */
+/** Layar Breeding House (M7 — Doc 12 §9.2): altar, 3 mitra NPC harian, syarat, preview anak.
+ * M10: avatar = FoxFace vector (Doc 10 §0). */
 import { eventBus } from "../lib/eventBus";
 import { useGameState } from "../store/gameState";
-import { ELEMENT_ICON, ELEMENT_LABEL } from "../lib/elements";
+import { ELEMENT_LABEL } from "../lib/elements";
+import { ELEMENT_PALETTE } from "../game/art/palette";
+import { Egg, FoxFace, IconChat, IconCheck, IconCoin, IconTorii } from "./icons";
+
+const elemColor = (element: string): string => ELEMENT_PALETTE[element]?.body ?? "#E8874A";
 
 const REASON_TEXT: Record<string, string> = {
   TOO_YOUNG: "Umur minimal 20 hari (Dewasa)",
@@ -27,7 +32,9 @@ export function BreedingScreen() {
         >
           ‹
         </button>
-        <h2 className="breeding__title">⛩️ Breeding House</h2>
+        <h2 className="breeding__title">
+          <IconTorii size={16} /> Breeding House
+        </h2>
       </header>
 
       <p className="breeding__note">
@@ -37,16 +44,18 @@ export function BreedingScreen() {
 
       <ul className="breeding__reqs">
         {breeding.reasons.length === 0 ? (
-          <li className="breeding__req breeding__req--ok">✅ Semua syarat terpenuhi</li>
+          <li className="breeding__req breeding__req--ok">
+            <IconCheck size={13} /> Semua syarat terpenuhi
+          </li>
         ) : (
           breeding.reasons.map((r) => (
             <li key={r} className="breeding__req">
-              ⬜ {REASON_TEXT[r] ?? r}
+              • {REASON_TEXT[r] ?? r}
             </li>
           ))
         )}
         <li className="breeding__req">
-          🧾 Keturunan {breeding.childrenCount}/{breeding.maxChildren}
+          Keturunan {breeding.childrenCount}/{breeding.maxChildren}
         </li>
       </ul>
 
@@ -54,7 +63,7 @@ export function BreedingScreen() {
         {breeding.partners.map((p) => (
           <div key={p.id} className="partner-card">
             <div className="partner-card__avatar" style={{ background: p.childCoat }}>
-              {ELEMENT_ICON[p.element] ?? "🦊"}
+              <FoxFace color={elemColor(p.element)} size={22} />
             </div>
             <div className="partner-card__info">
               <div className="partner-card__name">{p.name}</div>
@@ -73,14 +82,23 @@ export function BreedingScreen() {
               disabled={!breeding.canBreed || !canAfford}
               onClick={() => eventBus.emit("ui/breeding-start", { partnerId: p.id })}
             >
-              −🪙{breeding.costCoins}
+              −<IconCoin size={12} />
+              {breeding.costCoins}
             </button>
           </div>
         ))}
       </div>
 
-      {breeding.hasEgg && <p className="breeding__egg">🥚 Telur sudah ada di altar (maks 1)</p>}
-      {!canAfford && <p className="breeding__egg">🪙 Koin belum cukup (butuh {breeding.costCoins})</p>}
+      {breeding.hasEgg && (
+        <p className="breeding__egg">
+          <Egg color="#F5EFE0" size={14} /> Telur sudah ada di altar (maks 1)
+        </p>
+      )}
+      {!canAfford && (
+        <p className="breeding__egg">
+          <IconCoin size={14} /> Koin belum cukup (butuh {breeding.costCoins})
+        </p>
+      )}
 
       {/* M8 — jalur antar-pemain asinkron (Doc 07 §2B) */}
       <div className="breeding__online">
@@ -89,7 +107,7 @@ export function BreedingScreen() {
           className="breeding__online-btn"
           onClick={() => eventBus.emit("ui/online-open", undefined)}
         >
-          🌐 Tukar Kode Antar-Pemain
+          <IconChat size={14} /> Tukar Kode Antar-Pemain
         </button>
         <p className="breeding__egg">
           Tukar Breeding Code dengan pemain lain — telur turunan muncul saat kalian berdua buka game.

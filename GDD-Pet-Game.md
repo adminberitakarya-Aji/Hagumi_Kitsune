@@ -240,7 +240,7 @@ Semua mini-game menggunakan **koin sebagai satu-satunya mata uang** (kesederhana
 
 ### 8.3 Arah Seni: Tema Jepang & Empat Musim
 
-**Gaya visual:** pixel-art dengan **palet soft pastel** — efisien untuk mobile, tapi tetap hangat seperti anime (bukan dingin ala retro gelap).
+**Gaya visual (revisi v2, 04/09 — Doc 10 §0):** **flat vector kawaii** dengan **palet soft pastel** — bentuk bulat memanjakan mata ala game virtual pet top Play Store (Adorable Home, Animal Restaurant), bukan pixel retro. Sentuhan Jepang tetap lewat bentuk (torii, seigaiha) & palet — bukan lewat gaya gambar. *(v1 pixel-art dipertahankan sebagai fallback renderer — Doc 17 §1.)*
 
 **Palet inti:** krem washi `#F5EFE0` · sakura `#F7C8D0` · indigo `#3D4A6B` · matcha `#9DB88A` · kayu hangat `#C9A87C` · aksen hanko merah `#C1443C`.
 
@@ -454,9 +454,9 @@ Agar pemain "benar-benar merasa memiliki", pet tidak pasif:
 
 1. ✅ GDD v0.6 — sinkronisasi balance: tabel decay 3-fase, poop, penyakit, katalog harga, offline floor 50 newborn — semua kini mencerminkan `decay.json`/`rules.json`/`items.json` hasil kalibrasi simulasi 90 hari
 2. ✅ Doc 12 — wireframe UI lengkap; implementasi = komponen React+TSX (`apps/web/src/components`, `screens`)
-3. ⬜ Buat **M1 Playable Core**: monorepo + `packages/core` (PetStats, TimeService, SaveSystem) + scene Rumah Tatami
+3. ✅ **M1–M9 selesai** (Fase I): playable core → evolusi → mini-game → breeding online → companion LLM; 200 test lulus, e2e online 12/12
 4. ✅ Playtest internal, iterasi balance decay (kalibrasi siklus 90 hari) — dilakukan via simulasi headless 4 seed (semuanya hidup sampai hari 90); hasilnya dibalikkan ke GDD §3/§5/§7/§9
-5. ⬜ Lanjut M2–M9 sesuai roadmap; monetisasi ditunda (Doc 11 §6)
+5. ⬜ **Fase II — World-Class (M10–M20)**: seni final, landing storytelling, audio produksi, UI/UX system, pet autonomy (kitsune berjalan/lari dengan kehendak), FTUE 2.0, pipeline mobile + CI/CD, telemetry, monetisasi cosmetics-first, lokalisasi, soft & global launch — checklist lengkap di `ROADMAP.md`, spesifikasi di `docs/13–16`
 
 ---
 

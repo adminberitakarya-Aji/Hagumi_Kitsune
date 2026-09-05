@@ -2,6 +2,7 @@
 import { eventBus } from "../lib/eventBus";
 import { HankoButton } from "./HankoButton";
 import { useGameState } from "../store/gameState";
+import { IconFuton, IconSun } from "./icons";
 
 export function FutonSheet({ onDone }: { onDone: () => void }) {
   const { sleeping } = useGameState();
@@ -20,7 +21,8 @@ export function FutonSheet({ onDone }: { onDone: () => void }) {
           onDone();
         }}
       >
-        {sleeping ? "☀️ Bangunkan" : "🛏️ Tidurkan"}
+        {sleeping ? <IconSun size={16} /> : <IconFuton size={16} />}
+        {sleeping ? " Bangunkan" : " Tidurkan"}
       </HankoButton>
     </div>
   );

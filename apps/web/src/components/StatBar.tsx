@@ -1,6 +1,8 @@
-/** StatBar mini (Doc 12 §2.1) — blink saat <30. */
+/** StatBar mini (Doc 12 §2.1) — blink saat <30. Ikon = ReactNode vector (M10). */
+import type { ReactNode } from "react";
+
 interface StatBarProps {
-  icon: string;
+  icon: ReactNode;
   value: number;
   color: string;
 }

@@ -1,9 +1,11 @@
 /** Pengaturan + backup ekspor/impor base64 (Doc 09 §4) — dibuka dari tombol gear HUD.
- * M5: toggle musik/SFX/notify/companion offline (Doc 12 §3.2) — persist via ui/settings. */
+ * M5: toggle musik/SFX/notify/companion offline (Doc 12 §3.2) — persist via ui/settings.
+ * M10: ikon vector (Doc 10 §0). */
 import { useState } from "react";
 import { eventBus } from "../lib/eventBus";
 import { useGameState } from "../store/gameState";
 import { HankoButton } from "./HankoButton";
+import { IconCheck, IconWarn } from "./icons";
 
 export function SettingsSheet() {
   const backupCode = useGameState().backupCode;
@@ -13,6 +15,7 @@ export function SettingsSheet() {
   const [sfx, setSfx] = useState(true);
   const [notify, setNotify] = useState(true);
   const [offlineLlm, setOfflineLlm] = useState(true);
+  const [textLarge, setTextLarge] = useState(() => localStorage.getItem("hagumi_text_large") === "1");
 
   const update = (patch: { music?: boolean; sfx?: boolean; notify?: boolean; offlineLlm?: boolean }): void => {
     eventBus.emit("ui/settings", patch);
@@ -21,7 +24,7 @@ export function SettingsSheet() {
   return (
     <div className="sheet__body">
       <section className="backup-section">
-        <h4 className="backup-title">🎵 Suara</h4>
+        <h4 className="backup-title">Suara</h4>
         <label className="settings-row">
           <span>Musik</span>
           <input
@@ -66,9 +69,21 @@ export function SettingsSheet() {
             }}
           />
         </label>
+        <label className="settings-row">
+          <span>Teks besar</span>
+          <input
+            type="checkbox"
+            checked={textLarge}
+            onChange={(e) => {
+              setTextLarge(e.target.checked);
+              document.documentElement.classList.toggle("text-large", e.target.checked);
+              localStorage.setItem("hagumi_text_large", e.target.checked ? "1" : "0");
+            }}
+          />
+        </label>
       </section>
       <section className="backup-section">
-        <h4 className="backup-title">📦 Backup Progress</h4>
+        <h4 className="backup-title">Backup Progress</h4>
         <HankoButton
           size="md"
           onClick={() => eventBus.emit("ui/backup-export", undefined)}
@@ -88,24 +103,26 @@ export function SettingsSheet() {
                 );
               }}
             >
-              📋 Salin
+              <IconCheck size={12} /> Salin
             </button>
           </>
         )}
       </section>
       <section className="backup-section">
-        <h4 className="backup-title">☁️ Backup Awan (M8)</h4>
+        <h4 className="backup-title">Backup Awan (M8)</h4>
         <div className="cloud-buttons">
           <HankoButton size="md" disabled={cloud.busy} onClick={() => eventBus.emit("ui/cloud-push", undefined)}>
-            ⬆️ Unggah
+            Unggah
           </HankoButton>
           <HankoButton size="md" disabled={cloud.busy} onClick={() => eventBus.emit("ui/cloud-pull", undefined)}>
-            ⬇️ Tarik
+            Tarik
           </HankoButton>
         </div>
         {cloud.diffSummary && (
           <div className="cloud-warning">
-            <p className="sheet__note">⚠️ Perbedaan terdeteksi: {cloud.diffSummary}</p>
+            <p className="sheet__note">
+              <IconWarn size={12} /> Perbedaan terdeteksi: {cloud.diffSummary}
+            </p>
             <HankoButton size="md" onClick={() => eventBus.emit("ui/cloud-restore", undefined)}>
               Pakai yang Lebih Baru (LWW)
             </HankoButton>
@@ -116,7 +133,7 @@ export function SettingsSheet() {
         </p>
       </section>
       <section className="backup-section">
-        <h4 className="backup-title">♻️ Pulihkan dari Kode</h4>
+        <h4 className="backup-title">Pulihkan dari Kode</h4>
         <textarea
           className="backup-textarea"
           placeholder="Tempel kode backup di sini..."

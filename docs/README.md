@@ -18,10 +18,15 @@
 | [07-breeding-genetics.md](07-breeding-genetics.md)       | Breeding         | Syarat, algoritma genetika, lineage tree, warisan                   | ✅     |
 | [08-companion-dialogue.md](08-companion-dialogue.md)     | Companion        | Mesin dialog, prioritas trigger, template chat, memori              | ✅     |
 | [09-architecture-save.md](09-architecture-save.md)       | Arsitektur       | Struktur folder, modul, state machine, skema save JSON              | ✅     |
-| [10-art-audio-styleguide.md](10-art-audio-styleguide.md) | Seni & Audio     | Palet, ukuran sprite, komponen UI, daftar musik/SFX                 | ✅     |
+| [10-art-audio-styleguide.md](10-art-audio-styleguide.md) | Seni & Audio     | **v2 flat vector kawaii** (§0) · palet, komponen UI, musik/SFX       | ✅ v2  |
 | [11-companion-llm-memory.md](11-companion-llm-memory.md) | LLM & Memory     | Memory 2 tingkat, ILlmProvider + adapter, guardrail, Supabase proxy | ✅     |
 | [12-ui-layout-wireframes.md](12-ui-layout-wireframes.md) | UI Layout        | Grid 360×640, HUD, komponen, wireframe semua layar & modal          | ✅     |
-| [../ROADMAP.md](../ROADMAP.md)                           | 🗺️ Roadmap Kerja | Checklist M1–M9 + Definition of Done per milestone                  | ✅     |
+| [13-pet-autonomy.md](13-pet-autonomy.md)                 | Pet Autonomy     | Kehendak pet: intent berbasis kebutuhan, behavior.json, klip baru, waypoint, gating | 📐 desain |
+| [14-ui-ux-system.md](14-ui-ux-system.md)                 | UI/UX System     | UX pillars, design tokens, ikon pixel, motion, adaptasi, FTUE 2.0, UI test | 📐 desain |
+| [15-launch-liveops.md](15-launch-liveops.md)             | Launch & Live-Ops| KPI target, telemetry, monetisasi cosmetics-first, i18n, pipeline mobile, soft launch | 📐 desain |
+| [16-landing-preview.md](16-landing-preview.md)           | Landing & Preview| Storytelling 6 babak, lazy-load game, funnel landing, SEO/share     | 📐 desain |
+| [17-asset-contract-m10.md](17-asset-contract-m10.md)     | Kontrak Aset M10 | Palet 28 slot terkunci, inventory sprite/bg/ikon, pipeline pixel-map | 🔨     |
+| [../ROADMAP.md](../ROADMAP.md)                           | 🗺️ Roadmap Kerja | Checklist M1–M20 + Definition of Done per milestone                  | ✅     |
 
 ## 🧭 Cara Pakai
 
